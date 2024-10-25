@@ -1,0 +1,43 @@
+<template>
+    <img
+      :alt="`Avatar of ${user.name}`"
+      :src="avatars()"
+      :title="user.name"
+      @error="onError"
+      class="object-cover rounded-full aspect-square bg-k-bg-primary"
+    >
+</template>
+  
+<script>
+import { defaultAvatar } from '@/utils'
+  
+export default {
+    name: 'UserAvatar',
+    
+    props: {
+      user: {
+        type: Object,
+        required: true,
+        validator: function(value) {
+          return value && typeof value.name === 'string' && typeof value.avatar === 'string';
+        }
+      }
+    },
+    
+    data() {
+      return {
+        avatar: this.user.avatar
+      }
+    },
+   
+    methods: {
+      onError() {
+        this.avatar = defaultAvatar; 
+      },
+
+      avatars() {        
+        return defaultAvatar;
+      }
+    }
+}
+</script>

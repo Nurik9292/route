@@ -1,0 +1,39 @@
+{
+  "name": "ugur_admin",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@floating-ui/dom": "^1.6.11",
+    "@fortawesome/fontawesome-svg-core": "^6.6.0",
+    "@fortawesome/free-brands-svg-icons": "^6.6.0",
+    "@fortawesome/free-regular-svg-icons": "^6.6.0",
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/vue-fontawesome": "^3.0.8",
+    "@vueuse/core": "^11.1.0",
+    "fuse.js": "^7.0.0",
+    "ismobilejs": "^1.1.1",
+    "lodash": "^4.17.21",
+    "mitt": "^3.0.1",
+    "nouislider": "^15.8.1",
+    "postcss-mixins": "^11.0.3",
+    "postcss-nested": "^6.2.0",
+    "vue": "^3.5.12",
+    "vue-router": "^4.4.5",
+    "vuex": "^4.0.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.1.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "postcss-import": "^16.1.0",
+    "tailwindcss": "^3.4.14",
+    "vite": "^5.4.8",
+    "vite-plugin-vue-devtools": "^7.4.6"
+  }
+}
