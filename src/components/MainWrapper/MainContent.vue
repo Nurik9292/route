@@ -28,25 +28,14 @@ export default {
 
     mounted() {
         const { onRouteChanged, getCurrentScreen } = useRouter();
-        const savedScreen = localStorage.getItem('currentScreen');
-        if (savedScreen) {
-            this.screen = savedScreen; 
-        } else {
-            this.screen = getCurrentScreen(); 
-        }
-    
-        onRouteChanged(route => {
-            this.screen = route.screen;
-            localStorage.setItem('currentScreen', this.screen);
-        });
+        onRouteChanged(this.onRouteChanged);
+        this.screen = getCurrentScreen();
     },
-    
-    beforeDestroy() {
-        localStorage.removeItem('currentScreen');
-    },
-   
+     
     methods: {
-    
+        async onRouteChanged(route) {
+            this.screen = route.screen;
+        }
     }
 
 }

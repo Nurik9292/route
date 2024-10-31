@@ -21,6 +21,7 @@ export const use = (value, cb) => {
   };
   
   export const provideReadonly = (key, value, deep = true, mutator) => {
+    
     mutator = mutator || (v => (isRef(value) ? (value.value = v) : (value = v)));
   
     if (!isObject(value)) {
@@ -32,8 +33,9 @@ export const use = (value, cb) => {
   };
   
   export const requireInjection = (key, defaultValue) => {
+        
     const value = inject(key, defaultValue);
-  
+    
     if (typeof value === 'undefined') {
       throw new Error(`Missing injection: ${key.toString()}`);
     }

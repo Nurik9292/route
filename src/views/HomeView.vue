@@ -20,6 +20,7 @@ import ThumbnailStack from '@/components/Ui/ThumbnailStack.vue';
 
 import { sample } from 'lodash';
 import { useRouter } from '@/composables';
+import { mapGetters } from 'vuex';
 
 export default {
     name: 'HomeView',
@@ -42,9 +43,11 @@ export default {
     },
 
     computed: {
+        ...mapGetters('user', ['currentUser']),
+
         greeting() {
             const greeting = sample(this.greetings);
-            return greeting ? greeting.replace('%s', 'Admin') : '';
+            return greeting ? greeting.replace('%s', this.currentUser.name) : '';
         }
     },
 
@@ -56,7 +59,7 @@ export default {
                 //   await overviewStore.fetch();
                   this.initialized = true;
                 } catch (error) {
-                //   useErrorHandler('dialog').handleHttpError(error);
+                   useErrorHandler('dialog').handleHttpError(error);
                 console.log(error);
                 
                 } finally {

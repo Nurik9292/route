@@ -19,14 +19,14 @@ export default {
         type: Object,
         required: true,
         validator: function(value) {
-          return value && typeof value.name === 'string' && typeof value.avatar === 'string';
+          return value && typeof value.name === 'string';
         }
       }
     },
     
     data() {
       return {
-        avatar: this.user.avatar
+       
       }
     },
    

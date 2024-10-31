@@ -16,6 +16,7 @@
 
 <script>
 import UserAvatar from '../User/UserAvatar.vue';
+import { mapGetters } from 'vuex';
 
 export default {
     name: 'ProfileAvatar',
@@ -24,11 +25,16 @@ export default {
         UserAvatar
     },
 
-    methods: {
+    computed: {
+        ...mapGetters('user', ['currentUser'])
+    },
 
-        currentUser() {
-            return "{name: 'Test', avatar: null}";
-        }
+    mounted() {
+        console.log(this.currentUser);
+        
+    },
+
+    methods: {
     }
 }
 </script>

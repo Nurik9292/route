@@ -6,21 +6,23 @@ import { authService } from '@/services';
 class Http {
     constructor() {
         this.client = Axios.create({
-            baseURL: `${window.BASE_URL}api`,
+            baseURL: `${import.meta.env.VITE_API_URL}`,
             headers: {
-                'X-Api-Version': 'v6'
+                'Content-Type': 'application/json',
             }
         });
 
         this.silent = false;
 
-        // this.client.interceptors.request.use((config) => {
-        //     if (!this.silent) this.showLoadingIndicator();
-        //     config.headers.Authorization = `Bearer ${authService.getApiToken()}`;
-        //     return config;
-        // });
-
+        this.client.interceptors.request.use((config) => {
+            if (!this.silent) this.showLoadingIndicator();            
+            config.headers.Authorization = `Bearer ${authService.getApiToken()}`;  
+            return config;
+        });
+      
+    
         this.client.interceptors.response.use((response) => {
+           
             if (!this.silent) this.hideLoadingIndicator();
             this.silent = false;
 
@@ -47,7 +49,7 @@ class Http {
         return this;
     }
 
-    request(method, url, data = {}, onUploadProgress) {
+    async request(method, url, data = {}, onUploadProgress) {
         return this.client.request({
             url,
             data,
@@ -57,23 +59,23 @@ class Http {
     }
 
     async get(url) {
-        return (await this.request('get', url)).data;
+        return await this.request('get', url);
     }
 
     async post(url, data = {}, onUploadProgress) {
-        return (await this.request('post', url, data, onUploadProgress)).data;
+        return (await this.request('post', url, data, onUploadProgress));
     }
 
     async put(url, data) {
-        return (await this.request('put', url, data)).data;
+        return (await this.request('put', url, data));
     }
 
     async patch(url, data) {
-        return (await this.request('patch', url, data)).data;
+        return (await this.request('patch', url, data));
     }
 
     async delete(url, data = {}) {
-        return (await this.request('delete', url, data)).data;
+        return (await this.request('delete', url, data));
     }
 
     showLoadingIndicator() {

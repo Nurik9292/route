@@ -9,21 +9,18 @@ export const ReadonlyInjectionKey = (type) => {
 export const RouterKey = Symbol('Router');
 export const OverlayKey = Symbol('Overlay')
 export const DialogBoxKey = Symbol('DialogBox')
-export const MessageToasterKey = Symbol('MessageToaster')
+export const MessageToasterKey = Symbol('MessageToaster');
 
 
-export const ListConfigKey = Symbol('ListConfig');
-export const ListSortFieldKey = Symbol('ListSortField');
+export const StopsKey = Symbol('Stops');
+export const CurrentStopKey = Symbol('CurrentStop');
+export const SelectedStopsKey = Symbol('SelectedStopsKey');
+export const StopListConfigKey = Symbol('StopListConfig');
+export const StopListSortFieldKey = Symbol('StopListSortField');
+export const StopListSortOrderKey = Symbol('StopListSortOrder');
+export const StopListFilterKeywordsKey = Symbol('StopListFilterKeywords');
+export const StopListContextKey = Symbol('StopListContext');
 
-export const ObjectsKey = Symbol('Objects')
-export const CurrentSelectKey = Symbol('CurrentSelect')
-export const SelectedObjectKey = Symbol('SelectedObject')
-
-export const ListSortOrderKey = Symbol('ListSortOrder')
-export const ListFilterKeywordsKey = Symbol('ListFilterKeywords')
-export const ObjectListContextKey = Symbol('ObjectListContext')
-
-export const ModalContextKey = Symbol('ModalContext')
-
+export const ModalContextKey = Symbol('ModalContext');
 
 

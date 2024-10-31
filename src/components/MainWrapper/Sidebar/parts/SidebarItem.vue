@@ -50,9 +50,7 @@ export default {
       const { onRouteChanged } = useRouter();
 
       if (this.screen) {
-        console.log(this.screen, 'Sidebar item');
       
-        
         onRouteChanged((route) => {
           this.current = route.screen === this.screen
         });

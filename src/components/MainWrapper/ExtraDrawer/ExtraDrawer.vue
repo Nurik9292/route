@@ -38,6 +38,10 @@ export default {
         ExtraDrawerButton, LogoutButton, ProfileAvatar
     },
 
+    mounted() {
+     
+    },
+
     methods: {
       
       expandSidebar() {

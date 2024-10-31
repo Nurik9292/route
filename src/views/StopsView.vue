@@ -1,12 +1,8 @@
 <template>
     <BaseView>
         <template #header>
-            <ScreenHeader :layout="layouts()">
+            <ScreenHeader layout="collapsed">
                 Остановки
-
-                <template #thumbnail>
-                    <ThumbnailStack :thumbnails="thumbnails" />
-                </template>
 
                 <template v-if="totalStopCount" #meta>
                     <span>{{ pluralize(totalStopCount, 'stops') }}</span>
@@ -19,17 +15,23 @@
                     <BtnGroup uppercase>
                         <BtnComponent success @click="showAddUserForm">
                           <Icon :icon="['fas', 'plus']" />
-                          Add
+                          Добавить
                         </BtnComponent>
                       </BtnGroup>
                 </template>
             </ScreenHeader>
-            
-            <ListSkeleton v-if="showSkeletons" class="-m-6"/>
-            <template v-else>
-                
-            </template>
+        </template>
 
+        <ListSkeleton v-if="showSkeletons" class="-m-6"/>
+        <template v-else>
+            <TableList
+                ref="stopList"
+                class="-m-6"
+                @sort="sort"
+                @scroll-breakpoint="onScrollBreakpoint"
+                @press:enter="onPressEnter"
+                @scrolled-to-end="fetchStops"
+            />
         </template>
     </BaseView>
 </template>
@@ -42,9 +44,11 @@ import ListFilter from '@/components/Ui/ListFilter.vue';
 import BtnGroup from '@/components/Ui/Form/BtnGroup.vue';
 import BtnComponent from '@/components/Ui/Form/BtnComponent.vue';
 import ListSkeleton from '@/components/Ui/Skeletons/ListSkeleton.vue';
+import TableList from '@/components/Stops/TableList.vue';
 
 import { pluralize } from '@/utils';
-import isMobile from 'ismobilejs';
+import { useStopList, useErrorHandler } from '@/composables';
+import { mapActions } from 'vuex';
 
 export default {
     name: 'StopsView',
@@ -56,39 +60,71 @@ export default {
         ListFilter,
         BtnGroup,
         BtnComponent,
-        ListSkeleton
+        ListSkeleton,
+        TableList
     },
 
     data() {
+        const { stops, stopList, isPhone, onScrollBreakpoint } = useStopList([], { type: 'Stops' }, { filterable: false, sortable: true })
+
         return {
             totalStopCount: 1,
+            page: 1,
             initialized: false,
             loading: false,
+            sortField: 'title',
+            sortOrder: 'asc',
             thumbnails: [],
-            isPhone: isMobile.phone,
+            isPhone,
+            stops,
             showSkeletons: false
         }
     },
 
     computed: {
         showSkeletons()  {
-            return this.loading && 0 === 0;
-        }
-    },
-
-    methods: {
-        
-        fetchStops() {
-            if (this.loading) return;
+            return this.loading && this.stops.length === 0;
         },
 
+        moreStopsAvailable() {
+        return this.page !== null
+      },
+    },
+
+    
+
+    methods: {
+
+        ...mapActions('stops', ['paginate']),
+        
         pluralize(count, singular) {
             return pluralize(count, singular);
         },
 
-        layouts() { 
-            return true ? 'collapsed' : 'expanded';
-        }
+    
+        async sort(field, order) {
+            this.page = 1;
+            this.stops = [];
+            this.sortField = field;
+            this.sortOrder = order;
+            await this.fetchStops();
+        },
+
+        async fetchStops() {
+            if (!this.moreSongsAvailable || this.loading) return
+            this.loading = true
+            try {
+                this.page = this.paginate({
+                    sort: this.sortField,
+                    order: this.sortOrder,
+                    page: this.page,
+                 });
+            } catch (error) {
+                useErrorHandler().handleHttpError(error)
+            } finally {
+                this.loading = false
+            }
+        },
     }
 }
 </script>

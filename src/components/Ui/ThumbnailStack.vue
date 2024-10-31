@@ -31,8 +31,7 @@ export default {
 
     computed: {
         displayedThumbnails() {
-            console.log('test', defaultLogo);
-            console.log(this.thumbnails.length === 0);
+          
             
             return this.thumbnails.length === 0 
                 ? [defaultLogo]

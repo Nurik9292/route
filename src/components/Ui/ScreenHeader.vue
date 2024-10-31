@@ -16,8 +16,8 @@
                 <span v-if="$slots.meta" class="meta text-k-text-secondary hidden text-[0.9rem] leading-loose">
                   <slot name="meta" />
                 </span>
-              </div>
-        
+            </div>
+            
               <slot name="controls" />
         </main>
     </header>
@@ -75,6 +75,7 @@ header.screen-header {
       @apply flex-col items-start;
     }
   }
+
 
   .thumbnail-wrapper {
     transition: width var(--transition-duration);
