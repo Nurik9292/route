@@ -2,13 +2,15 @@
     <section id="mainContent" class="flex-1 relative overflow-hidden">
         <HomeView v-show="screen === 'Home'" />
         <StopsView v-show="screen === 'Stops'"/>
-        {{ screen }}
+        
+        <ProfileView v-if="screen === 'Profile'" />
     </section>
 </template>
 
 <script>
 import HomeView from '@/views/HomeView.vue';
 import StopsView from '@/views/StopsView.vue';
+import ProfileView from '@/views/ProfileView.vue';
 
 import { useRouter } from '@/composables';
 
@@ -17,7 +19,8 @@ export default {
 
     components: {
         HomeView, 
-        StopsView
+        StopsView,
+        ProfileView
     },
 
     data() {

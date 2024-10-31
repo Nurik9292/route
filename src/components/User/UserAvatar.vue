@@ -26,7 +26,7 @@ export default {
     
     data() {
       return {
-       
+          avatar: this.user.avatar
       }
     },
    
@@ -36,7 +36,7 @@ export default {
       },
 
       avatars() {        
-        return defaultAvatar;
+        return this.avatar ? this.avatar : defaultAvatar;
       }
     }
 }

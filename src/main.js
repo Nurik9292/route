@@ -27,7 +27,9 @@ import {
     faCircleExclamation,
     faWarning,
     faEye,
-    faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+    faEyeSlash,
+    faRefresh,
+    faUpload } from '@fortawesome/free-solid-svg-icons';
 
 import App from './App.vue';
 import Router from './router';
@@ -65,7 +67,9 @@ library.add(
     faCircleExclamation,
     faWarning,
     faEye,
-    faEyeSlash);
+    faEyeSlash,
+    faRefresh,
+    faUpload);
 
 
 const app = createApp(App);
