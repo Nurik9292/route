@@ -1,5 +1,6 @@
 import { differenceBy, merge } from 'lodash';
 import { arrayify } from '@/utils';
+import userAPI from '@/api/userAPI';
 
 export default {
     namespaced: true,
@@ -19,7 +20,13 @@ export default {
 
           byId: (state) => (id) => {
             return state.vault.get(id);
+          },
+
+          users(state) {
+            return state.users;
           }
+
+
     },
     
     mutations: {
@@ -62,8 +69,8 @@ export default {
             commit('SET_CURRENT_USER', currentUser);
           },
           
-          async fetch({ commit, dispatch }) {
-            const users = await http.get('users');
+          async fetchUsers({ commit, dispatch }) {
+            const users = await userAPI.getAll();            
             await dispatch('syncWithVault', users);
             commit('SET_USERS', users);
           },
@@ -73,7 +80,7 @@ export default {
           },
         
           async store({ dispatch }, data) {
-            const user = await http.post('users', data);
+            const user = await userAPI.store(data);
             await dispatch('add', user);
             return user;
           },
@@ -83,14 +90,16 @@ export default {
             commit('ADD_USER', user);
           },
         
-          async update({ dispatch }, { user, data }) {
-            const updatedUser = await http.put(`users/${user.id}`, data);
+          async update({ dispatch },  {userId, data} ) {
+            const updatedUser =  await userAPI.update(userId, data);
             await dispatch('syncWithVault', updatedUser);
             return updatedUser;
           },
         
           async destroy({ commit }, user) {
-            await http.delete(`users/${user.id}`);
+            console.log(user);
+            
+            await userAPI.destroy(user.id);
             commit('REMOVE_USER', user);
           }
     }

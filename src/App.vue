@@ -56,8 +56,6 @@ export default {
 
   mounted() {
     this.initializeApp();
-    console.log('App');
-   
   },
 
   methods: {

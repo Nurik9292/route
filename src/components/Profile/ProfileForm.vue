@@ -4,7 +4,7 @@
         <div class="flex flex-col gap-3 md:flex-row md:gap-8 w-full md:w-[640px]">
             <div class="flex-1 space-y-5">
                 <FormRow>
-                    <template #label>Current Password</template>
+                    <template #label>Текущий Пароль</template>
                     <TextInput v-model="profile.current_password" v-koel-focus data-testid="currentPassword"
                         name="current_password" 
                         placeholder="Требуется обновить ваш профиль" 
@@ -13,13 +13,13 @@
                 </FormRow>
 
                 <FormRow>
-                    <template #label>Name</template>
+                    <template #label>Имя</template>
                     <TextInput v-model="profile.name" data-testid="name" name="name" />
                 </FormRow>
 
                
                 <FormRow >
-                    <template #label>New Password</template>
+                    <template #label>Новый Пароль</template>
                     <PasswordField v-model="profile.new_password" autocomplete="new-password" data-testid="newPassword"
                         minlength="10" placeholder="Оставьте пустым, чтобы сохранить текущий пароль" />
                     <template #help>Мин. 10 персонажей. Должно представлять собой смесь символов, цифр и символов.</template>
@@ -84,7 +84,7 @@ export default {
                 await authService.updateProfile(Object.assign({}, this.profile));
                 this.profile.current_password = null;
                 delete this.profile.new_password;
-                toastSuccess('Profile updated.');
+                toastSuccess('Профиль обновлен.');
             } catch (error) {
                 useErrorHandler('dialog').handleHttpError(error);
             }

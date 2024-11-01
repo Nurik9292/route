@@ -1,5 +1,6 @@
 import { logger, parseValidationError } from '@/utils';
 import { useDialogBox, useMessageToaster } from '@/composables';
+import axios from 'axios';
 
 export const useErrorHandler = (driver = 'toast') => {
     const { toastError } = useMessageToaster();

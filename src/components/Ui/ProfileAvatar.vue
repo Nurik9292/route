@@ -29,12 +29,5 @@ export default {
         ...mapGetters('user', ['currentUser'])
     },
 
-    mounted() {
-        console.log(this.currentUser);
-        
-    },
-
-    methods: {
-    }
 }
 </script>

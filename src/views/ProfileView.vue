@@ -11,7 +11,7 @@
                     aria-controls="profilePaneProfile"
                     @click="currentTab = 'profile'"
                 >
-                    Profile
+                    Профиль
                 </TabButton>
             </TabList>
 

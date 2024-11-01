@@ -1,5 +1,8 @@
 import authAPI from "@/api/authAPI";
+import userAPI from "@/api/userAPI";
 import { useLocalStorage } from "@/composables";
+import store from "@/store";
+import { merge } from 'lodash';
 
 const API_TOKEN_STORAGE_KEY = 'api-token';
 
@@ -18,8 +21,10 @@ export const authService = {
 
   getProfile: async () => await http.get < User > ('me'),
 
-  updateProfile: async (data) => {
-    merge(userStore.current, (await http.put < User > ('me', data)))
+  async updateProfile (data) {
+    const newUser = await userAPI.me(data);
+    this.destroy();
+    merge(store.state['user/current'], newUser);
   },
 
   getApiToken: () => lsGet(API_TOKEN_STORAGE_KEY),

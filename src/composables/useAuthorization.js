@@ -1,8 +1,9 @@
 import { computed, toRef } from 'vue';
-import user from '@/store/modules/user';
+import { useStore } from 'vuex';
 
 export const useAuthorization = () => {
-  const currentUser = toRef(user.state, 'curretn')
+  const store = useStore();
+  const currentUser = computed(() => store.getters['user/currentUser']);
   const isAdmin = true;
 
   return {

@@ -32,6 +32,7 @@ import UserAvatar from '../User/UserAvatar.vue';
 import ImageCropper from '../Utils/ImageCropper.vue';
 
 export default {
+    name: 'EditableProfileAvatar',
 
     components: {
         UserAvatar,

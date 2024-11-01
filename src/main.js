@@ -29,7 +29,9 @@ import {
     faEye,
     faEyeSlash,
     faRefresh,
-    faUpload } from '@fortawesome/free-solid-svg-icons';
+    faUpload,
+    faShield,
+    faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
 
 import App from './App.vue';
 import Router from './router';
@@ -69,7 +71,9 @@ library.add(
     faEye,
     faEyeSlash,
     faRefresh,
-    faUpload);
+    faUpload,
+    faShield,
+    faCircleQuestion);
 
 
 const app = createApp(App);
