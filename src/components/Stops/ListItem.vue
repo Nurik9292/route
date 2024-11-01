@@ -64,9 +64,6 @@ export default {
         //     return useAuthorization().currentUser
         // },
 
-        isPlus() {
-            return useKoelPlus().isPlus
-        },
 
         playable() {
             // return this.item.playable

@@ -7,7 +7,7 @@
 
         <section class="btn-collapse-block flex md:hidden items-center border-b border-b-white/5 h-k-header-height px-6">
             <div class="bg-white/5 rounded-full">
-              <ExtraDrawerButton>
+              <ExtraDrawerButton @click.prevent="collapseSidebar">
                 <Icon :icon="['fas', 'times']" fixed-width />
               </ExtraDrawerButton>
             </div>
@@ -38,6 +38,7 @@ import SidebarOtherSection from './sections/SidebarOtherSection.vue';
 import SidebarToggleButton from './parts/SidebarToggleButton.vue';
 
 import { useLocalStorage } from '@/composables';
+import { eventBus } from '@/utils';
 
 export default {
     name: 'SidebarMenu',
@@ -69,7 +70,13 @@ export default {
 
 
     mounted() {
-     
+      eventBus.on('TOGGLE_SIDEBAR', () => (this.mobileShowing = !this.mobileShowing));
+    },
+
+    methods: {
+      collapseSidebar() {
+        this.mobileShowing = !this.mobileShowing;
+      }
     }
 }
 </script>

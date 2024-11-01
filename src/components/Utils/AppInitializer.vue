@@ -25,7 +25,7 @@ export default {
 
 
         async init() {
-            this.showOverlay({ message: 'Just a little patience…' })
+            this.showOverlay({ message: 'Просто немного терпения…' })
 
             try {
                 await this.initCommon();

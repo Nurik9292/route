@@ -7,7 +7,7 @@
         <main class="space-y-5">
             <FormRow>
                 <template #label>Имя</template>
-                <TextInput v-model="newUser.name" v-koel-focus name="name" required title="Name" />
+                <TextInput v-model="newUser.name" v-focus name="name" required title="Name" />
             </FormRow>
             <FormRow>
                 <template #label>Парооль</template>

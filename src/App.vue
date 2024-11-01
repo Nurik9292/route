@@ -74,6 +74,7 @@ export default {
           default:
             this.layout = 'auth';
         }
+        
         document.documentElement.classList.add(
           navigator.userAgent.includes('Mac') ? 'mac' : 'non-mac'
         );

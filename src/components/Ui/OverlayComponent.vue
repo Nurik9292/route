@@ -3,10 +3,10 @@
         data-testid="overlay" @cancel.prevent="onCancel">
         <span class="flex items-baseline justify-center gap-3">
             <ItemBars v-if="state.type === 'loading'" />
-            <Icon v-if="state.type === 'error'" :icon="faCircleExclamation" />
-            <Icon v-if="state.type === 'warning'" :icon="faWarning" />
-            <Icon v-if="state.type === 'info'" :icon="faCircleInfo" />
-            <Icon v-if="state.type === 'success'" :icon="faCircleCheck" />
+            <Icon v-if="state.type === 'error'" :icon="['fas', 'circle-exclamation']" />
+            <Icon v-if="state.type === 'warning'" :icon="['fas', 'warning']" />
+            <Icon v-if="state.type === 'info'" :icon="['fas', 'circle-info']" />
+            <Icon v-if="state.type === 'success'" :icon="['fas', 'circle-check']" />
 
             <span class="message" v-html="state.message" />
         </span>

@@ -9,10 +9,16 @@
 </template>
   
 <script>
-
+import { eventBus } from '@/utils';
 
 export default {
     name: 'HomeButton',  
+
+    methods: {
+      onClick() {
+        eventBus.emit('TOGGLE_SIDEBAR');
+      }
+    }
 }
 
 </script>

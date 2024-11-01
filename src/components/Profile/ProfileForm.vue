@@ -5,7 +5,7 @@
             <div class="flex-1 space-y-5">
                 <FormRow>
                     <template #label>Текущий Пароль</template>
-                    <TextInput v-model="profile.current_password" v-koel-focus data-testid="currentPassword"
+                    <TextInput v-model="profile.current_password" v-focus data-testid="currentPassword"
                         name="current_password" 
                         placeholder="Требуется обновить ваш профиль" 
                         required

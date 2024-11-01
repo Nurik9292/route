@@ -34,7 +34,7 @@ export const authService = {
   },
 
   setTokensUsingCompositeToken(compositeToken) {
-    this.setApiToken(compositeToken.token)
+    this.setApiToken(compositeToken.token);
   },
 
   setApiToken: (token) => lsSet(API_TOKEN_STORAGE_KEY, token),
