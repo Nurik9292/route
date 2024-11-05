@@ -90,15 +90,13 @@ export default {
             commit('ADD_USER', user);
           },
         
-          async update({ dispatch },  {userId, data} ) {
+          async update({ dispatch }, userId, data ) {
             const updatedUser =  await userAPI.update(userId, data);
             await dispatch('syncWithVault', updatedUser);
             return updatedUser;
           },
         
           async destroy({ commit }, user) {
-            console.log(user);
-            
             await userAPI.destroy(user.id);
             commit('REMOVE_USER', user);
           }

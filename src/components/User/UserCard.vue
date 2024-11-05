@@ -95,8 +95,7 @@ export default {
         },
 
         async destroy() {
-            if (!await this.showConfirmDialog(`Unperson ${this.user.name}?`)) return;
-            console.log(this.user);
+            if (!await this.showConfirmDialog(`Удалить ${this.user.name}?`)) return;
             
             await this.userDestroy(this.user);
             this.toastSuccess(`Пользователь "${this.user.name}" удален.`);

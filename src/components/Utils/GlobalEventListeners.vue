@@ -33,7 +33,6 @@ export default {
        
 
         async handleLogout() {
-            console.log('global');
             
             await authService.logout();
             forceReloadWindow();

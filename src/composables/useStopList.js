@@ -2,7 +2,7 @@ import { differenceBy, orderBy, sampleSize, take, throttle } from 'lodash';
 import isMobile from 'ismobilejs';
 import { computed, provide, reactive, ref } from 'vue';
 import { arrayify, eventBus, provideReadonly } from '@/utils';
-import { useFuzzySearch, useRouter } from '@/composables';
+import { useFuzzySearch } from '@/composables';
 
 import {
     StopListConfigKey,
@@ -15,107 +15,94 @@ import {
 } from '@/symbols'
 
 
-export const useStopList = (stops, context = {}, config = {
+export const useStopList = (
+  stops,
+  context = {},
+  config = {
     filterable: true,
     sortable: true,
     reorderable: false,
     collaborative: false,
     hasCustomOrderSort: false
-}) => {
-
-
-    const filterKeywords = ref('');
-    config = reactive(config);
-    context = reactive(context);
-
-    const { isCurrentScreen, go } = useRouter();
-
-    const fuzzy = config.filterable ? useFuzzySearch(objects, [
-        'title',
-    ]) : null;
-
-
-    const stopList = ref()
-
-    const isPhone = isMobile.phone;
-    const selectedStops = ref([]);
-    const showingControls = ref(false);
+  }
+) => {
+    
+  const filterKeywords = ref('');
+  config = reactive(config);
+  context = reactive(context);
+  const fuzzy = config.filterable ? useFuzzySearch(stops, ['title']) : null;
+  const stopList = ref();
+  const isPhone = isMobile.any;
+  const selectedStops = ref([]);
+  const headerLayout = ref('expanded');
   
-    const onScrollBreakpoint = (direction) => {
-        headerLayout.value = direction === 'down' ? 'collapsed' : 'expanded';
-    };
 
-  
-    const applyFilter = throttle((keywords) => (filterKeywords.value = keywords), 200);
-
-    const sortField = ref((() => {
-        if (!config.sortable) return null;
-        if (isCurrentScreen('Stops')) return 'track';
-        if (isCurrentScreen('Search.Stop')) return null;
-        return 'title';
-    })());
-
-    const extendedSortFields = computed(() => {
-        if (!sortField.value) return null;
-        let extended = arrayify(sortField.value);
-        return extended;
-    })
+  const onScrollBreakpoint = (direction) => {
+    headerLayout.value = direction === 'down' ? 'collapsed' : 'expanded'
+  };
 
 
-    const filteredStops = computed(() => {
-        if (!fuzzy) return stops.value;
+  const applyFilter = throttle((keywords) => (filterKeywords.value = keywords), 200);
 
-        return sortField.value
-            ? orderBy(fuzzy.search(filterKeywords.value), extendedSortFields.value, sortOrder.value)
-            : fuzzy.search(filterKeywords.value);
-    })
+  const filteredStops = computed(() => {    
+    if (!fuzzy) return stops.value;
 
-   
-    const onPressEnter = async (event) => {
-        if (selectedStops.value.length === 1) {
-            await playbackService.play(selectedStops.value[0]);
-            return;
-        }
+    return sortField.value
+      ? orderBy(fuzzy.search(filterKeywords.value), extendedSortFields.value, sortOrder.value)
+      : fuzzy.search(filterKeywords.value)
+  });
 
-        event.shiftKey ? queueStore.queueToTop(selectedStops.value) : queueStore.queue(selectedStops.value);
 
-        if (event.ctrlKey || event.metaKey) {
-            await playbackService.play(selectedStops.value[0]);
-        }
+    
 
-        go('queue');
-    }
 
-   
-    const sortOrder = ref('asc');
+  const extendedSortFields = computed(() => {
 
-    const sort = (by = sortField.value, order = sortOrder.value) => {
-        sortField.value = by;
-        sortOrder.value = order;
-    };
+    if (!sortField.value) return null;
 
-    eventBus.on('SONGS_DELETED', deletedSongs => (playables.value = differenceBy(playables.value, deletedSongs, 'id')))
+    let extended = arrayify(sortField.value);
 
-    provideReadonly(StopsKey, filteredStops, false)
-    provideReadonly(SelectedStopsKey, selectedStops, false)
-    provideReadonly(StopListConfigKey, config)
-    provideReadonly(StopListContextKey, context)
-    provideReadonly(StopListSortFieldKey, sortField)
-    provideReadonly(StopListSortOrderKey, sortOrder)
-    provide(StopListFilterKeywordsKey, filterKeywords)
+    if (sortField.value === 'track') {
+      extended = ['disc', 'track', 'title']
+    } 
 
-    return {
-        stopList,
-        stops,
-        config,
-        context,
-        sortField,
-        sortOrder,
-        selectedStops,
-        isPhone,
-        onPressEnter,        
-        applyFilter,
-        onScrollBreakpoint,
-        sort
-    }
-}      
+    return extended
+  });
+
+ 
+  const sortField = ref((() => {
+    if (!config.sortable) return null;
+    return 'title'
+  })());
+
+  const sortOrder = ref('asc');
+
+  const sort = (by = sortField.value, order = sortOrder.value) => {
+    sortField.value = by
+    sortOrder.value = order
+  }
+
+  eventBus.on('STOPS_DELETED', deletedStops => (stops.value = differenceBy(stops.value, deletedStops, 'id')))
+
+  provideReadonly(StopsKey, filteredStops, false)
+  provideReadonly(SelectedStopsKey, selectedStops, false)
+  provideReadonly(StopListConfigKey, config)
+  provideReadonly(StopListContextKey, context)
+  provideReadonly(StopListSortFieldKey, sortField)
+  provideReadonly(StopListSortOrderKey, sortOrder)
+  provide(StopListFilterKeywordsKey, filterKeywords)
+
+  return {
+      stopList,
+      stops,
+      config,
+      context,
+      sortField,
+      sortOrder,
+      selectedStops,
+      isPhone,
+      applyFilter,
+      onScrollBreakpoint,
+      sort
+  }
+}

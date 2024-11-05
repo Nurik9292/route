@@ -2,6 +2,7 @@
 import { createApp } from 'vue';
 import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
+import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet';
 import { 
     faBars, 
     faHome, 
@@ -31,7 +32,8 @@ import {
     faRefresh,
     faUpload,
     faShield,
-    faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
+    faCircleQuestion,
+    faShopSlash } from '@fortawesome/free-solid-svg-icons';
 
 import App from './App.vue';
 import Router from './router';
@@ -73,7 +75,8 @@ library.add(
     faRefresh,
     faUpload,
     faShield,
-    faCircleQuestion);
+    faCircleQuestion,
+    faShopSlash);
 
 
 const app = createApp(App);
@@ -83,6 +86,9 @@ app.provide(RouterKey, new Router(routes));
 app.use(store);
 app.component('Icon', FontAwesomeIcon);
 app.component('IconLayers', FontAwesomeLayers);
+app.component('LMap', LMap);
+app.component('LTileLayer', LTileLayer);
+app.component('LMarker', LMarker);
 
 directives.forEach(directive => {
     app.directive(directive.name, directive);

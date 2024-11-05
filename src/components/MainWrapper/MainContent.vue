@@ -2,7 +2,6 @@
     <section id="mainContent" class="flex-1 relative overflow-hidden">
         <HomeView v-show="screen === 'Home'" />
         <StopsView v-show="screen === 'Stops'"/>
-        <StopsView v-show="screen === 'Stops'"/>
         
         <ProfileView v-if="screen === 'Profile'" />
         <UserView v-if="screen === 'Users'" />

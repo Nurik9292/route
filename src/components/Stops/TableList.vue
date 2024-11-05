@@ -17,12 +17,12 @@
                 data-testid="header-track-number"
                 role="button"
                 title="Sort by track number"
-                @click="sort('track')"
+                @click="sort('id')"
             >
                 #
                 <template v-if="config.sortable">
-                    <Icon v-if="sortField === 'track' && sortOrder === 'asc'" :icon="['fas', 'caret-up']" class="text-k-highlight" />
-                    <Icon v-if="sortField === 'track' && sortOrder === 'desc'" :icon="['fas', 'caret-down']" class="text-k-highlight" />
+                    <Icon v-if="sortField === 'id' && sortOrder === 'asc'" :icon="['fas', 'caret-up']" class="text-k-highlight" />
+                    <Icon v-if="sortField === 'id' && sortOrder === 'desc'" :icon="['fas', 'caret-down']" class="text-k-highlight" />
                 </template>
             </span>
             
@@ -40,24 +40,33 @@
                 </template>
             </span>
 
-            <template v-if="config.collaborative">
-              <span class="collaborator">User</span>
-              <span class="added-at">Added</span>
-            </template>        
+          <span class="action">
+            Actions
+          </span>
         </div>
 
         <VirtualScroller
+          v-slot="{ item }"
           :item-height="64"
           :items="rows"
+          @click="onClick(item, $event)"
+          @scroll="onScroll"
+          @scrolled-to-end="$emit('scrolled-to-end')"
          >
-        <ListItem/>
+        <ListItem
+          :key="item.stop.id"
+          :item="item"
+          draggable="true"
+          @click="onClick(item, $event)"
+        />
       </VirtualScroller>
     </div>
 </template>
 
 <script>
-import { StopListConfigKey, StopListSortFieldKey, StopListSortOrderKey, SelectedStopsKey } from '@/symbols';
-import { requireInjection } from '@/utils';
+import isMobile from 'ismobilejs';
+import { nextTick } from 'vue';
+import { throttle } from 'lodash';
 
 import VirtualScroller from '../Ui/VirtualScroller.vue';
 import ListItem from './ListItem.vue';
@@ -71,44 +80,93 @@ export default {
       ListItem
     },
 
-    data() {
-      const [selectedStops, setSelectedStops] = requireInjection(SelectedStopsKey);
-      const [sortField, setSortField] = requireInjection(StopListSortFieldKey);
-      const [sortOrder, setSortOrder] = requireInjection(StopListSortOrderKey);
-      const [config] = requireInjection(StopListConfigKey, [{}]);
+    props: {
+      stops: {
+        type: Array,
+        default: []
+      },
+      selectedStops: {
+        type: Array,
+        default: []
+      },
+      config: {
+        type: Object,
+        default: {}
+      },
+      sortField: {
+        type: String,
+        default: 'title'
+      },
+      sortOrder: {
+        
+      }
+    },
 
+    data() {
         return {
             wrapper: null,
             lastSelectedRow: null,
             sortFields: [],
             rows: [],
             lastScrollTop: 0,
-            sortField,
-            setSortField,
-            config,
-            sortOrder,
-            setSortOrder,
-            selectedStops,
-            setSelectedStops
+            throttledResize: null,
 
         }
     },
 
 
-    mounted() {
-      
+    mounted() {   
+      nextTick(() => {
+          this.wrapper = this.$refs.wrapper;
+        
+          if (isMobile.any) {
+            this.wrapper.setAttribute('tabindex', '0');
+          }
+        
+          this.throttledResize = throttle(() => {
+            this.$emit('resize');
+          }, 100);
+
+          window.addEventListener('resize', this.throttledResize);
+      });
+      this.render()
+    },
+
+    beforeUnmount() {
+      window.removeEventListener('resize', this.throttledResize);
+    },
+
+    watch: {
+      stops: {
+          handler() {
+            this.render();
+          },
+          deep: true,
+      },
     },
 
     methods: {
+
+      onScroll(e) {
+          const scroller = e.target;
+        
+          if (scroller.scrollTop > 512 && this.lastScrollTop < 512) {
+            this.$emit('scroll-breakpoint', 'down');
+          } else if (scroller.scrollTop < 512 && this.lastScrollTop > 512) {
+            this.$emit('scroll-breakpoint', 'up');
+          }
+        
+          this.lastScrollTop = scroller.scrollTop;
+      },
 
       render() {
         if (!this.config.sortable)
           this.sortFields = [];
 
-        this.rows = generateRows();
+        this.rows = this.generateRows();
       },
 
-      generateRows() {
+      generateRows() {        
         const selectedIds = this.selectedStops.map(stop => stop.id);
         return this.stops.map(stop => ({
           stop,
@@ -118,11 +176,25 @@ export default {
         
       sort(field) {
           if (!this.config.sortable) return;
-          this.setSortField(field);
-          this.setSortOrder(this.sortOrder === 'asc' ? 'desc' : 'asc');
-          this.$emit('sort', field, this.sortOrder);
+          const newSortField = field;
+          const newSortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+          this.$emit('sort',newSortField, newSortOrder);
       },
-    }
+
+      onClick (row, event) {
+        
+        if (isMobile.any) {
+          toggleRow(row)
+          return;
+        }
+      },
+
+      toggleRow (row) {
+        row.selected = !row.selected;
+        this.lastSelectedRow = row;
+      }
+      
+  }
 
 }
 </script>
@@ -142,7 +214,7 @@ export default {
   .stop-list-header > span, .stop-item > span {
     @apply text-left p-2 align-middle text-ellipsis overflow-hidden whitespace-nowrap;
 
-    &.time {
+    &.action {
       @apply basis-20 overflow-visible;
     }
 
@@ -150,13 +222,6 @@ export default {
       @apply basis-16 pl-6;
     }
 
-    &.album {
-      @apply basis-[27%];
-    }
-
-    &.collaborator {
-      @apply basis-[72px] text-center;
-    }
 
     &.added-at {
       @apply basis-36 text-left;
@@ -164,10 +229,6 @@ export default {
 
     &.extra {
       @apply basis-12 text-center;
-    }
-
-    &.play {
-      @apply hidden no-hover:block;
     }
 
     &.title-stop {
@@ -207,8 +268,8 @@ export default {
       width: 200%;
     }
 
-    .stop-item :is(.track-number, .album, .time, .added-at),
-    .stop-list-header :is(.track-number, .album, .time, .added-at) {
+    .stop-item :is(.track-number, .album, .action, .added-at),
+    .stop-list-header :is(.track-number, .album, .action, .added-at) {
       display: none;
     }
 

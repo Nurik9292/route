@@ -10,6 +10,12 @@
     </label>
 
     <div v-else :class="columnClass" class="grid gap-3">
+        <span v-if="$slots.label1">
+            <slot name="label1" />
+        </span>
+        <span v-if="$slots.label2">
+            <slot name="label2" />
+        </span>
         <slot />
     </div>
 </template>
@@ -29,6 +35,7 @@ export default {
 
     computed: {
         columnClass() {
+            
             switch (this.cols) {
                 case 1:
                     return 'grid-cols-1';

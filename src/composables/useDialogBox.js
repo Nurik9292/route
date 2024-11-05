@@ -1,6 +1,6 @@
 import { requireInjection } from '@/utils';
 import { DialogBoxKey } from '@/symbols';
-import DialogBox from '@/components/Ui/DialogBox.vue';
+
 
 let dialogBox;
 

@@ -3,7 +3,6 @@ import { http } from '@/services';
 
 class authAPI {
     postSignIn( credentials ) {
-      console.log(credentials);
       
       return http.post( 'auth/login', credentials );
     }

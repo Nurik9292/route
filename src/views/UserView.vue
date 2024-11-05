@@ -79,10 +79,6 @@ export default {
         showAddUserForm() {
             eventBus.emit('MODAL_SHOW_ADD_USER_FORM');
         },
-
-        showInviteUserForm() {
-            eventBus.emit('MODAL_SHOW_INVITE_USER_FORM');
-        }
     },
 
    

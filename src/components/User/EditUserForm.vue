@@ -56,27 +56,10 @@ export default {
         FormRow
     },
 
-    props: {
-        user: {
-            type: Object,
-            required: true
-        }
-    },
-
     setup() {
         const { showOverlay, hideOverlay } = useOverlay();
         const { toastSuccess } = useMessageToaster();
         const { showConfirmDialog } = useDialogBox();
-        
-        return {
-            showConfirmDialog,
-            showOverlay,
-            hideOverlay,
-            toastSuccess,
-        }
-    },
-
-    data() {
         const user = useModal().getFromContext('user');
         const originalData = {
           name: user.name,
@@ -84,9 +67,18 @@ export default {
         }
 
         return {
-          user,
-          updateData: reactive({ ...originalData }),
-          originalData
+            showConfirmDialog,
+            showOverlay,
+            hideOverlay,
+            toastSuccess,
+            originalData,
+            user
+        }
+    },
+
+    data() {
+        return {
+          updateData: reactive({ ...this.originalData }),
         }
   },
 

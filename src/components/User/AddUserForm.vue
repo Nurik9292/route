@@ -7,12 +7,23 @@
         <main class="space-y-5">
             <FormRow>
                 <template #label>Имя</template>
-                <TextInput v-model="newUser.name" v-focus name="name" required title="Name" />
+                <TextInput 
+                    v-model="newUser.name" 
+                    v-focus name="name" 
+                    required 
+                    title="Name" 
+                />
             </FormRow>
             <FormRow>
                 <template #label>Парооль</template>
-                <TextInput v-model="newUser.password" autocomplete="new-password" name="password" required
-                    title="Password" type="password" />
+                <TextInput 
+                    v-model="newUser.password" 
+                    autocomplete="new-password" 
+                    name="password" 
+                    required
+                    title="Password" 
+                    type="password" 
+                />
                 <template #help>Мин. 10 персонажей. Должно представлять собой смесь букв, цифр и символов.</template>
             </FormRow>
             <FormRow>
@@ -20,7 +31,8 @@
                     <CheckBox v-model="newUser.is_admin" name="is_admin" />
                     Пользователь является администратором
                     <TooltipIcon
-                        title="Администраторы могут выполнять административные задачи, такие как управление пользователями и.т.д." />
+                        title="Администраторы могут выполнять административные задачи, такие как управление пользователями и.т.д." 
+                    />
                 </div>
             </FormRow>
         </main>
@@ -87,7 +99,7 @@ export default {
 
             try {
                 this.store(this.newUser);
-                this.toastSuccess(`New user "${this.newUser.name}" created.`);
+                this.toastSuccess(`Новый сотрудник "${this.newUser.name}" создан.`);
                 this.close();
             } catch (error) {
                 this.errorHandler.handleHttpError(error);
@@ -101,7 +113,7 @@ export default {
         },
 
         async maybeClose() {
-    
+            
             const emptyUserData = {
                 name: '',
                 password: '',
@@ -113,7 +125,7 @@ export default {
                 return;
             }
 
-            if (await  this.showConfirmDialog('Discard all changes?')) {
+            if (await  this.showConfirmDialog('Отменить все изменения?')) {
                 this.close();
             }
         },

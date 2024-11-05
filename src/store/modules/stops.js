@@ -1,5 +1,7 @@
-import { secondsToHumanReadable, isStop, arrayify, use, logger } from "@/utils";
-import slugify from 'slugify';
+import stopAPI from "@/api/stopAPI";
+import { isStop, arrayify, use } from "@/utils";
+import { unionBy, merge, differenceBy } from 'lodash';
+
 
 export default {
     namespaced: true,
@@ -12,9 +14,9 @@ export default {
     },
 
     getters: {
-        
-        getFormattedLength( state , stops) {
-            return secondsToHumanReadable(sumBy(arrayify(stops), 'length'));
+
+        getStops(state) {
+            return state.stops;
         },
 
         byId({ state }, id) {
@@ -31,44 +33,95 @@ export default {
     },
 
     mutations: {
-        SYNC_WITH_VAULT ( {state, dispatch} , stops) {
-            arrayify(stops).forEach(stop => {
+        SYNC_WITH_VAULT(state, stop) {
+            state.vault.set(stop.id, stop);
+        },
+
+        SET_STOPS(state, stops) {
+            state.stops = stops;
+        },
+
+        ADD_STOP(state, stop) {
+            state.stops.push(stop);
+        },
+
+
+        UPDATE_STOP(state, updatedStop) {
+            const index = state.stops.findIndex(stop => stop.id === updatedStop.id);
+            if (index !== -1) {
+                state.stops.splice(index, 1, updatedStop);
+            }
+        },
+
+        REMOVE_STOP(state, stop) {
+            state.stops = differenceBy(state.stops, [stop], 'id');
+            state.vault.delete(stop.id);
+          },
+
+    },
+
+    actions: {
+
+        async store({commit}, data) {
+            const stop = await stopAPI.store(data);
+            commit('ADD_STOP', stop);
+            return stop;            
+        },
+
+        async update({commit},{stopId, data}) {
+            const updateStop = await stopAPI.update(stopId, data);
+            commit('UPDATE_STOP', updateStop);
+            
+            return updateStop;
+        },
+
+        async destroy({ commit }, stop) {
+            await stopAPI.destroy(stop.id);
+            commit('REMOVE_STOP', stop);
+        },
+
+        async paginate({ commit, state, dispatch }, params) {
+
+            const res = await stopAPI.getAll(params);
+            
+            const stops = res._embedded.stopPaginateResponseList;
+            const links = res._links;
+        
+            const syncedStops = await dispatch('syncWithVault', stops);
+            const mergedStops = unionBy(state.stops, syncedStops, 'id');
+            const { sort = 'id', order = 'asc' } = params;
+
+            const sortedStops = mergedStops.sort((a, b) => {
+                if (order === 'asc') {
+                    return a[sort] > b[sort] ? 1 : -1;
+                } else {
+                    return a[sort] < b[sort] ? 1 : -1;
+                }
+            });
+            
+
+            commit('SET_STOPS', sortedStops);
+
+            return links.next ? ++res.page.number : null;
+        },
+
+        syncWithVault({ state, commit }, stops) {
+
+            const syncedStops = arrayify(stops).map(stop => {
                 let local = state.vault.get(stop.id);
 
                 if (local) {
-                     merge(local, stop); 
+                    merge(local, stop);
                 } else {
-                    local = reactive(stop)
-                    state.vault.set(local.id, local)
+                    local = stop;
+                    commit('SYNC_WITH_VAULT', local);
                 }
-            })
-        },
 
-        SET_STOPS ( state , stops) {
-            state.stops = stops;
-          }
-    
-    },
+                return local;
+            });
 
-    actions:{
+            return syncedStops;
+        }
 
-        async resolve ({ getters, commit }, id) {
-            let stop = getters.byId(id);
-            if (!stop) {
-              try {
-                const response = await http.get(`stop/${id}`);
-                commit('SYNC_WITH_VAULT', response);
-                stop = response[0]
-              } catch (error) {
-                logger.error(error);
-              }
-            }
-            return playable
-        },
-
-        match ({}, { title, songs }) {
-            title = slugify(title.toLowerCase());
-            return songs.find(song => slugify(song.title.toLowerCase()) === title) || null;
-          },
-    }       
+    }
 }

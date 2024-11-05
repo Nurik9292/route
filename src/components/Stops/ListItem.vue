@@ -1,6 +1,6 @@
 <template>
     <article 
-        :class="{ playing, external, selected: true }" 
+        :class="{ selected: item.selected }" 
         class="stop-item group text-k-text-secondary border-b border-k-border !max-w-full h-[64px] flex
         items-center transition-[background-color,_box-shadow] ease-in-out duration-200
         focus:rounded-md focus focus-within:rounded-md focus:ring-inset focus:ring-1 focus:!ring-k-accent
@@ -9,37 +9,40 @@
         tabindex="0">
         <span class="track-number">
             <span  class="text-k-text-secondary">
-                1
+                {{ item.stop.id }}
             </span>
         </span>
         <span class="title-stop flex flex-col gap-2 overflow-hidden">
             <span class="title text-k-text-primary !flex gap-2 items-center">
-                Test
+                {{ item.stop.title }}
             </span>
             <span class="stop"> test </span>
         </span>
        
-        <template>
-       
-          
-        </template>
+        <span class="action">
+            <div class="space-x-2">
+                <BtnComponent highlight small @click="edit">Изменить</BtnComponent>
+                <BtnComponent danger small @click="destroy">Удалить</BtnComponent>
+            </div>
+        </span>
       
     </article>
 </template>
 
 <script>
-import { faPodcast } from '@fortawesome/free-solid-svg-icons'
-import { mapState } from 'vuex'
-import { requireInjection, secondsToHis } from '@/utils'
+import { mapActions, mapState } from 'vuex';
+import { requireInjection, secondsToHis, eventBus } from '@/utils'
 import { StopListConfigKey } from '@/symbols'
+import { useDialogBox, useMessageToaster } from "@/composables";
 
+import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import ItemBars from '../Ui/ItemBars.vue'
 
 export default {
     name: 'ListItem',
 
     components: {
-        ItemBars,
+        ItemBars, BtnComponent
     },
 
     props: {
@@ -49,9 +52,13 @@ export default {
         }
     },
 
-    data() {
+    setup() {
+        const { showConfirmDialog } = useDialogBox();
+        const {toastSuccess } = useMessageToaster();
+
         return {
-            faPodcast
+            showConfirmDialog,
+            toastSuccess
         }
     },
 
@@ -60,41 +67,34 @@ export default {
             config: () => requireInjection(StopListConfigKey, [{}])[0]
         }),
 
-        // currentUser() {
-        //     return useAuthorization().currentUser
-        // },
-
-
-        playable() {
-            // return this.item.playable
-        },
-
-        playing() {
-            // return ['Playing', 'Paused'].includes(this.playable.playback_state)
-            return 'Playing';
-        },
-
-        external() {
-            // return iStop(this.playable);
-            return false;
+        currentUser() {
+            return useAuthorization().currentUser;
         },
 
         fmtLength() {
             return secondsToHis(this.playable.length)
         },
-
-     
-
-        collaborator() {
-            return (this.playable.collaboration || {}).user
-        }
     },
 
+
     methods: {
-        play() {
-            this.$emit('play', this.playable)
+
+        ...mapActions('stops', {
+            stopDestroy: 'destroy'
+        }),
+
+       async edit() {
+            eventBus.emit('MODAL_SHOW_EDIT_STOP_FORM', this.item.stop);
+        },
+
+        async destroy() {
+            if (!await this.showConfirmDialog(`Удалить Остановку ${this.item.stop.title}?`)) return;
+            
+            await this.stopDestroy(this.item.stop);
+            this.toastSuccess(`Остановка "${this.item.title}" удалена.`);
         }
     }
+
 }
 </script>
 
@@ -112,12 +112,7 @@ article {
         @apply bg-white/10;
     }
 
-    &.playing {
-
-        .title {
-            @apply text-k-accent !important;
-        }
-    }
+   
 
     .title-stop {
         span {

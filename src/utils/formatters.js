@@ -1,27 +1,3 @@
-export const secondsToHumanReadable = (total) => {
-    total = Math.round(total)
-
-    const hours = Math.floor(total / 3600)
-    const minutes = Math.floor((total - hours * 3600) / 60)
-    const seconds = total - hours * 3600 - minutes * 60
-
-    const parts = []
-
-    if (hours > 0) {
-        parts.push(`${hours} hr`)
-    }
-
-    if (minutes > 0) {
-        parts.push(`${minutes} min`)
-    }
-
-    if (seconds > 0 && hours < 1) {
-        parts.push(`${seconds} sec`)
-    }
-
-    return parts.join(' ') || '0 sec'
-}
-
 export const secondsToHis = (total) => {
     total = Math.round(total)
     const parts = []

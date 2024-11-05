@@ -1,10 +1,19 @@
 <template>
-    <div ref="scroller" v-overflow-fade class="virtual-scroller will-change-transform overflow-scroll"
-        @scroll.passive="onScroll">
-        <div :style="{ height: `${totalHeight}px` }" class="will-change-transform overflow-hidden">
-            <div :style="{ transform: `translateY(${offsetY}px)` }" class="will-change-transform items-wrapper">
-               
-                <slot   />
+    <div 
+        ref="scroller" 
+        v-overflow-fade 
+        class="virtual-scroller will-change-transform overflow-scroll"
+        @scroll.passive="onScroll"
+    >
+        <div 
+            :style="{ height: `${totalHeight}px` }" 
+            class="will-change-transform overflow-hidden"
+        >
+            <div 
+                :style="{ transform: `translateY(${offsetY}px)` }" 
+                class="will-change-transform items-wrapper"
+            >
+                <slot v-for="item in renderedItems" :item="item" />
             </div>
         </div>
     </div>
@@ -45,10 +54,7 @@ export default {
 
     computed: {
         totalHeight() {
-            // return this.items.length * this.itemHeight
-            return 64
-
-
+            return this.items.length * this.itemHeight;
         },
 
         startPosition() {
@@ -60,21 +66,20 @@ export default {
         },
 
         renderedItems() {
-            // let count = Math.ceil(this.scrollerHeight / this.itemHeight) + 2 * this.renderAhead
-            // count = Math.min(this.items.length - this.startPosition, count)
-            // return this.items.slice(this.startPosition, this.startPosition + count)
-            return []
+            let count = Math.ceil(this.scrollerHeight / this.itemHeight) + 2 * this.renderAhead
+            count = Math.min(this.items.length - this.startPosition, count)
+            return this.items.slice(this.startPosition, this.startPosition + count)
         }
     },
 
     methods: {
         onScroll(e) {
             requestAnimationFrame(() => {
-                this.scrollTop = e.target.scrollTop
-                this.$emit('scroll', e)
+                this.scrollTop = e.target.scrollTop;
+                this.$emit('scroll', e);
 
                 if (this.scroller.scrollTop + this.scroller.clientHeight + this.itemHeight >= this.scroller.scrollHeight) {
-                    this.$emit('scrolled-to-end')
+                    this.$emit('scrolled-to-end');
                 }
             })
         }
@@ -82,6 +87,7 @@ export default {
 
     mounted() {
         if (this.$refs.scroller) {
+            this.scroller = this.$refs.scroller;
             const obs = new ResizeObserver(entries => {            
                 entries.forEach(entry => {
                     this.scrollerHeight = entry.contentRect.height;
