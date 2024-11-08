@@ -1,24 +1,26 @@
 <template>
     <article 
         :class="{ selected: item.selected }" 
-        class="highlight stop-item group text-k-text-secondary border-b border-k-border !max-w-full h-[64px] flex
+        class="highlight route-item group text-k-text-secondary border-b border-k-border !max-w-full h-[64px] flex
         items-center transition-[background-color,_box-shadow] ease-in-out duration-200
         focus:rounded-md focus focus-within:rounded-md focus:ring-inset focus:ring-1 focus:!ring-k-accent
         focus-within:ring-inset focus-within:ring-1 focus-within:!ring-k-accent
-        hover:bg-white/5 hover:ring-inset hover:ring-1 hover:ring-white/10 hover:rounded-md" data-testid="stop-item"
+        hover:bg-white/5 hover:ring-inset hover:ring-1 hover:ring-white/10 hover:rounded-md" data-testid="route-item"
         tabindex="0">
         <span class="track-number">
             <span  class="text-k-text-secondary">
-                {{ item.stop.id }}
+                {{ item.route.id }}
             </span>
         </span>
-        <span class="title-stop flex flex-col gap-2 overflow-hidden">
+        <span class="title-route flex flex-col gap-2 overflow-hidden">
             <span class="title text-k-text-primary !flex gap-2 items-center">
-                {{ item.stop.title }}
+                {{ item.route.title }}
             </span>
-            <span class="stop"> test </span>
+            <span class="route"> Маршрут </span>
         </span>
-       
+        <span class="number-route">
+            55
+        </span>
         <span class="action">
             <div class="space-x-2">
                 <BtnComponent highlight small @click="edit">Изменить</BtnComponent>
@@ -70,24 +72,25 @@ export default {
         currentUser() {
             return useAuthorization().currentUser;
         },
+
+        fmtLength() {
+            return secondsToHis(this.playable.length)
+        },
     },
 
 
     methods: {
 
-        ...mapActions('stops', {
-            stopDestroy: 'destroy'
-        }),
-
+     
        async edit() {
-            eventBus.emit('MODAL_SHOW_EDIT_STOP_FORM', this.item.stop);
+            eventBus.emit('MODAL_SHOW_EDIT_ROUTE_FORM', this.item.route);
         },
 
         async destroy() {
-            if (!await this.showConfirmDialog(`Удалить Остановку ${this.item.stop.title}?`)) return;
+            if (!await this.showConfirmDialog(`Удалить Остановку ${this.item.route.title}?`)) return;
             
-            await this.stopDestroy(this.item.stop);
-            this.toastSuccess(`Остановка "${this.item.stop.title}" удалена.`);
+            await this.routeDestroy(this.item.route);
+            this.toastSuccess(`Остановка "${this.item.route.title}" удалена.`);
         }
     }
 
@@ -114,16 +117,22 @@ article {
           @apply text-k-accent !important;
         }
       }
+
    
 
-    .title-stop {
+    .title-route, number-route {
         span {
            @apply overflow-hidden whitespace-nowrap text-ellipsis block;
         }
     }
 
+    
+
+
     button {
         @apply text-current;
     }
 }
+
+
 </style>

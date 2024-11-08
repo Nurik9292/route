@@ -21,6 +21,8 @@ export default {
                 'edit-user-form': defineAsyncComponent(() => import('../User/EditUserForm.vue')),
                 'add-stop-form': defineAsyncComponent(() => import('../Stops/AddStopForm.vue')),
                 'edit-stop-form': defineAsyncComponent(() => import('../Stops/EditStopForm.vue')),
+                'add-route-form': defineAsyncComponent(() => import('../Routes/AddRouteForm.vue')),
+                'edit-route-form': defineAsyncComponent(() => import('../Routes/EditRouteForm.vue')),
             },
             activeModalName: null,
             context: {},
@@ -37,12 +39,16 @@ export default {
 
         eventBus.on('MODAL_SHOW_ADD_USER_FORM', () => (this.activeModalName = 'add-user-form'));
         eventBus.on('MODAL_SHOW_ADD_STOP_FORM', () => (this.activeModalName = 'add-stop-form'));
+        eventBus.on('MODAL_SHOW_ADD_ROUTE_FORM', () => (this.activeModalName = 'add-route-form'));
         eventBus.on('MODAL_SHOW_EDIT_USER_FORM', (user) => {
                 this.context = { user };
                 this.activeModalName = 'edit-user-form'});
         eventBus.on('MODAL_SHOW_EDIT_STOP_FORM', (stop) => {
                 this.context = { stop };
                 this.activeModalName = 'edit-stop-form'});
+        eventBus.on('MODAL_SHOW_EDIT_ROUTE_FORM', (route) => {
+                this.context = { route };
+                this.activeModalName = 'edit-route-form'});
     },
 
     methods: {

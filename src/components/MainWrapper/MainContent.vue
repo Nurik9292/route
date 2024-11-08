@@ -2,6 +2,7 @@
     <section id="mainContent" class="flex-1 relative overflow-hidden">
         <HomeView v-show="screen === 'Home'" />
         <StopsView v-show="screen === 'Stops'"/>
+        <RoutesView v-show="screen === 'Routes'"/>
         
         <ProfileView v-if="screen === 'Profile'" />
         <UserView v-if="screen === 'Users'" />
@@ -13,6 +14,7 @@ import HomeView from '@/views/HomeView.vue';
 import StopsView from '@/views/StopsView.vue';
 import ProfileView from '@/views/ProfileView.vue';
 import UserView from '@/views/UserView.vue';
+import RoutesView from '@/views/RoutesView.vue';
 
 import { useRouter } from '@/composables';
 
@@ -23,7 +25,8 @@ export default {
         HomeView, 
         StopsView,
         ProfileView,
-        UserView
+        UserView,
+        RoutesView
     },
 
     data() {

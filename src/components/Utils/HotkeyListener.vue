@@ -41,14 +41,7 @@
         onKeyStroke('f', () => eventBus.emit('FOCUS_SEARCH_FIELD'));
         onKeyStroke('q', () => go(isCurrentScreen('Queue') ? -1 : 'queue'));
         onKeyStroke('h', () => go('home'));
-  
-  
-  
-        onKeyStroke('l', () => {
-            if (!queueStore.current) return;
-            favoriteStore.toggleOne(queueStore.current);
-            socketService.broadcast('SOCKET_SONG', queueStore.current);
-        });
+
     }
   }
   </script>

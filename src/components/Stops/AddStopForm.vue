@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="submit" @keydown.esc="maybeClose">
+    <form @submit.prevent="submit">
         <header>
             <h1>Добавить Остановку</h1>
         </header>
@@ -78,10 +78,23 @@ export default {
         }
     },
 
+    mounted() {
+        document.addEventListener('keydown', this.handleKeydown);
+    },
+
+    beforeUnmount() {
+        document.removeEventListener('keydown', this.handleKeydown);
+    },
 
     methods: {
 
         ...mapActions('stops', ['store']),
+
+        handleKeydown(event) {
+            if (event.key === 'Escape') {
+                this.maybeClose();
+            }
+        },
 
         async submit() {
             this.showOverlay();
@@ -98,6 +111,7 @@ export default {
         },
 
         async maybeClose() {
+            
             const emptyStopData = {
                 title: '',
                 lat: '',

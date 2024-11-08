@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="submit" @keydown.esc="maybeClose">
+    <form @submit.prevent="submit">
         <header>
             <h1>Изменить Остановку</h1>
         </header>
@@ -74,9 +74,24 @@ export default {
         };
     },  
 
+    mounted() {
+        document.addEventListener('keydown', this.handleKeydown);
+    },
+
+    beforeUnmount() {
+        document.removeEventListener('keydown', this.handleKeydown);
+    },
+
 
     methods: {
         ...mapActions('stops', ['update']),
+
+        handleKeydown(event) {
+            if (event.key === 'Escape') {
+                this.maybeClose();
+            }
+        },
+
 
         async submit() {
             this.showOverlay();
@@ -96,6 +111,7 @@ export default {
         },
 
         async maybeClose() {
+            
             if (isEqual(this.originalData, this.updateData)) {
                 this.close();
                 return;

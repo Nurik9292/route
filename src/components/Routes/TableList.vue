@@ -1,16 +1,16 @@
 <template>
     <div
         ref="wrapper"
-        class="stop-list-wrap relative flex flex-col flex-1 overflow-auto py-0 px-3 md:p-0"
-        data-testid="stop-list"
+        class="route-list-wrap relative flex flex-col flex-1 overflow-auto py-0 px-3 md:p-0"
+        data-testid="route-list"
         tabindex="0"
-        @keydown.delete.prevent.stop="handleDelete"
-        @keydown.enter.prevent.stop="handleEnter"
+        @keydown.delete.prevent="handleDelete"
+        @keydown.enter.prevent="handleEnter"
         @keydown.a.prevent="handleA"
     >
         <div
             :class="config.sortable ? 'sortable' : 'unsortable'"
-            class="stop-list-header flex z-[2] bg-k-bg-secondary"
+            class="route-list-header flex z-[2] bg-k-bg-secondary"
         >
             <span
                 class="track-number"
@@ -27,7 +27,7 @@
             </span>
             
             <span 
-                class="title-stop"
+                class="title-route"
                 data-testid="header-title"
                 role="button"
                 title="Sort by title"
@@ -38,6 +38,20 @@
                     <Icon v-if="sortField === 'title' && sortOrder === 'asc'" :icon="['fas', 'caret-up']" class="text-k-highlight" />
                     <Icon v-if="sortField === 'title' && sortOrder === 'desc'" :icon="['fas', 'caret-down']" class="text-k-highlight" />
                 </template>
+            </span>
+
+            <span
+              class="number-route"
+              data-testid="header-number"
+              role="button"
+              title="Sort by number"
+              @click="sort('number')"
+            >
+              Number
+              <template v-if="config.sortable">
+                  <Icon v-if="sortField === 'number' && sortOrder === 'asc'" :icon="['fas', 'caret-up']" class="text-k-highlight" />
+                  <Icon v-if="sortField === 'number' && sortOrder === 'desc'" :icon="['fas', 'caret-down']" class="text-k-highlight" />
+              </template>
             </span>
 
           <span class="action">
@@ -54,7 +68,7 @@
           @scrolled-to-end="$emit('scrolled-to-end')"
          >
         <ListItem
-          :key="item.stop.id"
+          :key="item.route.id"
           :item="item"
           draggable="true"
           @click="onClick(item, $event)"
@@ -81,11 +95,11 @@ export default {
     },
 
     props: {
-      stops: {
+      routes: {
         type: Array,
         default: []
       },
-      selectedStops: {
+      selectedRoutes: {
         type: Array,
         default: []
       },
@@ -137,7 +151,7 @@ export default {
     },
 
     watch: {
-      stops: {
+      routes: {
           handler() {
             this.render();
           },
@@ -167,10 +181,10 @@ export default {
       },
 
       generateRows() {        
-        const selectedIds = this.selectedStops.map(stop => stop.id);
-        return this.stops.map(stop => ({
-          stop,
-          selected: selectedIds.includes(stop.id)
+        const selectedIds = this.selectedRoutes.map(route => route.id);
+        return this.routes.map(route => ({
+          route,
+          selected: selectedIds.includes(route.id)
         }));
       },
         
@@ -202,24 +216,25 @@ export default {
 
 
 <style lang="postcss">
-.stop-list-wrap {
+.route-list-wrap {
   .virtual-scroller {
     @apply flex-1;
   }
 
-  &.dragging .stop-item * {
+  &.dragging .route-item * {
     @apply pointer-events-none;
   }
 
-  .stop-list-header > span, .stop-item > span {
+  .route-list-header > span, .route-item > span {
     @apply text-left p-2 align-middle text-ellipsis overflow-hidden whitespace-nowrap;
+
 
     &.track-number {
       @apply basis-16 pl-6;
     }
 
-    &.action {
-      @apply basis-56 text-center;
+    &.collaborator {
+      @apply basis-[72px] text-center;
     }
 
 
@@ -231,12 +246,21 @@ export default {
       @apply basis-12 text-center;
     }
 
-    &.title-stop {
+    &.title-route {
       @apply flex-1;
+    }
+
+    &.action {
+      @apply basis-56 text-center;
+    }
+
+
+    &.number-route {
+      @apply basis-[27%];
     }
   }
 
-  .stop-list-header {
+  .route-list-header {
     @apply tracking-widest uppercase cursor-pointer text-k-text-secondary;
 
     .extra {
@@ -259,7 +283,7 @@ export default {
       }
     }
 
-    .stop-item {
+    .route-item {
       padding: 8px 12px;
       position: relative;
       white-space: nowrap;
@@ -268,19 +292,14 @@ export default {
       width: 200%;
     }
 
-    .stop-item :is(.track-number, .title-stop, .action, .added-at),
-    .stop-list-header :is(.track-number, .title-stop, .action, .added-at) {
+    .route-item :is(.track-number, .title-route, .number-route, .action, .added-at),
+    .route-list-header :is(.track-number, .title-route, .number-route, .action, .added-at) {
       display: none;
     }
 
-    .stop-item span {
+    .route-item span {
       padding: 0;
       vertical-align: bottom;
-
-      &.thumbnail {
-        display: block;
-        padding-right: 12px;
-      }
     }
   }
 }

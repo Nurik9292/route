@@ -1,5 +1,6 @@
 <template>
     <LMap 
+        :use-global-leaflet="false"
         ref="map" 
         v-model:zoom="defaultZoom" 
         :center="defaultCenter"
