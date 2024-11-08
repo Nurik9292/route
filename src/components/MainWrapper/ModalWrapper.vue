@@ -23,6 +23,8 @@ export default {
                 'edit-stop-form': defineAsyncComponent(() => import('../Stops/EditStopForm.vue')),
                 'add-route-form': defineAsyncComponent(() => import('../Routes/AddRouteForm.vue')),
                 'edit-route-form': defineAsyncComponent(() => import('../Routes/EditRouteForm.vue')),
+                'add-city-form': defineAsyncComponent(() => import('../City/AddCityForm.vue')),
+                'edit-city-form': defineAsyncComponent(() => import('../City/EditCityForm.vue')),
             },
             activeModalName: null,
             context: {},
@@ -40,6 +42,7 @@ export default {
         eventBus.on('MODAL_SHOW_ADD_USER_FORM', () => (this.activeModalName = 'add-user-form'));
         eventBus.on('MODAL_SHOW_ADD_STOP_FORM', () => (this.activeModalName = 'add-stop-form'));
         eventBus.on('MODAL_SHOW_ADD_ROUTE_FORM', () => (this.activeModalName = 'add-route-form'));
+        eventBus.on('MODAL_SHOW_ADD_CITY_FORM', () => (this.activeModalName = 'add-city-form'));
         eventBus.on('MODAL_SHOW_EDIT_USER_FORM', (user) => {
                 this.context = { user };
                 this.activeModalName = 'edit-user-form'});
@@ -49,6 +52,9 @@ export default {
         eventBus.on('MODAL_SHOW_EDIT_ROUTE_FORM', (route) => {
                 this.context = { route };
                 this.activeModalName = 'edit-route-form'});
+        eventBus.on('MODAL_SHOW_EDIT_CITY_FORM', (city) => {
+                this.context = { city };
+                this.activeModalName = 'edit-city-form'});
     },
 
     methods: {

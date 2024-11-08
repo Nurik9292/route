@@ -33,8 +33,8 @@ import {
     faUpload,
     faShield,
     faCircleQuestion,
-    faShopSlash } from '@fortawesome/free-solid-svg-icons';
-
+    faShopSlash,
+    faBuildingCircleExclamation } from '@fortawesome/free-solid-svg-icons';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 import PickList from 'primevue/picklist';
@@ -83,7 +83,8 @@ library.add(
     faUpload,
     faShield,
     faCircleQuestion,
-    faShopSlash);
+    faShopSlash,
+    faBuildingCircleExclamation);
 
 
 const app = createApp(App);
