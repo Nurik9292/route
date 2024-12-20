@@ -44,9 +44,7 @@ export default {
     actions: {
         async paginate({ commit, state }, params) {
 
-         
             const res = await routeAPI.getAll(params);
-            console.log(res);
             
             const routes = res._embedded.routeList;
             const links = res._links;

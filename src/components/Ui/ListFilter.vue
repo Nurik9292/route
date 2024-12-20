@@ -2,13 +2,19 @@
     <div @click="onClickOutside">
         <form
             class="flex border rounded-md overflow-hidden border-solid border-white/10 focus-within:bg-black/10 focus-within:border-white/40"
-            @submit.prevent>
+            @submit.prevent
+        >
             <BtnComponent v-tooltip title="Filter" transparent unrounded @click.prevent="toggleInput">
                 <Icon :icon="['fas', 'filter']" fixed-width />
             </BtnComponent>
-            <TextInput v-show="showingInput" ref="input" v-model="keywords"
+            <TextInput 
+                v-show="showingInput" 
+                ref="input" 
+                v-model="keywords"
                 class="!text-k-text-primary !bg-transparent !rounded-none !pl-0 !h-[unset] placeholder:text-white/50 focus-visible:outline-0"
-                placeholder="Keywords" type="search" @blur="maybeClose" 
+                placeholder="Keywords" 
+                type="search" 
+                @blur="maybeClose" 
             />
         </form>
     </div>

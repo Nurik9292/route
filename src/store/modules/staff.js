@@ -1,6 +1,6 @@
 import { differenceBy, merge } from 'lodash';
 import { arrayify } from '@/utils';
-import userAPI from '@/api/userAPI';
+import staffAPI from '@/api/staffAPI';
 
 export default {
     namespaced: true,
@@ -9,6 +9,7 @@ export default {
         return {
             users: [],
             current: null,
+            avatar: null,
             vault: new Map()
         }
     },
@@ -16,6 +17,10 @@ export default {
     getters: {
         currentUser(state) {
             return state.current;
+          },
+
+          getAvatar(state) {
+            return state.avatar;
           },
 
           byId: (state) => (id) => {
@@ -54,6 +59,10 @@ export default {
             state.vault.delete(user.id);
           },
 
+          SET_AVATAR(state , avatar) {
+            state.avatar = avatar;
+          },
+
           SYNC_WITH_VAULT(state, users) {
             arrayify(users).forEach(user => {
               let local = state.vault.get(user.id);
@@ -70,9 +79,13 @@ export default {
           },
           
           async fetchUsers({ commit, dispatch }) {
-            const users = await userAPI.getAll();            
+            const users = await staffAPI.getAll();                      
             await dispatch('syncWithVault', users);
             commit('SET_USERS', users);
+          },
+
+          async fetchAvatar({commit}, avatar) {          
+             commit('SET_AVATAR', await staffAPI.fetchAvatar(avatar));
           },
         
           syncWithVault({ commit }, users) {
@@ -80,7 +93,7 @@ export default {
           },
         
           async store({ dispatch }, data) {
-            const user = await userAPI.store(data);
+            const user = await staffAPI.store(data);
             await dispatch('add', user);
             return user;
           },
@@ -90,14 +103,14 @@ export default {
             commit('ADD_USER', user);
           },
         
-          async update({ dispatch }, userId, data ) {
-            const updatedUser =  await userAPI.update(userId, data);
+          async update({ dispatch },  data ) {
+            const updatedUser =  await staffAPI.update(data);
             await dispatch('syncWithVault', updatedUser);
             return updatedUser;
           },
         
           async destroy({ commit }, user) {
-            await userAPI.destroy(user.id);
+            await staffAPI.destroy(user.id);
             commit('REMOVE_USER', user);
           }
     }

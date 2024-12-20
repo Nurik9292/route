@@ -34,7 +34,9 @@ import {
     faShield,
     faCircleQuestion,
     faShopSlash,
-    faBuildingCircleExclamation } from '@fortawesome/free-solid-svg-icons';
+    faBuildingCircleExclamation,
+    faImage, 
+    faSquareXmark} from '@fortawesome/free-solid-svg-icons';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 import PickList from 'primevue/picklist';
@@ -84,7 +86,9 @@ library.add(
     faShield,
     faCircleQuestion,
     faShopSlash,
-    faBuildingCircleExclamation);
+    faBuildingCircleExclamation,
+    faImage,
+    faSquareXmark);
 
 
 const app = createApp(App);

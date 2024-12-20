@@ -24,11 +24,7 @@ export default {
       }
     },
     
-    data() {
-      return {
-          avatar: this.user.avatar
-      }
-    },
+ 
    
     methods: {
       onError() {
@@ -36,7 +32,10 @@ export default {
       },
 
       avatars() {        
-        return this.avatar ? this.avatar : defaultAvatar;
+        if (this.user.avatar && this.user.avatar.startsWith('data:image'))  
+          return this.user.avatar;
+    
+        return this.user.avatar ? 'http://localhost:8081/admin/staff/avatar/' + this.user.avatar : defaultAvatar;
       }
     }
 }

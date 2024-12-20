@@ -26,11 +26,11 @@ export default {
 
     actions: {
         async init({dispatch, commit}) {
-            const currentUser = await homeAPI.fetchData();
-            
-            commit('SET_CURRENT_USER', currentUser);
-
-            await dispatch('user/init', currentUser, { root: true });
+            await homeAPI.fetchData().then(res => {   
+                const currentUser = res;
+                commit('SET_CURRENT_USER', currentUser);
+                dispatch('user/init', currentUser, { root: true });
+            });
         }
     }
 }

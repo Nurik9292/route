@@ -1,19 +1,19 @@
 <template>
     <form @submit.prevent="submit">
         <header>
-            <h1>Добавить Город</h1>
+            <h1>Добавить Баннер</h1>
         </header>
 
         <main class="space-y-5">
             <FormRow >
-                <template #label>Название</template>
-                <TextInput v-model="newCity.title" v-focus name="title" title="Title" required/>
+                <template #label>Изображение</template>
+                <ImageInput v-model="newBanner.banner" v-focus name="banner" title="Banner" required/>
             </FormRow>
         </main>
 
         <footer>
-            <BtnComponent class="BtnComponent-add" type="submit">Save</BtnComponent>
-            <BtnComponent class="BtnComponent-cancel" white @click.prevent="maybeClose">Cancel</BtnComponent>
+            <BtnComponent class="BtnComponent-add" type="submit">Сохранить</BtnComponent>
+            <BtnComponent class="BtnComponent-cancel" white @click.prevent="maybeClose">Отмена</BtnComponent>
         </footer>
     </form>
 </template>
@@ -24,14 +24,14 @@ import { isEqual } from 'lodash';
 import { mapActions } from 'vuex';
 
 import FormRow from '../Ui/Form/FormRow.vue';
-import TextInput from '../Ui/Form/TextInput.vue';
+import ImageInput from '../Ui/Form/ImageInput.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 
 export default {
-    name: 'AddCityForm',
+    name: 'AddBannerForm',
 
     components: {
-        FormRow, TextInput, BtnComponent
+        FormRow, ImageInput, BtnComponent
     },
 
     setup() {
@@ -50,8 +50,8 @@ export default {
 
     data() {
         return {
-            newCity: {
-                title: '',
+            newBanner: {
+                banner: '',
             },
         
         }
@@ -67,7 +67,7 @@ export default {
 
     methods: {
         
-        ...mapActions('cities', ['store']),
+        ...mapActions('banners', ['store']),
 
 
         handleKeydown(event) {
@@ -78,10 +78,11 @@ export default {
 
         async submit() {
             this.showOverlay();
-
+            console.log(this.newBanner);
+            
             try {
-                await this.store(this.newCity);
-                this.toastSuccess(`Новый город "${this.newCity.title}" создан.`);
+                await this.store(this.newBanner);
+                this.toastSuccess(`Новый баннер создан.`);
                 this.close();
             } catch (error) {
                 this.errorHandler.handleHttpError(error);
@@ -92,11 +93,11 @@ export default {
 
         async maybeClose() {
             
-            const emptyCityData = {
-                title: '',
+            const emptyBannerData = {
+                image: '',
             };
 
-            if (isEqual(this.newCity, emptyCityData)) {
+            if (isEqual(this.newBanner, emptyBannerData)) {
                 this.close();
                 return;
             }

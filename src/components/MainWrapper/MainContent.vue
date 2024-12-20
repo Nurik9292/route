@@ -4,6 +4,7 @@
         <StopsView v-show="screen === 'Stops'"/>
         <RoutesView v-show="screen === 'Routes'"/>
         <CityView v-show="screen === 'Cities'"/>
+        <BannerView v-show="screen === 'Banners'"/>
         
         <ProfileView v-if="screen === 'Profile'" />
         <UserView v-if="screen === 'Users'" />
@@ -17,6 +18,7 @@ import ProfileView from '@/views/ProfileView.vue';
 import UserView from '@/views/UserView.vue';
 import RoutesView from '@/views/RoutesView.vue';
 import CityView from '@/views/CityView.vue';
+import BannerView from '@/views/BannerView.vue';
 
 import { useRouter } from '@/composables';
 
@@ -29,7 +31,8 @@ export default {
         ProfileView,
         UserView,
         RoutesView,
-        CityView
+        CityView,
+        BannerView
     },
 
     data() {

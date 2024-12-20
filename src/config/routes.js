@@ -26,11 +26,14 @@ export const routes = [
     path: '/cities',
     screen: 'Cities'
   },
- 
-  
   {
     path: '/profile',
     screen: 'Profile'
+  },
+
+  {
+    path: '/banners',
+    screen: 'Banners'
   },
  
 ]

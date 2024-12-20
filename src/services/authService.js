@@ -1,5 +1,5 @@
 import authAPI from "@/api/authAPI";
-import userAPI from "@/api/userAPI";
+import staffAPI from "@/api/staffAPI";
 import { useLocalStorage } from "@/composables";
 import store from "@/store";
 import { merge } from 'lodash';
@@ -10,8 +10,8 @@ const { get: lsGet, set: lsSet, remove: lsRemove } = useLocalStorage(false);
 
 export const authService = {
 
-  async login(name, password) {
-    this.setTokensUsingCompositeToken(await authAPI.postSignIn({ name, password }));
+  async login(name, password) {    
+    this.setTokensUsingCompositeToken( await authAPI.postSignIn({ name, password }));
   },
 
   async logout() {
@@ -22,7 +22,7 @@ export const authService = {
   getProfile: async () => await http.get < User > ('me'),
 
   async updateProfile (data) {
-    const newUser = await userAPI.me(data);
+    const newUser = await staffAPI.me(data);
     this.destroy();
     merge(store.state['user/current'], newUser);
   },
@@ -34,7 +34,7 @@ export const authService = {
   },
 
   setTokensUsingCompositeToken(compositeToken) {
-    this.setApiToken(compositeToken.token);
+      this.setApiToken(compositeToken);
   },
 
   setApiToken: (token) => lsSet(API_TOKEN_STORAGE_KEY, token),

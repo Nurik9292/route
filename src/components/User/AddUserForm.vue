@@ -28,7 +28,7 @@
             </FormRow>
             <FormRow>
                 <div>
-                    <CheckBox v-model="newUser.is_admin" name="is_admin" />
+                    <CheckBox v-model="newUser.isAdmin" name="isAdmin" />
                     Пользователь является администратором
                     <TooltipIcon
                         title="Администраторы могут выполнять административные задачи, такие как управление пользователями и.т.д." 
@@ -85,7 +85,7 @@ export default {
             newUser: {
                 name: '',
                 password: '',
-                is_admin: false,
+                isAdmin: false,
             },
         };
     },
@@ -117,7 +117,7 @@ export default {
             const emptyUserData = {
                 name: '',
                 password: '',
-                is_admin: false,
+                isAdmin: false,
             };
 
             if (isEqual(this.newUser, emptyUserData)) {

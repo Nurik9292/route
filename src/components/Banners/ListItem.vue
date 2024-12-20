@@ -1,27 +1,27 @@
 <template>
     <article 
         :class="{ selected: item.selected }" 
-        class="highlight city-item group text-k-text-secondary border-b border-k-border !max-w-full h-[64px] flex
+        class="highlight banner-item group text-k-text-secondary border-b border-k-border !max-w-full h-[64px] flex
         items-center transition-[background-color,_box-shadow] ease-in-out duration-200
         focus:rounded-md focus focus-within:rounded-md focus:ring-inset focus:ring-1 focus:!ring-k-accent
         focus-within:ring-inset focus-within:ring-1 focus-within:!ring-k-accent
-        hover:bg-white/5 hover:ring-inset hover:ring-1 hover:ring-white/10 hover:rounded-md" data-testid="city-item"
+        hover:bg-white/5 hover:ring-inset hover:ring-1 hover:ring-white/10 hover:rounded-md"
         tabindex="0">
         <span class="track-number">
             <span  class="text-k-text-secondary">
-                {{ item.city.id }}
+                {{ item.banner.id }}
             </span>
         </span>
-        <span class="title-citiy flex flex-col gap-2 overflow-hidden">
-            <span class="title text-k-text-primary !flex gap-2 items-center">
-                {{ item.city.title }}
-            </span>
-            <span class="city"> Город </span>
+        <span class="image-banner flex flex-col gap-2 overflow-hidden">
+            <img 
+            :src="bannerUrl(item.banner.urlImage)" 
+            alt="Not found" 
+            class="w-16 h-16 object-cover rounded"
+            >
         </span>
        
         <span class="action">
             <div class="space-x-2">
-                <BtnComponent highlight small @click="edit">Изменить</BtnComponent>
                 <BtnComponent danger small @click="destroy">Удалить</BtnComponent>
             </div>
         </span>
@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { mapActions, mapState } from 'vuex';
+import { mapActions } from 'vuex';
 import {  eventBus } from '@/utils'
 import { useDialogBox, useMessageToaster } from "@/composables";
 
@@ -70,20 +70,22 @@ export default {
 
 
     methods: {
-        ...mapActions('cities', {
-            cityDestroy: 'destroy'
+        ...mapActions('banners', {
+            bannerDestroy: 'destroy'
         }),
 
+        bannerUrl(image) {
 
-       async edit() {
-            eventBus.emit('MODAL_SHOW_EDIT_CITY_FORM', this.item.city);
+            return 'http://localhost:8081/admin/banners/image/' + image;
         },
 
+
         async destroy() {
-            if (!await this.showConfirmDialog(`Удалить Город ${this.item.city.title}?`)) return;
+            if (!await this.showConfirmDialog(`Удалить баннер?`)) return;
+            console.log(this.item.banner);
             
-            await this.cityDestroy(this.item.city);
-            this.toastSuccess(`Город "${this.item.city.title}" удален.`);
+            await this.bannerDestroy(this.item.banner);
+            this.toastSuccess(`Баннер удален.`);
         }
     }
 
@@ -112,7 +114,7 @@ article {
       }
    
 
-    .title-citiy {
+    .image-banner {
         span {
            @apply overflow-hidden whitespace-nowrap text-ellipsis block;
         }

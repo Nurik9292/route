@@ -83,7 +83,7 @@ export default {
          }),
 
         isAdmin() {     
-            return this.user.is_admin;
+            return this.user.admin;
         },
 
         async edit() {

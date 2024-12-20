@@ -5,7 +5,7 @@
             <div class="flex-1 space-y-5">
                 <FormRow>
                     <template #label>Текущий Пароль</template>
-                    <TextInput v-model="profile.current_password" v-focus data-testid="currentPassword"
+                    <TextInput v-model="profile.currentPassword" v-focus data-testid="currentPassword"
                         name="current_password" 
                         placeholder="Требуется обновить ваш профиль" 
                         required
@@ -20,9 +20,9 @@
                
                 <FormRow >
                     <template #label>Новый Пароль</template>
-                    <PasswordField v-model="profile.new_password" autocomplete="new-password" data-testid="newPassword"
-                        minlength="10" placeholder="Оставьте пустым, чтобы сохранить текущий пароль" />
-                    <template #help>Мин. 10 персонажей. Должно представлять собой смесь символов, цифр и символов.</template>
+                    <PasswordField v-model="profile.newPassword" autocomplete="new-password" data-testid="newPassword"
+                        minlength="6" placeholder="Оставьте пустым, чтобы сохранить текущий пароль" />
+                    <template #help>Мин. 6 символов. Должно представлять собой смесь символов, цифр и символов.</template>
                 </FormRow>
             </div>
 
@@ -38,6 +38,7 @@
 </template>
 
 <script>
+import { mapActions, mapGetters } from 'vuex';
 import { authService } from '@/services';
 import { useAuthorization, useErrorHandler, useMessageToaster } from '@/composables';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
@@ -60,38 +61,46 @@ export default {
     data() {
         return {
             profile: {
+                id: null,
                 name: '',
                 avatar: null,
-                current_password: null,
-                new_password: ''
+                currentPassword: null,
+                newPassword: ''
             },
         
         }
     },
 
     computed: {
+        ...mapGetters('user', ['getAvatar']),
+
         currentUser() {
             return useAuthorization().currentUser.value;
         }
     },
 
     methods: {
-        async update() {
+        ...mapActions('user', ['fetchAvatar']),
+
+        async update() {    
             const { toastSuccess } = useMessageToaster();
-
-
             try {
+                console.log(this.profile);
+                
                 await authService.updateProfile(Object.assign({}, this.profile));
-                this.profile.current_password = null;
-                delete this.profile.new_password;
+                this.profile.currentPassword = null;
+                delete this.profile.newPassword;
                 toastSuccess('Профиль обновлен.');
             } catch (error) {
                 useErrorHandler('dialog').handleHttpError(error);
             }
         },
 
-        initializeProfile() {
+        async initializeProfile() {
+            console.log(this.currentUser);
+            
             this.profile = {
+                id: this.currentUser.id,
                 name: this.currentUser.name,
                 avatar: this.currentUser.avatar,
                 current_password: null
@@ -100,7 +109,7 @@ export default {
     },
 
     mounted() {
-        this.initializeProfile()
+        this.initializeProfile();
     }
 }
 </script>

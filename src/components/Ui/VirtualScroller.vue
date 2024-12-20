@@ -100,9 +100,10 @@ export default {
         }
     },
 
-    beforeUnmount() {
-        this.observer.unobserve(this.$refs.scroller)
-    }
+    // beforeUnmount() {
+        
+    //         this.observer.unobserve(this.$refs.scroller);
+    // }
 }
 </script>
 

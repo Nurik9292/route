@@ -25,7 +25,6 @@
 <script>
 import { useFileDialog } from '@vueuse/core';
 import { useFileReader } from '@/composables';
-import { defaultAvatar } from '@/utils';
 import { mapGetters } from 'vuex';
 
 import UserAvatar from '../User/UserAvatar.vue';

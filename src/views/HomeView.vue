@@ -56,7 +56,7 @@ export default {
             if (!this.initialized) {
                 this.loading = true;
                 try {
-                //   await overviewStore.fetch();
+                    
                   this.initialized = true;
                 } catch (error) {
                    useErrorHandler('dialog').handleHttpError(error);

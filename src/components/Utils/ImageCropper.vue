@@ -1,8 +1,17 @@
 <template>
     <div class="w-full h-full fixed top-0 left-0 flex items-center justify-center z-[99] bg-black/70">
         <div class="relative max-w-full max-h-full rounded-md flex">
-            <Cropper ref="cropper" :max-width="config.maxWidth" :min-width="config.minWidth" :src="source"
-                :stencil-props="{ aspectRatio: 1 }" />
+            <Cropper 
+                ref="cropper"
+                class="cropper"
+                :src="source"
+                :auto-zoom="config.autoZoom"
+                :stencil-size="{
+                    width: config.maxWidth,
+                    height: config.minWidth
+                }"
+                image-restriction="stencil"
+             />
             <div class="fixed top-6 right-6 flex flex-1 gap-2">
                 <BtnComponent success @click.prevent="crop">Crop</BtnComponent>
                 <BtnComponent transparent @click.prevent="emitCancel">Cancel</BtnComponent>
@@ -34,13 +43,13 @@ export default {
         config: {
             type: Object,
             default: () => ({
-                minWidth: 192,
-                maxWidth: null
+                minWidth: 280,
+                maxWidth: 280,
+                autoZoom: true,
             })
         }
     },
     
-    emits: ['crop', 'cancel'],
 
     data() {
         return {
@@ -49,11 +58,13 @@ export default {
     },
     methods: {
         crop() {
-            const result = this.cropper.getResult()?.canvas.toDataURL();
+            const result = this.$refs.cropper.getResult()?.canvas.toDataURL();
             if (result) {
                 this.$emit('crop', result);
             }
         },
+
+     
 
         emitCancel() {
             this.$emit('cancel');
@@ -63,5 +74,9 @@ export default {
 </script>
 
 <style scoped>
-@import 'vue-advanced-cropper/dist/style.css';
+.cropper {
+	height: 600px;
+	width: 600px;
+	background: #DDD;
+}
 </style>

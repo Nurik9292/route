@@ -18,7 +18,7 @@
             </FormRow>
             <FormRow>
                 <div>
-                    <CheckBox v-model="updateData.is_admin" name="is_admin" />
+                    <CheckBox v-model="updateData.isAdmin" name="isAdmin" />
                     Пользователь является администратором
                     <TooltipIcon
                         title="Администраторы могут выполнять административные задачи, такие как управление пользователями и.т.д." />
@@ -63,7 +63,7 @@ export default {
         const user = useModal().getFromContext('user');
         const originalData = {
           name: user.name,
-          is_admin: user.is_admin
+          isAdmin: user.isAdmin
         }
 
         return {
@@ -88,7 +88,7 @@ export default {
             () => {
               this.originalData = {
                 name: this.user.name,
-                is_admin: this.user.is_admin
+                isAdmin: this.user.isAdmin
               }
               this.updateData = reactive({ ...this.originalData })
             },
@@ -102,7 +102,7 @@ export default {
         async submit() {
             this.showOverlay();
 
-            try {
+            try {  
                 await this.update({userId: this.user.id, data: this.updateData});
                 this.toastSuccess('Пользователь обновлен');
                 this.close();

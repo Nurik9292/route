@@ -2,18 +2,15 @@
     <BaseView>
         <template #header>
             <ScreenHeader layout="collapsed"> 
-                Города
+                Баннеры
 
-                <template v-if="cities.length > 0" #meta>
+                <template v-if="banners.length > 0" #meta>
                     <span>{{ pluralizes() }}</span>
                 </template>
 
                 <template #controls>
-                    <div class="controls w-full min-h-[32px] flex justify-between items-center gap-4">
-                        <ListFilter v-if="cities.length > 0 && !isPhone"  @change="onFilterChanged"/>
-                    </div>
                     <BtnGroup uppercase>
-                        <BtnComponent success @click="showAddCitiyForm">
+                        <BtnComponent success @click="showAddBannerForm">
                             <Icon :icon="['fas', 'plus']" />
                             Добавить
                         </BtnComponent>
@@ -25,23 +22,22 @@
         <ListSkeleton v-if="showSkeletons" class="-m-6" />
         <template v-else>
             <TableList 
-                v-if="cities.length > 0" 
-                ref="cityList" class="-m-6" 
-                :cities="filteredCities"
+                v-if="banners.length > 0" 
+                ref="bannerList" class="-m-6" 
+                :banners="filteredBanners"
                 :config="config"
                 :sortField="sortField"
                 :sortOrder="sortOrder"
                 @sort="sort"
                 @scroll-breakpoint="onScrollBreakpoint" 
                 @press:enter="onPressEnter" 
-                @scrolled-to-end="fetchCities" 
+                @scrolled-to-end="fetchBanners" 
             />
             <EmptyState v-else>
                 <template #icon>
-                    <Icon :icon="['fas', 'building-circle-exclamation']" />
+                    <Icon :icon="['fas', 'square-xmark']" />
                 </template>
-                Список городов пуст
-
+                Список баннеров пуст
             </EmptyState>
         </template>
     </BaseView>
@@ -54,7 +50,7 @@ import ListFilter from '@/components/Ui/ListFilter.vue';
 import BtnGroup from '@/components/Ui/Form/BtnGroup.vue';
 import BtnComponent from '@/components/Ui/Form/BtnComponent.vue';
 import ListSkeleton from '@/components/Ui/Skeletons/ListSkeleton.vue';
-import TableList from '@/components/City/TableList.vue';
+import TableList from '@/components/Banners/TableList.vue';
 import EmptyState from '@/components/Ui/EmptyState.vue';
 
 import { pluralize, eventBus } from '@/utils';
@@ -64,7 +60,7 @@ import { mapActions, mapGetters } from 'vuex';
 import { orderBy, throttle } from 'lodash';
 
 export default {
-    name: 'CityView',
+    name: 'BannerView',
 
     components: {
         BaseView,
@@ -88,13 +84,13 @@ export default {
     data() {
         return {
             fuzzy: null,
-            cities: [],
+            banners: [],
             filterKeywords: '',
-            cityList: null,
+            bannerList: null,
             isPhone: isMobile.any,
-            selectedCities: [],
+            selectedBanners: [],
             headerLayout: 'expanded',
-            sortField: 'title',
+            sortField: 'id',
             sortOrder: 'asc',
             loading: false,
             page: 1,
@@ -111,43 +107,43 @@ export default {
 
     computed: {
 
-        ...mapGetters('cities', ['getCities']),
+        ...mapGetters('banners', ['getBanners']),
 
-        moreCitiesAvailable() {
+        moreBannersAvailable() {
             return this.page !== null;
         },
 
         showSkeletons() {
-            return this.loading && this.filteredCities.length === 0;
+            return this.loading && this.filteredBanners.length === 0;
         },
 
-        filteredCities() {
-            if (!this.filterKeywords) return this.cities;
+        filteredBanners() {
+            if (!this.filterKeywords) return this.banners;
             return this.sortField
                 ? orderBy(this.fuzzy.search(this.filterKeywords), this.extendedCityFields, this.sortOrder)
                 : this.fuzzy.search(this.filterKeywords);
         },
 
-        extendedCityFields() {
+        extendedBannerFields() {
             if (!this.sortField) return null;
             let extended = [this.sortField];
             if (this.sortField === 'id') {
-                extended = ['id', 'title'];
+                extended = ['id'];
             }
             return extended;
         },
     },
 
     async created() {
-        this.fetchInitialCities();
+        this.fetchInitialBanners();
     },
 
 
     watch: {
-        getCities: {
+        getBanners: {
             immediate: true,
-            handler(newCities) {             
-                this.cities = newCities;
+            handler(newBanners) {             
+                this.banners = newBanners || [];
             }
         },
 
@@ -155,27 +151,27 @@ export default {
 
     methods: {
 
-        ...mapActions('cities', ['paginate']),
+        ...mapActions('banners', ['paginate']),
 
         pluralizes() {
-            pluralize(this.cities.length, 'cities');
+            pluralize(this.banners.length, 'banners');
         },
 
-        async fetchInitialCities() {            
+        async fetchInitialBanners() {            
             if (this.loading || this.initialized) return;
             try {
                 this.initialized = true;
-                await this.fetchCities();
-                this.fuzzy = useFuzzySearch(this.cities, ['title']);
+                await this.fetchBanners();
+                this.fuzzy = useFuzzySearch(this.banners, ['id']);
 
             } catch (error) {
                 useErrorHandler().handleHttpError(error);
             }
         },
 
-        async fetchCities() { 
+        async fetchBanners() { 
           
-            if (!this.moreCitiesAvailable || this.loading) return;
+            if (!this.moreBannersAvailable || this.loading) return;
          
             this.loading = true;    
                      
@@ -199,11 +195,11 @@ export default {
             this.sortField = field;
             this.sortOrder = order;
             
-            await this.fetchCities();
+            await this.fetchBanners();
         },
 
-        showAddCitiyForm() {
-            eventBus.emit('MODAL_SHOW_ADD_CITY_FORM');
+        showAddBannerForm() {
+            eventBus.emit('MODAL_SHOW_ADD_BANNER_FORM');
         },
 
         onFilterChanged(value) {

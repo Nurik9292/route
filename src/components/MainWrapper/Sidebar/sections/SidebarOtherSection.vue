@@ -5,6 +5,12 @@
         </template>
 
         <ul class="menu">
+            <SidebarItem href="#/banners" screen="Banners">
+                <template #icon>
+                    <Icon :icon="['fas', 'image']" fixed-width /> 
+                </template>
+                Баннеры
+            </SidebarItem>
             <SidebarItem href="#/cities" screen="Cities">
                 <template #icon>
                     <Icon :icon="['fas', 'city']" fixed-width /> 

@@ -69,16 +69,13 @@ export default {
 
                 map.on('pm:create', (el) => {
                     el.layer.on('pm:edit', (e) => {
-                        console.log('Изменнно новая фигура:', e.layer.getLatLngs());
                         this.points = el.layer.getLatLngs();
                     })
                     this.points = el.layer.getLatLngs();
-                    console.log('Создана новая фигура:', el.layer.getLatLngs());
                 });
              
                 map.on('pm:remove', (e) => {
                     this.points = [];
-                    console.log('Фигура удалена:', e.layer);
                 });
             } else {
                 console.error("Leaflet-Geoman не инициализирован.");

@@ -233,8 +233,6 @@ export default {
         },
       
         async maybeClose() {
-            console.log(this.$refs.geoMapFront.fetchPoints());
-            
             const emptyRouteData = {
                 title: '',
                 number: ''

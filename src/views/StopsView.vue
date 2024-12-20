@@ -210,7 +210,6 @@ export default {
             this.headerLayout = direction === 'down' ? 'collapsed' : 'expanded';
         }, 200)
 
-
   }
 
 }
