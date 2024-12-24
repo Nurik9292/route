@@ -31,12 +31,12 @@
                 data-testid="header-title"
                 role="button"
                 title="Sort by title"
-                @click="sort('title')"
+                @click="sort('name')"
             >
-                Title
+                Name
                 <template v-if="config.sortable">
-                    <Icon v-if="sortField === 'title' && sortOrder === 'asc'" :icon="['fas', 'caret-up']" class="text-k-highlight" />
-                    <Icon v-if="sortField === 'title' && sortOrder === 'desc'" :icon="['fas', 'caret-down']" class="text-k-highlight" />
+                    <Icon v-if="sortField === 'name' && sortOrder === 'asc'" :icon="['fas', 'caret-up']" class="text-k-highlight" />
+                    <Icon v-if="sortField === 'name' && sortOrder === 'desc'" :icon="['fas', 'caret-down']" class="text-k-highlight" />
                 </template>
             </span>
 
@@ -95,7 +95,7 @@ export default {
       },
       sortField: {
         type: String,
-        default: 'title'
+        default: 'name'
       },
       sortOrder: {
         
@@ -164,6 +164,10 @@ export default {
           this.sortFields = [];
 
         this.rows = this.generateRows();
+        console.log("render stops");
+        console.log(this.rows);
+        
+        
       },
 
       generateRows() {        

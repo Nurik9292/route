@@ -7,7 +7,14 @@
         <main class="space-y-5">
             <FormRow >
                 <template #label>Название</template>
-                <TextInput v-model="newStop.title" v-focus name="title" title="Title" required/>
+                <TextInput v-model="newStop.name" v-focus name="name" title="Title" required/>
+            </FormRow>
+            <FormRow>
+                <template #label>Город</template>
+                <SelectBox v-model="newStop.cityId" v-focus name="cityId" title="City" required>
+                    <option value="" disabled>Выберите...</option>
+                    <option v-for="city in getCities" :key="city.id" :value="city.id">{{city.title}}</option>
+                </SelectBox>
             </FormRow>
             <FormRow :cols="2">
                 <template #label1>Широта</template>
@@ -21,8 +28,8 @@
         </main>
 
         <footer>
-            <BtnComponent class="BtnComponent-add" type="submit">Save</BtnComponent>
-            <BtnComponent class="BtnComponent-cancel" white @click.prevent="maybeClose">Cancel</BtnComponent>
+            <BtnComponent class="BtnComponent-add" type="submit">Сохранить</BtnComponent>
+            <BtnComponent class="BtnComponent-cancel" white @click.prevent="maybeClose">Отмена</BtnComponent>
         </footer>
     </form>
 </template>
@@ -30,18 +37,19 @@
 <script>
 import { useDialogBox, useErrorHandler, useMessageToaster, useOverlay } from '@/composables';
 import { isEqual } from 'lodash';
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 
 import FormRow from '../Ui/Form/FormRow.vue';
 import TextInput from '../Ui/Form/TextInput.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import MapComponent from '../Map/MapComponent.vue';
+import SelectBox from '../Ui/Form/SelectBox.vue';
 
 export default {
     name: 'AddStopForm',
 
     components: {
-        FormRow, TextInput, BtnComponent, MapComponent
+        FormRow, TextInput, BtnComponent, MapComponent, SelectBox
     },
 
     setup() {
@@ -61,9 +69,10 @@ export default {
     data() {
         return {
             newStop: {
-                title: '',
+                name: '',
                 lat: '',
                 lng: '',
+                cityId: ''
             },
             icon: { lat: 37.93585208752015, lng: 58.39120934103419 }
         }
@@ -78,7 +87,12 @@ export default {
         }
     },
 
+    computed: {
+        ...mapGetters('cities', ['getCities'])
+    },
+
     mounted() {
+        this.fetchAll();
         document.addEventListener('keydown', this.handleKeydown);
     },
 
@@ -90,6 +104,8 @@ export default {
 
         ...mapActions('stops', ['store']),
 
+        ...mapActions('cities', ['fetchAll']),
+
         handleKeydown(event) {
             if (event.key === 'Escape') {
                 this.maybeClose();
@@ -97,11 +113,10 @@ export default {
         },
 
         async submit() {
-            this.showOverlay();
-
+            this.showOverlay();   
             try {
-                this.store(this.newStop);
-                this.toastSuccess(`Новая остановка "${this.newStop.title}" создана.`);
+                await this.store(this.newStop);
+                this.toastSuccess(`Новая остановка "${this.newStop.name}" создана.`);
                 this.close();
             } catch (error) {
                 this.errorHandler.handleHttpError(error);
@@ -113,9 +128,10 @@ export default {
         async maybeClose() {
             
             const emptyStopData = {
-                title: '',
+                name: '',
                 lat: '',
                 lng: '',
+                cityId: ''
             };
 
             if (isEqual(this.newStop, emptyStopData)) {

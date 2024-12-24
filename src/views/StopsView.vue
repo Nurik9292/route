@@ -10,7 +10,7 @@
 
                 <template #controls>
                     <div class="controls w-full min-h-[32px] flex justify-between items-center gap-4">
-                        <ListFilter v-if="stops.length > 0 && !isPhone" />
+                        <ListFilter v-if="stops.length > 0 && !isPhone"  @change="onFilterChanged"/>
                     </div>
                     <BtnGroup uppercase>
                         <BtnComponent success @click="showAddStopForm">
@@ -90,16 +90,17 @@ export default {
 
     data() {
         return {
+            fuzzy: null,
             stops: [],
             filterKeywords: '',
             stopList: null,
             isPhone: isMobile.any,
             selectedStops: [],
             headerLayout: 'expanded',
-            sortField: 'title',
+            sortField: 'name',
             sortOrder: 'asc',
             loading: false,
-            page: 0,
+            page: 1,
             initialized: false,
             config: {
                 filterable: false,
@@ -123,7 +124,7 @@ export default {
         },
 
         filteredStops() {            
-            if (!this.fuzzy) return this.stops;
+            if (!this.filterKeywords) return this.stops;
             return this.sortField
                 ? orderBy(this.fuzzy.search(this.filterKeywords), this.extendedSortFields, this.sortOrder)
                 : this.fuzzy.search(this.filterKeywords);
@@ -142,7 +143,6 @@ export default {
     },
 
     async created() {
-        this.fuzzy = this.config.filterable ? useFuzzySearch(this.stops, ['title']) : null;
         this.fetchInitialStops();
     },
 
@@ -152,6 +152,10 @@ export default {
             immediate: true,
             handler(newStops) {                
                 this.stops = newStops;
+                console.log("watch");
+                
+                console.log(this.stops);
+                
             }
         }
     },
@@ -164,10 +168,11 @@ export default {
         },
 
         async fetchInitialStops() {            
-            if (this.loading || this.initialized) return;
+            if (this.loading || this.initialized) return;  
             try {
                 this.initialized = true;
                 await this.fetchStops();
+                this.fuzzy = useFuzzySearch(this.stops, ['name']);
             } catch (error) {
                 useErrorHandler().handleHttpError(error);
             }
@@ -195,7 +200,6 @@ export default {
         async sort(field, order) {        
             
             this.page = 1;
-            this.stateStops = [];
             this.sortField = field;
             this.sortOrder = order;
             
@@ -204,6 +208,10 @@ export default {
 
         showAddStopForm() {
             eventBus.emit('MODAL_SHOW_ADD_STOP_FORM');
+        },
+
+        onFilterChanged(value) {
+            this.filterKeywords = value;
         },
 
         onScrollBreakpoint: throttle(function (direction) {

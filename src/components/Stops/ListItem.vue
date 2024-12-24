@@ -14,9 +14,9 @@
         </span>
         <span class="title-stop flex flex-col gap-2 overflow-hidden">
             <span class="title text-k-text-primary !flex gap-2 items-center">
-                {{ item.stop.title }}
+                {{ item.stop.name }}
             </span>
-            <span class="stop"> test </span>
+            <span class="stop">Остановка</span>
         </span>
        
         <span class="action">
@@ -30,9 +30,7 @@
 </template>
 
 <script>
-import { mapActions, mapState } from 'vuex';
-import { requireInjection, secondsToHis, eventBus } from '@/utils'
-import { StopListConfigKey } from '@/symbols'
+import { mapActions } from 'vuex';
 import { useDialogBox, useMessageToaster } from "@/composables";
 
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
@@ -63,10 +61,6 @@ export default {
     },
 
     computed: {
-        ...mapState({
-            config: () => requireInjection(StopListConfigKey, [{}])[0]
-        }),
-
         currentUser() {
             return useAuthorization().currentUser;
         },
@@ -84,10 +78,10 @@ export default {
         },
 
         async destroy() {
-            if (!await this.showConfirmDialog(`Удалить Остановку ${this.item.stop.title}?`)) return;
+            if (!await this.showConfirmDialog(`Удалить Остановку ${this.item.stop.name}?`)) return;
             
             await this.stopDestroy(this.item.stop);
-            this.toastSuccess(`Остановка "${this.item.stop.title}" удалена.`);
+            this.toastSuccess(`Остановка "${this.item.stop.name}" удалена.`);
         }
     }
 

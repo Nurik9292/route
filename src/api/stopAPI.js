@@ -12,7 +12,7 @@ class stopAPI {
     }
 
     async update ( id, data ) {
-        return await http.put(`stops/${id}`, data);
+        return await http.patch(`stops/${id}`, data);
     }
 
     async destroy ( id ) {

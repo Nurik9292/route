@@ -65,6 +65,12 @@ export default {
 
             return links.next ? ++res.page.number : null;
         },
+
+        async store({commit}, data) {
+            const route = await routeAPI.store(data);
+            commit('ADD_ROUTE', route);
+            return route;            
+        },
     }
 }
 

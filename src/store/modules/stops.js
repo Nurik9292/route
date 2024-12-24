@@ -54,7 +54,7 @@ export default {
         },
 
         REMOVE_STOP(state, stop) {
-            state.stops = differenceBy(state.stops, [stop], 'id');
+            state.stops = differenceBy(state.stops, [stop], 'id');  
             state.vault.delete(stop.id);
           },
 
@@ -81,28 +81,13 @@ export default {
         },
 
         async paginate({ commit, state, dispatch }, params) {
+            let page = params.page;
+            const stops = await stopAPI.getAll(params);  
+          
+            await dispatch('syncWithVault', stops.items);      
+            commit('SET_STOPS', stops.items);
 
-            const res = await stopAPI.getAll(params);
-            
-            const stops = res._embedded.stopPaginateResponseList;
-            const links = res._links;
-        
-            const syncedStops = await dispatch('syncWithVault', stops);
-            const mergedStops = unionBy(state.stops, syncedStops, 'id');
-            const { sort = 'id', order = 'asc' } = params;
-
-            const sortedStops = mergedStops.sort((a, b) => {
-                if (order === 'asc') {
-                    return a[sort] > b[sort] ? 1 : -1;
-                } else {
-                    return a[sort] < b[sort] ? 1 : -1;
-                }
-            });
-            
-
-            commit('SET_STOPS', sortedStops);
-
-            return links.next ? ++res.page.number : null;
+            return stops.isLastPage ? null : ++page;
         },
 
         syncWithVault({ state, commit }, stops) {

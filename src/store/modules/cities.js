@@ -20,7 +20,7 @@ export default {
     },
 
     mutations: {
-        SET_CITIES(state, cities) {
+          SET_CITIES(state, cities) {
             state.cities = cities;
           },
           
@@ -62,6 +62,15 @@ export default {
             commit('SET_CITIES', cities.items);
 
             return cities.isLastPage ? null : ++page;
+          },
+
+          async fetchAll({ dispatch, commit }) {
+            const cities = await cityAPI.fetchAll();     
+            console.log(cities);
+            
+            await dispatch('syncWithVault', cities);
+            commit('SET_CITIES', cities);
+
           },
 
           syncWithVault({ commit }, cities) {

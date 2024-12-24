@@ -6,6 +6,10 @@ class cityAPI {
         return await http.get(`cities?${new URLSearchParams(params).toString()}`);
     }
 
+    async fetchAll() {
+        return await http.get('cities/all');
+    }
+
     async store( data ) {
         return await http.post('cities', data);
     }

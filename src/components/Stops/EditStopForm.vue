@@ -7,7 +7,13 @@
         <main class="space-y-5">
             <FormRow >
                 <template #label>Название</template>
-                <TextInput v-model="updateData.title" v-focus name="title" title="Title" required/>
+                <TextInput v-model="updateData.name" v-focus name="name" title="Title" required/>
+            </FormRow>
+            <FormRow>
+                <template #label>Город</template>
+                <SelectBox v-model="updateData.cityId" v-focus name="cityId" title="City" required>
+                    <option v-for="city in getCities" :key="city.id" :value="city.id">{{city.title}}</option>
+                </SelectBox>
             </FormRow>
             <FormRow :cols="2">
                 <template #label1>Широта</template>
@@ -20,28 +26,29 @@
             </div>
         </main>
         <footer>
-            <BtnComponent class="BtnComponent-add" type="submit">Save</BtnComponent>
-            <BtnComponent class="BtnComponent-cancel" white @click.prevent="maybeClose">Cancel</BtnComponent>
+            <BtnComponent class="BtnComponent-add" type="submit">Обновить</BtnComponent>
+            <BtnComponent class="BtnComponent-cancel" white @click.prevent="maybeClose">Отмена</BtnComponent>
         </footer>
     </form>
 </template>
 
 <script>
 import { useDialogBox, useErrorHandler, useMessageToaster, useOverlay, useModal } from '@/composables';
-import { isEqual } from 'lodash';
-import { mapActions } from 'vuex';
+import { isEqual, omit } from 'lodash';
+import { mapActions, mapGetters } from 'vuex';
 import { reactive } from 'vue';
 
 import FormRow from '../Ui/Form/FormRow.vue';
 import TextInput from '../Ui/Form/TextInput.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import MapComponent from '../Map/MapComponent.vue';
+import SelectBox from '../Ui/Form/SelectBox.vue';
 
 export default {
     name: 'EditStopForm',
 
     components: {
-        FormRow, TextInput, BtnComponent, MapComponent
+        FormRow, TextInput, BtnComponent, MapComponent, SelectBox
     },
 
     setup() {
@@ -52,14 +59,14 @@ export default {
         const { getFromContext, updateContext } = useModal();
         const stop = getFromContext('stop');
         
-        
         const updateData = reactive({
             id: stop.id,
-            title: stop.title,
+            name: stop.name,
             lat: stop.lat,
-            lng: stop.lng
+            lng: stop.lng,
+            cityId: stop.cityId
         });
-
+        
         const icon = reactive({ lat: stop.lat, lng: stop.lng });        
 
         return {
@@ -74,7 +81,12 @@ export default {
         };
     },  
 
+    computed: {
+        ...mapGetters('cities', ['getCities'])
+    },
+
     mounted() {
+        this.fetchAll();
         document.addEventListener('keydown', this.handleKeydown);
     },
 
@@ -86,6 +98,8 @@ export default {
     methods: {
         ...mapActions('stops', ['update']),
 
+        ...mapActions('cities', ['fetchAll']),
+
         handleKeydown(event) {
             if (event.key === 'Escape') {
                 this.maybeClose();
@@ -96,7 +110,11 @@ export default {
         async submit() {
             this.showOverlay();
             try {
-                await this.update({stopId: this.updateData.id, data: this.updateData});
+                console.log(this.updateData);
+                
+                const stopId = this.updateData.id;
+                const data = omit(this.updateData, 'id');
+                await this.update({stopId, data});
                 this.toastSuccess('Остановка обновлена');
                 this.close();
             } catch (error) {

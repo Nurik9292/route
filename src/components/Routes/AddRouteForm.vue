@@ -57,12 +57,12 @@
                 >
                     <FormRow>
                         <template #label>Название</template>
-                        <TextInput v-model="formData.title" v-focus name="title" title="Title"/>
+                        <TextInput v-model="newRoute.name" v-focus name="name" title="Title"/>
                     </FormRow>
                     <FormRow>
                         <template #label>Номер</template>
                         <TextInput 
-                            v-model="formData.number" 
+                            v-model="newRoute.number" 
                             v-focus 
                             min="1"
                             name="number"
@@ -77,7 +77,7 @@
                     class="space-y-5"
                 >
                     <div class="map-container">
-                        <GeoMap ref="geoMapFront" /> 
+                        <GeoMap ref="geoMapFront" @create="createToPoint"/> 
                     </div>
                 </TabPanel>
                 <TabPanel
@@ -87,7 +87,7 @@
                     class="space-y-5"
                 >
                     <div class="map-container">
-                        <GeoMap ref="geoMapBack" /> 
+                        <GeoMap ref="geoMapBack" @create="createFromPoint"/> 
                     </div>
                 </TabPanel>
                 <TabPanel
@@ -118,8 +118,8 @@
         </TabsComponent>
 
         <footer>
-            <BtnComponent class="BtnComponent-add" type="submit">Save</BtnComponent>
-            <BtnComponent class="BtnComponent-cancel" white @click.prevent="maybeClose">Cancel</BtnComponent>
+            <BtnComponent class="BtnComponent-add" type="submit">Сохранить</BtnComponent>
+            <BtnComponent class="BtnComponent-cancel" white @click.prevent="maybeClose">Отмена</BtnComponent>
         </footer>
     </form>
 </template>
@@ -137,6 +137,7 @@ import FormRow from '../Ui/Form/FormRow.vue';
 import TextInput from '../Ui/Form/TextInput.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import GeoMap from '../Map/GeoMap.vue';
+import { mapActions } from 'vuex';
 
 export default {
     name: 'AddRouteForm',
@@ -173,11 +174,11 @@ export default {
 
     data() {
         return {
-            formData: {
-                title: '',
+            newRoute: {
+                name: '',
                 number: '',
-                frontPoints: [],
-                backPoints: []
+                toPoints: [],
+                fromPoints: []
             },
             stops: [
                 [
@@ -226,19 +227,44 @@ export default {
 
     methods: {
 
+        ...mapActions('routes', ['store']),
+
         handleKeydown(event) {
             if (event.key === 'Escape') {
                 this.close();
             }
         },
+
+        createToPoint(value) {
+           this.newRoute.toPoints = value; 
+        },
+
+        createFromPoint(value) {
+           this.newRoute.fromPoints = value; 
+        },
+
+        async submit() {
+            this.showOverlay();
+            console.log(this.newRoute);
+            
+            try {
+                this.store(this.newRoute);
+                this.toastSuccess(`Новый маршрут "${this.newRoute.name}" создан.`);
+                this.close();
+            } catch (error) {
+                this.errorHandler.handleHttpError(error);
+            } finally {
+                this.hideOverlay();
+            }
+        },
       
         async maybeClose() {
             const emptyRouteData = {
-                title: '',
+                name: '',
                 number: ''
             };
 
-            if (isEqual(this.formData, emptyRouteData)) {
+            if (isEqual(this.newRoute, emptyRouteData)) {
                 this.close();
                 return;
             }

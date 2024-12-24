@@ -28,9 +28,6 @@ export default {
         }
     },
 
-    
-
-
 
     methods: {
 
@@ -70,17 +67,24 @@ export default {
                 map.on('pm:create', (el) => {
                     el.layer.on('pm:edit', (e) => {
                         this.points = el.layer.getLatLngs();
+                        this.createPoint();
                     })
                     this.points = el.layer.getLatLngs();
+                    this.createPoint();
                 });
              
                 map.on('pm:remove', (e) => {
                     this.points = [];
+                    this.createPoint();
                 });
             } else {
                 console.error("Leaflet-Geoman не инициализирован.");
             }
         },
+
+        createPoint() {
+            this.$emit('create', this.points);
+        }
     },
 }
 </script>
