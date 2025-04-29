@@ -97,10 +97,10 @@ export default {
             isPhone: isMobile.any,
             selectedRoutes: [],
             headerLayout: 'expanded',
-            sortField: 'title',
+            sortField: 'name',
             sortOrder: 'asc',
             loading: false,
-            page: 0,
+            page: 1,
             initialized: false,
             config: {
                 filterable: false,

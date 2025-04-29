@@ -152,9 +152,6 @@ export default {
             immediate: true,
             handler(newStops) {                
                 this.stops = newStops;
-                console.log("watch");
-                
-                console.log(this.stops);
                 
             }
         }

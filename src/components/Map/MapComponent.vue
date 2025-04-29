@@ -45,7 +45,6 @@ export default {
 
     methods: {
         log( item ) {
-            console.log(item);
         },
 
         moveIcon(e) {

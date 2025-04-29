@@ -85,7 +85,6 @@ export default {
         async update() {    
             const { toastSuccess } = useMessageToaster();
             try {
-                console.log(this.profile);
                 
                 await authService.updateProfile(Object.assign({}, this.profile));
                 this.profile.currentPassword = null;
@@ -97,8 +96,6 @@ export default {
         },
 
         async initializeProfile() {
-            console.log(this.currentUser);
-            
             this.profile = {
                 id: this.currentUser.id,
                 name: this.currentUser.name,

@@ -56,7 +56,6 @@ export default {
           
           async paginate({ commit, dispatch }, params) {
             let page = params.page;
-            console.log(params);
             
             const banners = await bannerAPI.getAll(params);     
                              

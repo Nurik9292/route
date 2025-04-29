@@ -42,28 +42,17 @@ export default {
     },
 
     actions: {
-        async paginate({ commit, state }, params) {
-
-            const res = await routeAPI.getAll(params);
+        async paginate({ commit, dispatch }, params) {
+            console.log('1');
             
-            const routes = res._embedded.routeList;
-            const links = res._links;
-        
-            const mergedRoutes = unionBy(state.routes, routes, 'id');
-            const { sort = 'id', order = 'asc' } = params;
-
-            const sortedRoutes = mergedRoutes.sort((a, b) => {
-                if (order === 'asc') {
-                    return a[sort] > b[sort] ? 1 : -1;
-                } else {
-                    return a[sort] < b[sort] ? 1 : -1;
-                }
-            });
+            let page = params.page;
+            const routes = await routeAPI.getAll(params);  
+            console.log(routes);
             
-
-            commit('SET_ROUTES', sortedRoutes);
-
-            return links.next ? ++res.page.number : null;
+            await dispatch('syncWithVault', routes.items);      
+            commit('SET_ROUTES', routes.items);
+         
+            return routes.isLastPage ? null : ++page;
         },
 
         async store({commit}, data) {

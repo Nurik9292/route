@@ -164,8 +164,6 @@ export default {
           this.sortFields = [];
 
         this.rows = this.generateRows();
-        console.log("render stops");
-        console.log(this.rows);
         
         
       },

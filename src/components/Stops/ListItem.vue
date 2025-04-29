@@ -35,6 +35,7 @@ import { useDialogBox, useMessageToaster } from "@/composables";
 
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import ItemBars from '../Ui/ItemBars.vue'
+import { eventBus } from '@/utils';
 
 export default {
     name: 'ListItem',

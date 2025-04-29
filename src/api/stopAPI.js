@@ -7,6 +7,10 @@ class stopAPI {
         return await http.get(`stops?${new URLSearchParams(params).toString()}`);
     }
 
+    async fetchAll(  ) {
+        return await http.get(`stops/all`);
+    }
+
     async store ( data ) {
         return await http.post('stops', data);
     }

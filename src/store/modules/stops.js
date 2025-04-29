@@ -80,7 +80,13 @@ export default {
             commit('REMOVE_STOP', stop);
         },
 
-        async paginate({ commit, state, dispatch }, params) {
+        async fetchAll({commit, dispatch}) {
+            const stops = await stopAPI.fetchAll(); 
+            await dispatch('syncWithVault', stops);
+            commit('SET_STOPS', stops);
+        },
+
+        async paginate({ commit, dispatch }, params) {
             let page = params.page;
             const stops = await stopAPI.getAll(params);  
           

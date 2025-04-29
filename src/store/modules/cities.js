@@ -66,7 +66,6 @@ export default {
 
           async fetchAll({ dispatch, commit }) {
             const cities = await cityAPI.fetchAll();     
-            console.log(cities);
             
             await dispatch('syncWithVault', cities);
             commit('SET_CITIES', cities);

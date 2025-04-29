@@ -82,7 +82,6 @@ export default {
 
         async destroy() {
             if (!await this.showConfirmDialog(`Удалить баннер?`)) return;
-            console.log(this.item.banner);
             
             await this.bannerDestroy(this.item.banner);
             this.toastSuccess(`Баннер удален.`);

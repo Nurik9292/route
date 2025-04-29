@@ -110,7 +110,6 @@ export default {
         async submit() {
             this.showOverlay();
             try {
-                console.log(this.updateData);
                 
                 const stopId = this.updateData.id;
                 const data = omit(this.updateData, 'id');
@@ -155,7 +154,7 @@ export default {
 
 <style scoped>
 .map-container {
-    height: 60vh;
+    height: 40vh;
     width: 100%;
 }
 

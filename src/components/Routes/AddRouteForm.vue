@@ -57,7 +57,12 @@
                 >
                     <FormRow>
                         <template #label>Название</template>
-                        <TextInput v-model="newRoute.name" v-focus name="name" title="Title"/>
+                        <TextInput 
+                            v-model="newRoute.name" 
+                            v-focus name="name" 
+                            title="Title" 
+                            required
+                        />
                     </FormRow>
                     <FormRow>
                         <template #label>Номер</template>
@@ -67,7 +72,26 @@
                             min="1"
                             name="number"
                             type="number"
+                            required
                         />
+                    </FormRow>
+                    <FormRow>
+                        <template #label>Интервал</template>
+                        <TextInput 
+                            v-model="newRoute.interval" 
+                            v-focus 
+                            min="1"
+                            name="number"
+                            type="number"
+                            required
+                        />
+                    </FormRow>
+                    <FormRow>
+                        <template #label>Город</template>
+                        <SelectBox v-model="newRoute.cityId" v-focus name="cityId" title="City" required>
+                            <option value="" disabled>Выберите...</option>
+                            <option v-for="city in getCities" :key="city.id" :value="city.id">{{city.title}}</option>
+                        </SelectBox>
                     </FormRow>
                 </TabPanel>
                 <TabPanel
@@ -96,7 +120,7 @@
                     aria-labelledby="addRouteTabStopFront"
                     class="space-y-5"
                 >
-                    <PickList v-model="stops"  dataKey="id" breakpoint="1400px">
+                    <PickList v-model="stopsTo"  dataKey="id" breakpoint="1400px">
                         <template #option="{ option  }">
                             {{ option.name }}
                         </template>
@@ -108,7 +132,7 @@
                     aria-labelledby="addRouteTabStopBack"
                     class="space-y-5"
                 >
-                    <PickList v-model="stops"  dataKey="id" breakpoint="1400px">
+                    <PickList v-model="stopsFrom"  dataKey="id" breakpoint="1400px">
                         <template #option="{ option  }">
                             {{ option.name }}
                         </template>
@@ -137,7 +161,8 @@ import FormRow from '../Ui/Form/FormRow.vue';
 import TextInput from '../Ui/Form/TextInput.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import GeoMap from '../Map/GeoMap.vue';
-import { mapActions } from 'vuex';
+import SelectBox from '../Ui/Form/SelectBox.vue';
+import { mapActions, mapGetters } from 'vuex';
 
 export default {
     name: 'AddRouteForm',
@@ -152,6 +177,7 @@ export default {
         TextInput,
         BtnComponent,
         GeoMap,
+        SelectBox
     },
 
     setup() {
@@ -177,25 +203,15 @@ export default {
             newRoute: {
                 name: '',
                 number: '',
+                interval: '',
                 toPoints: [],
-                fromPoints: []
+                fromPoints: [],
+                toStops: [],
+                fromStops: [],
+                cityId: '',
             },
-            stops: [
-                [
-                    {id: 1, name: 'test 1'},
-                {id: 2, name: 'test 2'},
-                {id: 3, name: 'test 3'},
-                {id: 4, name: 'test 4'},
-                {id: 5, name: 'test 5'},
-                {id: 6, name: 'test 6'},
-                {id: 7, name: 'test 7'},
-                {id: 8, name: 'test 8'},
-                {id: 9, name: 'test 9'},
-                {id: 10, name: 'test 10'},
-                {id: 11, name: 'test 11'},
-                ],
-                []
-            ],
+            stopsTo: [[],[]],
+            stopsFrom: [[],[]],
             currentTab: 'details',
             
         }
@@ -213,10 +229,19 @@ export default {
                     this.$refs.geoMapBack.invalidateMapSize();
                 });
             }
+        },
+
+        getStops: {
+            immediate: true,
+            handler(newStops) {  
+                this.stopsTo[0] = newStops;
+                this.stopsFrom[0] = newStops;
+            }
         }
     },
 
     mounted() {
+        this.fetchAll();
         document.addEventListener('keydown', this.handleKeydown);
     },
 
@@ -224,10 +249,19 @@ export default {
         document.removeEventListener('keydown', this.handleKeydown);
     },
 
+    computed: {
+        ...mapGetters('stops', ['getStops']),
+        ...mapGetters('cities', ['getCities'])
+    },
+
 
     methods: {
 
         ...mapActions('routes', ['store']),
+
+        ...mapActions('stops', ['fetchAll']),
+
+        ...mapActions('cities', ['fetchAll']),
 
         handleKeydown(event) {
             if (event.key === 'Escape') {
@@ -244,10 +278,12 @@ export default {
         },
 
         async submit() {
-            this.showOverlay();
-            console.log(this.newRoute);
-            
+            this.showOverlay();     
             try {
+                const toIds = this.stopsTo[1].map(item => item.id);
+                const fromIds = this.stopsFrom[1].map(item => item.id);
+                this.newRoute.toStops = toIds;
+                this.newRoute.fromStops = fromIds;
                 this.store(this.newRoute);
                 this.toastSuccess(`Новый маршрут "${this.newRoute.name}" создан.`);
                 this.close();

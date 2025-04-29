@@ -78,7 +78,6 @@ export default {
 
         async submit() {
             this.showOverlay();
-            console.log(this.newBanner);
             
             try {
                 await this.store(this.newBanner);
