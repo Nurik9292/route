@@ -6,35 +6,42 @@ import { authService } from '@/services';
 class Http {
     constructor() {
         this.client = Axios.create({
-            baseURL: `${import.meta.env.VITE_API_URL}`,
+            baseURL: `${import.meta.env.VUE_APP_API_BASE_URL || 'http://localhost:8080/api/v1'}`,
             headers: {
                 'Content-Type': 'application/json',
-            }
+            },
+            timeout: 10000
         });
 
         this.silent = false;
 
         this.client.interceptors.request.use((config) => {
-            if (!this.silent) this.showLoadingIndicator();            
-            config.headers.Authorization = `Bearer ${authService.getApiToken()}`;  
+            if (!this.silent) this.showLoadingIndicator();
+
+            const token = authService.getApiToken() || localStorage.getItem('auth_token');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+
             return config;
         });
-      
-    
+
         this.client.interceptors.response.use((response) => {
-           
             if (!this.silent) this.hideLoadingIndicator();
             this.silent = false;
 
             const token = response.headers.authorization;
-            if (token) authService.setApiToken(token);
+            if (token) {
+                authService.setApiToken(token);
+                localStorage.setItem('auth_token', token);
+            }
 
             return response;
         }, (error) => {
             if (!this.silent) this.hideLoadingIndicator();
             this.silent = false;
 
-            if (error.response?.status === 400 || error.response?.status === 401) {
+            if (error.response?.status === 401) {
                 if (!(error.config.method === 'post' && error.config.url === 'me')) {
                     eventBus.emit('LOG_OUT');
                 }
@@ -63,19 +70,19 @@ class Http {
     }
 
     async post(url, data = {}, onUploadProgress) {
-        return (await this.request('post', url, data, onUploadProgress));
+        return await this.request('post', url, data, onUploadProgress);
     }
 
     async put(url, data) {
-        return (await this.request('put', url, data));
+        return await this.request('put', url, data);
     }
 
     async patch(url, data) {
-        return (await this.request('patch', url, data));
+        return await this.request('patch', url, data);
     }
 
     async delete(url, data = {}) {
-        return (await this.request('delete', url, data));
+        return await this.request('delete', url, data);
     }
 
     showLoadingIndicator() {

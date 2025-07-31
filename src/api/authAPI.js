@@ -1,17 +1,27 @@
-import { http } from '@/services';
+import {http} from '@/services';
 
 
-class authAPI {
-    postSignIn( credentials ) {
-      return http.post( 'auth/login', credentials );
+class AuthAPI {
+    async login(credentials) {
+        return await http.post('/admin/auth/login', {
+            username: credentials.username,
+            password: credentials.password
+        });
     }
 
-    async delete() {
-      await http.delete('auth/logout');
+    async logout() {
+        return await http.post('/admin/auth/logout');
     }
 
-   
+    async refreshToken(refreshToken) {
+        return await http.post('/admin/auth/refresh', {
+            refreshToken: refreshToken
+        });
+    }
+
+    async getCurrentUser() {
+        return await http.get('/admin/auth/me');
+    }
 }
 
-
-export default new authAPI();
+export default new AuthAPI();

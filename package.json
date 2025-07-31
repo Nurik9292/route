@@ -20,7 +20,7 @@
     "@primevue/themes": "^4.2.1",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "@vueuse/core": "^11.1.0",
-    "axios": "^1.7.7",
+    "axios": "1.11.0",
     "fuse.js": "^7.0.0",
     "ismobilejs": "^1.1.1",
     "js-md5": "^0.8.3",

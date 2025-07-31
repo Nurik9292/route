@@ -1,8 +1,8 @@
 <template>
     <img
-      :alt="`Avatar of ${user.name}`"
+      alt="`Avatar of test"
       :src="avatars()"
-      :title="user.name"
+      title="test"
       @error="onError"
       class="object-cover rounded-full aspect-square bg-k-bg-primary"
     >
@@ -32,10 +32,10 @@ export default {
       },
 
       avatars() {        
-        if (this.user.avatar && this.user.avatar.startsWith('data:image'))  
-          return this.user.avatar;
-    
-        return this.user.avatar ? 'http://localhost:8081/admin/staff/avatar/' + this.user.avatar : defaultAvatar;
+        // if (this.user.avatar && this.user.avatar.startsWith('data:image'))
+        //   return this.user.avatar;
+        //
+        return  defaultAvatar;
       }
     }
 }

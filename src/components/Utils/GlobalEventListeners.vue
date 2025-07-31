@@ -10,8 +10,6 @@ import { authService } from '@/services';
 export default {
     name: 'GlobalEventListeners',
 
-  
-
     mounted() {
   
         this.toastSuccess = useMessageToaster().toastSuccess;
@@ -30,10 +28,10 @@ export default {
                 this.go('stops');
             }
         },
-       
+
 
         async handleLogout() {
-            
+
             await authService.logout();
             forceReloadWindow();
         }
