@@ -1,4 +1,4 @@
-import homeAPI from "@/api/homeAPI";
+import homeAPI from "@/api/dashboardAPI.js";
 
 export default {
 

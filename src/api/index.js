@@ -65,45 +65,6 @@ export const apiChecker = {
 };
 
 
-// if (import.meta.env.DEV) {
-//
-//     window.testAPI = async function() {
-//         console.log('🧪 Тестирование API подключения...');
-//
-//         try {
-//             console.log('📡 Тест: Backend доступность');
-//             const routes = await routeAPI.getActiveRoutes();
-//             console.log('✅ Backend доступен, маршрутов:', routes.length);
-//
-//             console.log('🔐 Тест: Проверка сессии');
-//             try {
-//                 const user = await authAPI.getCurrentUser();
-//                 console.log('✅ Пользователь авторизован:', user.username);
-//             } catch (authError) {
-//                 console.log('ℹ️ Пользователь не авторизован');
-//             }
-//
-//             console.log('👥 Тест: Админские API');
-//             try {
-//                 const admins = await adminAPI.getAll();
-//                 console.log('✅ Админские API работают, админов:', admins.length);
-//             } catch (adminError) {
-//                 console.log('⚠️ Админские API недоступны:', adminError.message);
-//             }
-//
-//             console.log('🎉 Тестирование завершено!');
-//
-//         } catch (error) {
-//             console.error('❌ Критическая ошибка API:', error);
-//         }
-//     };
-//
-//     setTimeout(() => {
-//         console.log('🚀 Автотест API через 2 секунды...');
-//         window.testAPI();
-//     }, 2000);
-// }
-
 
 export const apiConfig = {
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1',

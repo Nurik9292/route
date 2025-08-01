@@ -1,27 +1,15 @@
 import {http} from '@/services';
 
 class AdminAPI {
-    async login(credentials) {
-        return await http.post('/admin/auth/login', {
-            username: credentials.username,
-            password: credentials.password
-        });
+
+
+    async activate(id) {
+        return await http.post(`/admin/users/${id}/activate`);
     }
 
-    async logout() {
-        return await http.post('/admin/auth/logout');
+    async deactivate(id) {
+        return await http.post(`/admin/users/${id}/deactivate`);
     }
-
-    async refreshToken(refreshToken) {
-        return await http.post('/admin/auth/refresh', {
-            refreshToken: refreshToken
-        });
-    }
-
-    async getCurrentUser() {
-        return await http.get('/admin/auth/me');
-    }
-
 
     async getAll(params = {}) {
         const queryString = new URLSearchParams(params).toString();
@@ -92,14 +80,12 @@ class AdminAPI {
         return await this.delete(id);
     }
 
-    convertBackendUser(backendUser) {
+    convertBackendAdmin(backendUser) {
         return {
             id: backendUser.id,
             name: backendUser.fullName,
             fullName: backendUser.fullName,
             username: backendUser.username,
-            admin: backendUser.isSuperAdmin,
-            isAdmin: backendUser.isSuperAdmin,
             isSuperAdmin: backendUser.isSuperAdmin,
             isActive: backendUser.isActive,
             createdAt: backendUser.createdAt,
