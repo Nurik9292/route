@@ -19,8 +19,8 @@ export const routes = [
     screen: 'Routes'
   },
   {
-    path: '/users',
-    screen: 'Users'
+    path: '/admins',
+    screen: 'Admins'
   },
   {
     path: '/cities',

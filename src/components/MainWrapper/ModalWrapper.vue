@@ -17,8 +17,8 @@ export default {
     data() {
         return {
             modalNameToComponentMap: {
-                'add-user-form': defineAsyncComponent(() => import('../User/AddUserForm.vue')),
-                'edit-user-form': defineAsyncComponent(() => import('../User/EditUserForm.vue')),
+                'add-user-form': defineAsyncComponent(() => import('@/components/Admin/AddAdminForm.vue')),
+                'edit-user-form': defineAsyncComponent(() => import('@/components/Admin/EditAdminForm.vue')),
                 'add-stop-form': defineAsyncComponent(() => import('../Stops/AddStopForm.vue')),
                 'edit-stop-form': defineAsyncComponent(() => import('../Stops/EditStopForm.vue')),
                 'add-route-form': defineAsyncComponent(() => import('../Routes/AddRouteForm.vue')),

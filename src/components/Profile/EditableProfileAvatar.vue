@@ -27,14 +27,14 @@ import { useFileDialog } from '@vueuse/core';
 import { useFileReader } from '@/composables';
 import { mapGetters } from 'vuex';
 
-import UserAvatar from '../User/UserAvatar.vue';
+import AdminAvatar from '@/components/Admin/AdminAvatar.vue';
 import ImageCropper from '../Utils/ImageCropper.vue';
 
 export default {
     name: 'EditableProfileAvatar',
 
     components: {
-        UserAvatar,
+        UserAvatar: AdminAvatar,
         ImageCropper,
         
     },

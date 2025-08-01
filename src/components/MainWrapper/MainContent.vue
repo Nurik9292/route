@@ -7,7 +7,7 @@
         <BannerView v-show="screen === 'Banners'"/>
         
         <ProfileView v-if="screen === 'Profile'" />
-        <UserView v-if="screen === 'Users'" />
+        <AdminView v-if="screen === 'Admins'" />
     </section>
 </template>
 
@@ -15,7 +15,7 @@
 import HomeView from '@/views/HomeView.vue';
 import StopsView from '@/views/StopsView.vue';
 import ProfileView from '@/views/ProfileView.vue';
-import UserView from '@/views/UserView.vue';
+import AdminView from '@/views/AdminView.vue';
 import RoutesView from '@/views/RoutesView.vue';
 import CityView from '@/views/CityView.vue';
 import BannerView from '@/views/BannerView.vue';
@@ -29,7 +29,7 @@ export default {
         HomeView, 
         StopsView,
         ProfileView,
-        UserView,
+        AdminView,
         RoutesView,
         CityView,
         BannerView

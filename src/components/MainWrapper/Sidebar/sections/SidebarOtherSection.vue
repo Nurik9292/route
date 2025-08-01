@@ -17,7 +17,7 @@
                 </template>
                 Города
             </SidebarItem>
-            <SidebarItem href="#/users" screen="Users">
+            <SidebarItem href="#/admins" screen="Admins">
                 <template #icon>
                     <Icon :icon="['fas', 'users']" fixed-width /> 
                 </template>

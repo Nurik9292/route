@@ -1,12 +1,11 @@
 import { authAPI, adminAPI } from "@/api/index";
 import { useLocalStorage } from "@/composables";
 import store from "@/store";
-import { http } from "@/services/http.js";
 import { logger } from "@/utils/index.js";
 
 const API_TOKEN_STORAGE_KEY = 'api-token';
 const REFRESH_TOKEN_STORAGE_KEY = 'refresh-token';
-const USER_DATA_STORAGE_KEY = 'user-data';
+const ADMIN_DATA_STORAGE_KEY = 'admin-data';
 
 const { get: lsGet, set: lsSet, remove: lsRemove } = useLocalStorage(false);
 
@@ -16,17 +15,17 @@ export const authService = {
     try {
       logger.info('🔐 Попытка входа для пользователя:', username);
 
-      const response = await adminAPI.login({ username, password });
+      const response = await authAPI.login({ username, password });
 
       this.setApiToken(response.access_token);
       this.setRefreshToken(response.refresh_token);
 
-      const userData = adminAPI.convertBackendUser(response.admin);
-      this.setUserData(userData);
+      const adminData = adminAPI.convertBackendAdmin(response.admin);
+      this.setAdminData(adminData);
 
-      await store.dispatch('admin/init', userData);
+      await store.dispatch('admin/init', adminData);
 
-      logger.info('✅ Вход выполнен успешно:', userData.username);
+      logger.info('✅ Вход выполнен успешно:', adminData.username);
       return response;
 
     } catch (error) {
@@ -45,7 +44,7 @@ export const authService = {
       logger.info('🚪 Выход из системы...');
 
       try {
-        await adminAPI.logout();
+        await authAPI.logout();
       } catch (error) {
         logger.warn('⚠️ Не удалось уведомить backend о logout:', error);
       }
@@ -68,7 +67,7 @@ export const authService = {
     try {
       logger.info('🔄 Обновление токена...');
 
-      const response = await adminAPI.refreshToken(refreshToken);
+      const response = await authAPI.refreshToken(refreshToken);
 
       this.setApiToken(response.access_token);
       this.setRefreshToken(response.refresh_token);
@@ -120,10 +119,10 @@ export const authService = {
 
       logger.info('📝 Обновление профиля:', currentUser.username);
 
-      const updatedUser = await adminAPI.updateProfile(data);
-      const convertedUser = adminAPI.convertBackendUser(updatedUser);
+      const updatedAdmin = await adminAPI.updateProfile(data);
+      const convertedUser = adminAPI.convertBackendAdmin(updatedAdmin);
 
-      this.setUserData(convertedUser);
+      this.setAdminData(convertedUser);
       await store.dispatch('admin/updateCurrent', convertedUser);
 
       logger.info('✅ Профиль обновлен успешно');
@@ -142,19 +141,19 @@ export const authService = {
       return storeUser;
     }
 
-    const cachedUser = this.getUserData();
-    if (cachedUser) {
-      await store.dispatch('admin/init', cachedUser);
-      return cachedUser;
+    const cachedAdmin = this.getAdminData();
+    if (cachedAdmin) {
+      await store.dispatch('admin/init', cachedAdmin);
+      return cachedAdmin;
     }
 
     try {
       logger.info('🔍 Получение профиля с сервера...');
 
-      const profile = await adminAPI.getCurrentUser();
-      const convertedProfile = adminAPI.convertBackendUser(profile);
+      const profile = await authAPI.getCurrentAdmin();
+      const convertedProfile = adminAPI.convertBackendAdmin(profile);
 
-      this.setUserData(convertedProfile);
+      this.setAdminData(convertedProfile);
       await store.dispatch('admin/init', convertedProfile);
 
       return convertedProfile;
@@ -177,8 +176,8 @@ export const authService = {
   getRefreshToken: () => lsGet(REFRESH_TOKEN_STORAGE_KEY),
   setRefreshToken: (token) => lsSet(REFRESH_TOKEN_STORAGE_KEY, token),
 
-  getUserData: () => lsGet(USER_DATA_STORAGE_KEY),
-  setUserData: (userData) => lsSet(USER_DATA_STORAGE_KEY, userData),
+  getAdminData: () => lsGet(ADMIN_DATA_STORAGE_KEY),
+  setAdminData: (userData) => lsSet(ADMIN_DATA_STORAGE_KEY, userData),
 
   hasApiToken() {
     return Boolean(this.getApiToken());
@@ -207,14 +206,14 @@ export const authService = {
   destroy() {
     lsRemove(API_TOKEN_STORAGE_KEY);
     lsRemove(REFRESH_TOKEN_STORAGE_KEY);
-    lsRemove(USER_DATA_STORAGE_KEY);
+    lsRemove(ADMIN_DATA_STORAGE_KEY);
   },
 
-  getCurrentUser() {
+  getCurrentAdmin() {
     const storeUser = store.getters['admin/currentUser'];
     if (storeUser) return storeUser;
 
-    return this.getUserData();
+    return this.getAdminData();
   },
 
   async postSignIn(credentials) {

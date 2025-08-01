@@ -9,6 +9,7 @@ class AuthAPI {
         });
     }
 
+
     async logout() {
         return await http.post('/admin/auth/logout');
     }
@@ -19,9 +20,10 @@ class AuthAPI {
         });
     }
 
-    async getCurrentUser() {
+    async getCurrentAdmin() {
         return await http.get('/admin/auth/me');
     }
+
 }
 
 export default new AuthAPI();

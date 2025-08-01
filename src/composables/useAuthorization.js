@@ -3,11 +3,11 @@ import { useStore } from 'vuex';
 
 export const useAuthorization = () => {
   const store = useStore();
-  const currentUser = computed(() => store.getters['admin/currentUser']);
-  const isAdmin = true;
+  const currentAdmin = computed(() => store.getters['admin/currentAdmin']);
+  const isSuperAdmin = computed(() => store.getters['admin/isSuperAdmin']);
 
   return {
-    currentUser,
-    isAdmin
+    currentAdmin,
+    isSuperAdmin
   }
 }

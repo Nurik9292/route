@@ -15,14 +15,14 @@
 </template>
 
 <script>
-import UserAvatar from '../User/UserAvatar.vue';
+import AdminAvatar from '@/components/Admin/AdminAvatar.vue';
 import { mapGetters } from 'vuex';
 
 export default {
     name: 'ProfileAvatar',
 
     components: {
-        UserAvatar
+        UserAvatar: AdminAvatar
     },
 
     computed: {
