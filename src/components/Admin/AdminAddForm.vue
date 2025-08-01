@@ -1,8 +1,8 @@
 <template>
-  <form class="add-user-form" @submit.prevent="submit">
+  <form @submit.prevent="submit" class="add-admin-form">
     <header class="form-header">
       <h1>Добавить администратора</h1>
-      <p>Создание нового пользователя с правами администратора</p>
+      <p>Создайте новую учетную запись администратора для системы</p>
     </header>
 
     <main class="form-content">
@@ -12,17 +12,17 @@
           <span class="required">*</span>
         </template>
         <TextInput
-            v-model="newUser.username"
+            v-model="newAdmin.username"
             autocomplete="username"
             name="username"
-            placeholder="Введите имя пользователя"
+            placeholder="username"
             required
             :error="fieldErrors.username"
             @blur="validateUsername"
             @input="clearFieldError('username')"
         />
-        <template #help>
-          Минимум 3 символа, только латинские буквы, цифры, точки, дефисы и подчеркивания.
+        <template #hint>
+          От 3 до 20 символов. Только латинские буквы, цифры и подчеркивания.
         </template>
       </FormRow>
 
@@ -32,17 +32,17 @@
           <span class="required">*</span>
         </template>
         <TextInput
-            v-model="newUser.fullName"
+            v-model="newAdmin.fullName"
             autocomplete="name"
             name="fullName"
-            placeholder="Введите полное имя"
+            placeholder="Имя Фамилия"
             required
             :error="fieldErrors.fullName"
             @blur="validateFullName"
             @input="clearFieldError('fullName')"
         />
-        <template #help>
-          Минимум 2 символа.
+        <template #hint>
+          Полное имя администратора для отображения в системе.
         </template>
       </FormRow>
 
@@ -52,7 +52,7 @@
           <span class="required">*</span>
         </template>
         <TextInput
-            v-model="newUser.password"
+            v-model="newAdmin.password"
             autocomplete="new-password"
             name="password"
             type="password"
@@ -62,7 +62,7 @@
             @blur="validatePassword"
             @input="clearFieldError('password')"
         />
-        <template #help>
+        <template #hint>
           Минимум 8 символов. Должен содержать строчные и заглавные буквы, цифры.
         </template>
       </FormRow>
@@ -73,7 +73,7 @@
           <span class="required">*</span>
         </template>
         <TextInput
-            v-model="newUser.confirmPassword"
+            v-model="newAdmin.confirmPassword"
             autocomplete="new-password"
             name="confirmPassword"
             type="password"
@@ -88,7 +88,7 @@
       <FormRow>
         <div class="permissions-section">
           <CheckBox
-              v-model="newUser.isSuperAdmin"
+              v-model="newAdmin.isSuperAdmin"
               name="isSuperAdmin"
               id="isSuperAdmin"
           />
@@ -107,7 +107,7 @@
       <FormRow>
         <div class="permissions-section">
           <CheckBox
-              v-model="newUser.isActive"
+              v-model="newAdmin.isActive"
               name="isActive"
               id="isActive"
           />
@@ -137,6 +137,7 @@
             highlight
             :disabled="!isFormValid || loading"
         >
+          <Icon v-if="loading" :icon="['fas', 'refresh']" class="animate-spin mr-2" />
           <span v-if="loading">Создаем...</span>
           <span v-else>Создать администратора</span>
         </BtnComponent>
@@ -159,7 +160,7 @@ import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import TooltipIcon from '../Ui/TooltipIcon.vue';
 
 export default {
-  name: 'EditAdminForm',
+  name: 'AdminAddForm',
 
   components: {
     FormRow,
@@ -168,6 +169,8 @@ export default {
     BtnComponent,
     TooltipIcon
   },
+
+  emits: ['close', 'success'],
 
   setup() {
     const { toastSuccess, toastError } = useMessageToaster();
@@ -185,7 +188,7 @@ export default {
       loading: false,
       generalError: null,
 
-      newUser: {
+      newAdmin: {
         username: '',
         fullName: '',
         password: '',
@@ -205,13 +208,12 @@ export default {
 
   computed: {
     isFormValid() {
-      // Проверяем валидность всех полей
-      const basicValid = this.newUser.username.trim().length >= 3 &&
-          this.newUser.fullName.trim().length >= 2 &&
-          this.newUser.password.length >= 8 &&
-          this.newUser.confirmPassword === this.newUser.password;
+      const basicValid =
+          this.newAdmin.username.trim().length >= 3 &&
+          this.newAdmin.fullName.trim().length >= 2 &&
+          this.newAdmin.password.length >= 8 &&
+          this.newAdmin.confirmPassword === this.newAdmin.password;
 
-      // Проверяем отсутствие ошибок в полях
       const noErrors = Object.values(this.fieldErrors).every(error => !error);
 
       return basicValid && noErrors;
@@ -219,15 +221,13 @@ export default {
   },
 
   methods: {
-    // ✅ ИСПРАВЛЕНО: используем admin модуль
     ...mapActions('admin', {
-      createUser: 'store'
+      createAdmin: 'store'
     }),
 
     async submit() {
       if (!this.isFormValid || this.loading) return;
 
-      // Финальная валидация перед отправкой
       this.validateAllFields();
       if (!this.isFormValid) {
         this.toastError('Пожалуйста, исправьте ошибки в форме');
@@ -238,70 +238,55 @@ export default {
       this.generalError = null;
 
       try {
-        const userData = {
-          username: this.newUser.username.trim(),
-          fullName: this.newUser.fullName.trim(),
-          password: this.newUser.password,
-          isSuperAdmin: this.newUser.isSuperAdmin,
-          isActive: this.newUser.isActive
+        const adminData = {
+          username: this.newAdmin.username.trim().toLowerCase(),
+          fullName: this.newAdmin.fullName.trim(),
+          password: this.newAdmin.password,
+          isSuperAdmin: this.newAdmin.isSuperAdmin,
+          isActive: this.newAdmin.isActive
         };
 
-        const createdUser = await this.createUser(userData);
+        await this.createAdmin(adminData);
 
-        this.toastSuccess(`Администратор "${createdUser.fullName || createdUser.username}" создан успешно`);
-        this.close();
+        this.toastSuccess(`Администратор "${adminData.fullName}" успешно создан`);
+        this.$emit('success'); // ✅ УВЕДОМЛЯЕМ ModalWrapper О УСПЕХЕ
 
       } catch (error) {
-        console.error('Ошибка создания пользователя:', error);
+        console.error('Ошибка создания администратора:', error);
 
-        // Детальная обработка ошибок
         if (error.response?.status === 409) {
           this.fieldErrors.username = 'Пользователь с таким именем уже существует';
-          this.generalError = 'Пользователь с таким именем уже существует';
-        } else if (error.response?.status === 400) {
-          this.generalError = error.response.data?.message || 'Неверные данные';
-        } else if (error.response?.status === 403) {
-          this.generalError = 'У вас нет прав для создания администраторов';
-        } else if (error.response?.status === 422) {
-          // Обработка ошибок валидации от сервера
-          const validationErrors = error.response.data?.errors || {};
-          Object.keys(validationErrors).forEach(field => {
-            if (this.fieldErrors.hasOwnProperty(field)) {
-              this.fieldErrors[field] = validationErrors[field][0];
-            }
-          });
-          this.generalError = 'Проверьте правильность заполнения полей';
         } else {
-          this.generalError = 'Произошла ошибка при создании пользователя';
+          this.generalError = error.response?.data?.message ||
+              error.message ||
+              'Ошибка создания администратора';
         }
-
-        this.toastError(this.generalError);
       } finally {
         this.loading = false;
       }
     },
 
     validateUsername() {
-      const username = this.newUser.username.trim();
+      const username = this.newAdmin.username.trim();
 
       if (!username) {
-        this.fieldErrors.username = 'Обязательное поле';
+        this.fieldErrors.username = 'Имя пользователя обязательно';
       } else if (username.length < 3) {
         this.fieldErrors.username = 'Минимум 3 символа';
-      } else if (username.length > 50) {
-        this.fieldErrors.username = 'Максимум 50 символов';
-      } else if (!/^[a-zA-Z0-9_.-]+$/.test(username)) {
-        this.fieldErrors.username = 'Только латинские буквы, цифры, точки, дефисы и подчеркивания';
+      } else if (username.length > 20) {
+        this.fieldErrors.username = 'Максимум 20 символов';
+      } else if (!/^[a-z0-9_]+$/i.test(username)) {
+        this.fieldErrors.username = 'Только латинские буквы, цифры и подчеркивания';
       } else {
         this.fieldErrors.username = null;
       }
     },
 
     validateFullName() {
-      const fullName = this.newUser.fullName.trim();
+      const fullName = this.newAdmin.fullName.trim();
 
       if (!fullName) {
-        this.fieldErrors.fullName = 'Обязательное поле';
+        this.fieldErrors.fullName = 'Полное имя обязательно';
       } else if (fullName.length < 2) {
         this.fieldErrors.fullName = 'Минимум 2 символа';
       } else if (fullName.length > 100) {
@@ -312,30 +297,25 @@ export default {
     },
 
     validatePassword() {
-      const password = this.newUser.password;
+      const password = this.newAdmin.password;
 
       if (!password) {
-        this.fieldErrors.password = 'Обязательное поле';
+        this.fieldErrors.password = 'Пароль обязателен';
       } else if (password.length < 8) {
         this.fieldErrors.password = 'Минимум 8 символов';
-      } else if (password.length > 128) {
-        this.fieldErrors.password = 'Максимум 128 символов';
-      } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-        this.fieldErrors.password = 'Должен содержать строчные, заглавные буквы и цифры';
+      } else if (!/(?=.*[a-z])/.test(password)) {
+        this.fieldErrors.password = 'Должен содержать строчные буквы';
+      } else if (!/(?=.*[A-Z])/.test(password)) {
+        this.fieldErrors.password = 'Должен содержать заглавные буквы';
+      } else if (!/(?=.*\d)/.test(password)) {
+        this.fieldErrors.password = 'Должен содержать цифры';
       } else {
         this.fieldErrors.password = null;
-      }
-
-      // Перепроверяем подтверждение пароля
-      if (this.newUser.confirmPassword) {
-        this.validateConfirmPassword();
       }
     },
 
     validateConfirmPassword() {
-      if (!this.newUser.confirmPassword) {
-        this.fieldErrors.confirmPassword = 'Обязательное поле';
-      } else if (this.newUser.confirmPassword !== this.newUser.password) {
+      if (this.newAdmin.confirmPassword !== this.newAdmin.password) {
         this.fieldErrors.confirmPassword = 'Пароли не совпадают';
       } else {
         this.fieldErrors.confirmPassword = null;
@@ -351,20 +331,19 @@ export default {
 
     clearFieldError(field) {
       this.fieldErrors[field] = null;
-      if (this.generalError) {
-        this.generalError = null;
-      }
+      this.generalError = null;
     },
 
     async maybeClose() {
-      const hasChanges = this.newUser.username.trim() ||
-          this.newUser.fullName.trim() ||
-          this.newUser.password ||
-          this.newUser.confirmPassword;
+      const hasChanges =
+          this.newAdmin.username.trim() ||
+          this.newAdmin.fullName.trim() ||
+          this.newAdmin.password ||
+          this.newAdmin.confirmPassword;
 
       if (hasChanges) {
         const confirmed = await this.showConfirmDialog(
-            'Отменить создание пользователя?',
+            'Закрыть форму?',
             'Все введенные данные будут потеряны.'
         );
 
@@ -375,8 +354,8 @@ export default {
     },
 
     close() {
-      // Сброс формы при закрытии
-      this.newUser = {
+      // Сброс формы
+      this.newAdmin = {
         username: '',
         fullName: '',
         password: '',
@@ -400,7 +379,7 @@ export default {
 </script>
 
 <style lang="postcss" scoped>
-.add-user-form {
+.add-admin-form {
   @apply max-w-2xl mx-auto;
 }
 

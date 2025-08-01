@@ -2,21 +2,25 @@
   <BaseView>
     <template #header>
       <ScreenHeader layout="collapsed">
-        Сотрудники
+        Администраторы
 
         <template #meta>
-          <span v-if="admins.length > 0">{{ pluralizes() }}</span>
+          <span v-if="sortedAdmins.length > 0">{{ pluralizeAdmins() }}</span>
         </template>
 
         <template #controls>
           <div class="controls w-full min-h-[32px] flex justify-between items-center gap-4">
             <ListFilter
-                v-if="admins.length > 0 && !isPhone"
+                v-if="sortedAdmins.length > 0 && !isPhone"
+                :placeholder="'Поиск администраторов...'"
                 @change="onFilterChanged"
             />
           </div>
           <BtnGroup uppercase>
-            <BtnComponent success @click="showAddAdminForm">
+            <BtnComponent
+                v-if="canManageAdmins"
+                success
+                @click="showAddAdminForm">
               <Icon :icon="['fas', 'plus']" />
               Добавить
             </BtnComponent>
@@ -25,14 +29,12 @@
       </ScreenHeader>
     </template>
 
-    <!-- Индикатор загрузки -->
     <ListSkeleton v-if="isLoading" class="-m-6" />
 
-    <!-- Список пользователей -->
     <template v-else>
       <ul v-if="sortedAdmins.length > 0" class="space-y-3">
         <li v-for="admin in sortedAdmins" :key="admin.id">
-          <AdminCard :admin="admin" />
+          <AdminCard :admin="admin" @refresh="refreshAdmins" />
         </li>
       </ul>
 
@@ -44,13 +46,17 @@
         Список администраторов пуст
 
         <template #action>
-          <BtnComponent success @click="showAddAdminForm">
+          <BtnComponent
+              v-if="canManageAdmins"
+              success
+              @click="showAddAdminForm">
             <Icon :icon="['fas', 'plus']" class="mr-2" />
             Добавить первого администратора
           </BtnComponent>
         </template>
       </EmptyState>
     </template>
+
   </BaseView>
 </template>
 
@@ -68,7 +74,6 @@ import AdminCard from '@/components/Admin/AdminCard.vue';
 import ListFilter from '@/components/Ui/ListFilter.vue';
 import ListSkeleton from '@/components/Ui/Skeletons/ListSkeleton.vue';
 import EmptyState from '@/components/Ui/EmptyState.vue';
-// import Pagination from '@/components/Ui/Pagination.vue'; // ✅ Убираем пока не нужно
 
 export default {
   name: 'AdminView',
@@ -82,40 +87,46 @@ export default {
     ListFilter,
     ListSkeleton,
     EmptyState
-    // Pagination // ✅ Убираем пока не нужно
   },
 
   setup() {
-    const { currentAdmin } = useAuthorization();
-    return { currentAdmin };
+    const { currentAdmin, isSuperAdmin } = useAuthorization();
+    return { currentAdmin, isSuperAdmin };
   },
 
   data() {
     return {
-      isPhone: isMobile.any
+      isPhone: isMobile.any,
+      searchQuery: ''
     };
   },
 
   computed: {
-    // ✅ ИСПРАВЛЕНО: используем admin модуль
     ...mapGetters('admin', [
       'admins',
-      // 'filteredUsers',  // ✅ Убираем пока не реализовано
       'isLoading'
-      // 'pagination',     // ✅ Убираем пока не реализовано
-      // 'filters',        // ✅ Убираем пока не реализовано
-      // 'currentUser',    // ✅ Дублируется из setup()
-      // 'isSuperAdmin'    // ✅ Убираем пока не реализовано
     ]),
 
+    canManageAdmins() {
+      return this.isSuperAdmin;
+    },
+
     filteredAdmins() {
-      // ✅ Простая фильтрация пока admin модуль не готов
-      return this.admins || [];
+      if (!this.searchQuery.trim()) {
+        return this.admins || [];
+      }
+
+      const query = this.searchQuery.toLowerCase();
+      return (this.admins || []).filter(admin => {
+        const name = (admin.fullName || admin.name || '').toLowerCase();
+        const username = (admin.username || '').toLowerCase();
+        return name.includes(query) || username.includes(query);
+      });
     },
 
     sortedAdmins() {
       return this.filteredAdmins
-          .slice() //
+          .slice()
           .sort((a, b) => {
             if (a.id === this.currentAdmin?.id) return -1;
             if (b.id === this.currentAdmin?.id) return 1;
@@ -126,74 +137,53 @@ export default {
             if (aIsSuper && !bIsSuper) return -1;
             if (!aIsSuper && bIsSuper) return 1;
 
-            // Потом по алфавиту
-            const aName = a.fullName || a.full_name || a.username;
-            const bName = b.fullName || b.full_name || b.username;
+            // Активные выше неактивных
+            if (a.isActive && !b.isActive) return -1;
+            if (!a.isActive && b.isActive) return 1;
+
+            // По имени
+            const aName = a.fullName || a.name || a.username || '';
+            const bName = b.fullName || b.name || b.username || '';
             return aName.localeCompare(bName);
           });
-    },
-
-    hasActiveFilters() {
-      return false;
-      // return this.filters.search ||
-      //        this.filters.isActive !== null ||
-      //        this.filters.isSuperAdmin !== null;
     }
   },
 
   async mounted() {
-    try {
-      await this.fetchAdmins();
-    } catch (error) {
-      console.error('Ошибка загрузки пользователей:', error);
-    }
+    await this.refreshAdmins();
   },
 
   methods: {
-    ...mapActions('admin', [
-      'fetchAdmins'
-      // 'setFilters',     // ✅ Убираем пока не реализовано
-      // 'resetFilters',   // ✅ Убираем пока не реализовано
-      // 'setPage'         // ✅ Убираем пока не реализовано
-    ]),
+    ...mapActions('admin', {
+      fetchAdmins: 'fetchAdmins'
+    }),
+
+    pluralizeAdmins() {
+      return pluralize(this.sortedAdmins.length, 'администратор', 'администратора', 'администраторов');
+    },
+
+    onFilterChanged(query) {
+      this.searchQuery = query;
+    },
 
     showAddAdminForm() {
       eventBus.emit('MODAL_SHOW_ADD_USER_FORM');
     },
 
-    async onFilterChanged(filters) {
-      // ✅ TODO: Реализовать когда будет готов admin модуль
-      console.log('Фильтры изменены:', filters);
-      // await this.setFilters(filters);
-    },
-
-    async clearFilters() {
-      // ✅ TODO: Реализовать когда будет готов admin модуль
-      console.log('Очистка фильтров');
-      // await this.resetFilters();
-    },
-
-    async changePage(page) {
-      // ✅ TODO: Реализовать когда будет готов admin модуль
-      console.log('Смена страницы:', page);
-      // await this.setPage(page);
-    },
-
-    pluralizes() {
-      return pluralize(this.users.length, 'администратор', 'администратора', 'администраторов');
+    async refreshAdmins() {
+      try {
+        await this.fetchAdmins();
+      } catch (error) {
+        console.error('Ошибка загрузки администраторов:', error);
+      }
     }
+
   }
 };
 </script>
 
 <style lang="postcss" scoped>
 .controls {
-  @apply flex items-center justify-between gap-4;
-}
-
-@media (max-width: 768px) {
-  .controls {
-    @apply flex-col items-stretch gap-3;
-  }
+  min-height: 32px;
 }
 </style>

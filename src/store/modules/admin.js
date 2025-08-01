@@ -1,4 +1,3 @@
-import { differenceBy, merge } from 'lodash';
 import { arrayify } from '@/utils';
 import { adminAPI } from '@/api/index.js';
 import { logger } from '@/utils';
@@ -18,7 +17,6 @@ export default {
             lastError: null,
             isInitialized: false,
 
-
             pagination: {
                 page: 1,
                 size: 20,
@@ -35,7 +33,6 @@ export default {
     },
 
     getters: {
-
         currentAdmin: (state) => state.current || state.currentAdmin,
 
         isAuthenticated: (state) => !!(state.current || state.currentAdmin),
@@ -54,7 +51,7 @@ export default {
             const admin = state.current || state.currentAdmin;
             const fullName = admin?.full_name || admin?.fullName || admin?.name;
 
-            if (!fullName) return 'G';
+            if (!fullName) return 'A';
 
             return fullName
                 .split(' ')
@@ -74,7 +71,6 @@ export default {
 
         lastError: (state) => state.lastError,
 
-
         activeAdmins: (state) => {
             return state.admins.filter(admin => admin.isActive !== false);
         },
@@ -89,29 +85,26 @@ export default {
 
         filters: (state) => state.filters,
 
-        filteredAdmins: (state) => {
+        filteredAdmins: (state, getters) => {
             let filtered = state.admins;
 
-            if (state.filters.search) {
-                const search = state.filters.search.toLowerCase();
+            if (state.filters.search.trim()) {
+                const query = state.filters.search.toLowerCase();
                 filtered = filtered.filter(admin => {
-                    const fullName = admin.full_name || admin.fullName || admin.name || '';
-                    const username = admin.username || '';
-                    return fullName.toLowerCase().includes(search) ||
-                        username.toLowerCase().includes(search);
+                    const name = (admin.fullName || admin.name || '').toLowerCase();
+                    const username = (admin.username || '').toLowerCase();
+                    return name.includes(query) || username.includes(query);
                 });
             }
 
             if (state.filters.isActive !== null) {
-                filtered = filtered.filter(admin =>
-                    Boolean(admin.isActive) === Boolean(state.filters.isActive)
-                );
+                filtered = filtered.filter(admin => admin.isActive === state.filters.isActive);
             }
 
             if (state.filters.isSuperAdmin !== null) {
                 filtered = filtered.filter(admin => {
-                    const isSuperAdmin = admin.isSuperAdmin || admin.is_super_admin || admin.admin;
-                    return Boolean(isSuperAdmin) === Boolean(state.filters.isSuperAdmin);
+                    const isSuper = admin.isSuperAdmin || admin.is_super_admin || admin.admin;
+                    return isSuper === state.filters.isSuperAdmin;
                 });
             }
 
@@ -120,78 +113,30 @@ export default {
     },
 
     mutations: {
-
-        SET_ADMINS(state, admins) {
-            state.admins = admins;
-        },
-
-        SET_CURRENT_ADMIN(state, admin) {
-            state.current = admin;
-            state.currentAdmin = admin;
-            state.isInitialized = true;
-            logger.info('🔐 Текущий пользователь установлен:', admin?.username || admin?.full_name);
-        },
-
-        UPDATE_CURRENT_ADMIN(state, updates) {
-            if (state.current) {
-                merge(state.current, updates);
-                state.currentAdmin = state.current;
-                logger.info('📝 Данные текущего пользователя обновлены');
-            }
-        },
-
-        CLEAR_CURRENT_ADMIN(state) {
-            state.current = null;
-            state.currentAdmin = null;
-            state.isInitialized = false;
-            state.lastError = null;
-            logger.info('🚪 Текущий пользователь очищен');
-        },
-
-        ADD_ADMIN(state, admin) {
-            state.admins.push(user);
-            logger.info('➕ Добавлен новый админ:', admin.username || admin.full_name);
-        },
-
-        UPDATE_ADMIN(state, admin) {
-            const index = state.admins.findIndex(a => a.id === admin.id);
-            if (index !== -1) {
-                state.admins.splice(index, 1, admin);
-                logger.info('📝 Админ обновлен:', admin.username || admin.full_name);
-            }
-        },
-
-        REMOVE_ADMIN(state, admin) {
-            state.admins = differenceBy(state.admins, [admin], 'id');
-            state.vault.delete(admin.id);
-            logger.info('🗑️ Админ удален:', admin.username || admin.full_name);
-        },
-
-        SET_AVATAR(state, avatar) {
-            state.avatar = avatar;
-        },
-
-        SYNC_WITH_VAULT(state, admins) {
-            arrayify(admins).forEach(admin => {
-                let local = state.vault.get(admin.id);
-                local = local ? merge(local, admin) : admin;
-                state.vault.set(admin.id, local);
-            });
-        },
-
         SET_LOADING(state, loading) {
             state.isLoading = loading;
         },
 
         SET_ERROR(state, error) {
             state.lastError = error;
-            logger.error('❌ Ошибка в admin store:', error);
         },
 
         CLEAR_ERROR(state) {
             state.lastError = null;
         },
 
+        SET_USERS(state, admins) {
+            state.admins = Array.isArray(admins) ? admins : [];
+        },
+
+        SET_CURRENT_USER(state, admin) {
+            state.current = admin;
+            state.currentAdmin = admin;
+        },
+
+        SET_AVATAR(state, avatar) {
+            state.avatar = avatar;
+        },
 
         SET_PAGINATION(state, pagination) {
             state.pagination = { ...state.pagination, ...pagination };
@@ -201,87 +146,73 @@ export default {
             state.filters = { ...state.filters, ...filters };
         },
 
-        RESET_FILTERS(state) {
-            state.filters = {
-                search: '',
-                isActive: null,
-                isSuperAdmin: null
-            };
+        SYNC_WITH_VAULT(state, admins) {
+            const adminArray = arrayify(admins);
+            adminArray.forEach(admin => {
+                if (admin.id) {
+                    state.vault.set(admin.id, admin);
+                }
+            });
+        },
+
+        ADD_USER(state, admin) {
+            if (admin && admin.id) {
+                state.admins.push(admin);
+                state.vault.set(admin.id, admin);
+            }
+        },
+
+        UPDATE_USER(state, updatedAdmin) {
+            if (!updatedAdmin || !updatedAdmin.id) return;
+
+            const index = state.admins.findIndex(admin => admin.id === updatedAdmin.id);
+            if (index !== -1) {
+                state.admins.splice(index, 1, updatedAdmin);
+            }
+            state.vault.set(updatedAdmin.id, updatedAdmin);
+
+            if (state.current?.id === updatedAdmin.id) {
+                state.current = updatedAdmin;
+                state.currentAdmin = updatedAdmin;
+            }
+        },
+
+        REMOVE_USER(state, adminId) {
+            state.admins = state.admins.filter(admin => admin.id !== adminId);
+            state.vault.delete(adminId);
+        },
+
+        SET_INITIALIZED(state, initialized) {
+            state.isInitialized = initialized;
         }
     },
 
     actions: {
+        async init({ commit, state }, adminData) {
+            if (state.isInitialized && state.current) {
+                return state.current;
+            }
 
-        async init({ commit, dispatch }, adminData) {
             try {
-                commit('SET_CURRENT_USER', adminData);
-                await dispatch('syncWithVault', adminData);
-
-                const isSuperAdmin = adminData.isSuperAdmin || adminData.is_super_admin || adminData.admin;
-                if (isSuperAdmin) {
-                    await dispatch('fetchUsers');
+                if (adminData) {
+                    commit('SET_CURRENT_USER', adminData);
                 }
 
+                commit('SET_INITIALIZED', true);
+                return adminData;
+
             } catch (error) {
-                commit('SET_ERROR', error.message || 'Ошибка инициализации');
+                logger.error('❌ Ошибка инициализации admin модуля:', error);
                 throw error;
             }
         },
 
-        async updateCurrent({ commit, dispatch }, adminData) {
-            commit('UPDATE_CURRENT_USER', adminData);
-            await dispatch('syncWithVault', adminData);
-        },
-
-        async updateProfile({ commit, state, dispatch }, data) {
-            if (!state.current && !state.currentAdmin) {
-                throw new Error('No current user to update');
-            }
-
+        async index({ commit, dispatch }, params = {}) {
             commit('SET_LOADING', true);
             commit('CLEAR_ERROR');
 
             try {
-                const currentAdmin = state.current || state.currentAdmin;
-                const updatedUser = await adminAPI.update(currentAdmin.id, data);
-
-                await dispatch('updateCurrent', updatedUser);
-                return updatedUser;
-
-            } catch (error) {
-                const errorMessage = error.response?.data?.message || error.message || 'Ошибка обновления профиля';
-                commit('SET_ERROR', errorMessage);
-                throw error;
-            } finally {
-                commit('SET_LOADING', false);
-            }
-        },
-
-        async clear({ commit }) {
-            commit('CLEAR_CURRENT_USER');
-            commit('CLEAR_ERROR');
-            commit('SET_LOADING', false);
-            commit('SET_USERS', []);
-            commit('RESET_FILTERS');
-            logger.info('🧹 Админ модуль очищен');
-        },
-
-        async fetchAdmins({ commit, dispatch, state }) {
-            commit('SET_LOADING', true);
-            commit('CLEAR_ERROR');
-
-            try {
-                const params = {
-                    page: state.pagination.page,
-                    size: state.pagination.size,
-                    search: state.filters.search || undefined,
-                    isActive: state.filters.isActive,
-                    isSuperAdmin: state.filters.isSuperAdmin
-                };
-
-                Object.keys(params).forEach(key =>
-                    params[key] === undefined && delete params[key]
-                );
+                logger.info('🔍 Загрузка списка администраторов...', params);
 
                 const response = await adminAPI.getAll(params);
 
@@ -301,9 +232,12 @@ export default {
                     throw new Error('Неожиданный формат ответа от API');
                 }
 
+                logger.info('✅ Администраторы загружены:', response.length || response.content?.length);
+
             } catch (error) {
-                const errorMessage = error.response?.data?.message || error.message || 'Ошибка загрузки пользователей';
+                const errorMessage = error.response?.data?.message || error.message || 'Ошибка загрузки администраторов';
                 commit('SET_ERROR', errorMessage);
+                logger.error('❌ Ошибка загрузки администраторов:', error);
                 throw error;
             } finally {
                 commit('SET_LOADING', false);
@@ -330,149 +264,121 @@ export default {
             commit('CLEAR_ERROR');
 
             try {
-                const admin = await adminAPI.store(data);
-                await dispatch('add', admin);
-                return admin;
+                logger.info('➕ Создание нового администратора:', data.username);
+
+                const createdAdmin = await adminAPI.store(data);
+                const convertedAdmin = adminAPI.convertBackendAdmin(createdAdmin);
+
+                commit('ADD_USER', convertedAdmin);
+
+                logger.info('✅ Администратор создан:', convertedAdmin.username);
+                return convertedAdmin;
+
             } catch (error) {
-                const errorMessage = error.response?.data?.message || error.message || 'Ошибка создания пользователя';
+                const errorMessage = error.response?.data?.message || error.message || 'Ошибка создания администратора';
                 commit('SET_ERROR', errorMessage);
+                logger.error('❌ Ошибка создания администратора:', error);
                 throw error;
             } finally {
                 commit('SET_LOADING', false);
             }
         },
 
-        add({ commit, dispatch }, admin) {
-            dispatch('syncWithVault', admin);
-            commit('ADD_ADMIN', admin);
-        },
-
-        async update({ commit, dispatch, state }, data) {
+        async update({ commit }, { id, data }) {
             commit('SET_LOADING', true);
             commit('CLEAR_ERROR');
 
             try {
-                const updatedAdmin = await adminAPI.update(data.id, data);
-                await dispatch('syncWithVault', updatedAdmin);
-                commit('UPDATE_ADMIN', updatedAdmin);
+                logger.info('🔄 Обновление администратора:', id, data);
 
-                const currentAdmin = state.current || state.currentAdmin;
-                if (currentAdmin && currentAdmin.id === data.id) {
-                    commit('UPDATE_CURRENT_ADMIN', updatedAdmin);
-                }
+                const updatedAdmin = await adminAPI.update(id, data);
+                const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
 
-                return updatedAdmin;
+                commit('UPDATE_USER', convertedAdmin);
+
+                logger.info('✅ Администратор обновлен:', convertedAdmin.username);
+                return convertedAdmin;
+
             } catch (error) {
-                const errorMessage = error.response?.data?.message || error.message || 'Ошибка обновления пользователя';
+                const errorMessage = error.response?.data?.message || error.message || 'Ошибка обновления администратора';
                 commit('SET_ERROR', errorMessage);
+                logger.error('❌ Ошибка обновления администратора:', error);
                 throw error;
             } finally {
                 commit('SET_LOADING', false);
             }
         },
 
-        async destroy({ commit }, admin) {
+        async destroy({ commit }, adminId) {
             commit('SET_LOADING', true);
             commit('CLEAR_ERROR');
 
             try {
-                const adminId = typeof admin === 'object' ? admin.id : admin;
-                await adminAPI.delete(adminId);
-                commit('REMOVE_USER', admin);
+                logger.info('🗑️ Удаление администратора:', adminId);
+
+                await adminAPI.destroy(adminId);
+                commit('REMOVE_USER', adminId);
+
+                logger.info('✅ Администратор удален:', adminId);
+
             } catch (error) {
-                const errorMessage = error.response?.data?.message || error.message || 'Ошибка удаления пользователя';
+                const errorMessage = error.response?.data?.message || error.message || 'Ошибка удаления администратора';
                 commit('SET_ERROR', errorMessage);
+                logger.error('❌ Ошибка удаления администратора:', error);
                 throw error;
             } finally {
                 commit('SET_LOADING', false);
             }
         },
 
-        async activate({ commit, dispatch }, admin) {
-            commit('SET_LOADING', true);
-            commit('CLEAR_ERROR');
-
+        async activate({ commit }, adminId) {
             try {
-                await adminAPI.activate(admin.id);
+                logger.info('🔓 Активация администратора:', adminId);
 
-                const updatedAdmin = { ...admin, isActive: true };
-                await dispatch('syncWithVault', updatedAdmin);
-                commit('UPDATE_USER', updatedAdmin);
+                const updatedAdmin = await adminAPI.activate(adminId);
+                const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
 
-                logger.info('✅ Админ активирован:', admin.username || admin.full_name);
-                return updatedAdmin;
+                commit('UPDATE_USER', convertedAdmin);
+                logger.info('✅ Администратор активирован:', adminId);
+                return convertedAdmin;
+
             } catch (error) {
-                const errorMessage = error.response?.data?.message || error.message || 'Ошибка активации администратора';
-                commit('SET_ERROR', errorMessage);
+                logger.error('❌ Ошибка активации администратора:', error);
                 throw error;
-            } finally {
-                commit('SET_LOADING', false);
             }
         },
 
-        async deactivate({ commit, dispatch }, admin) {
-            commit('SET_LOADING', true);
-            commit('CLEAR_ERROR');
-
+        async deactivate({ commit }, adminId) {
             try {
-                await adminAPI.deactivate(admin.id);
+                logger.info('🔒 Деактивация администратора:', adminId);
 
-                const updatedUser = { ...admin, isActive: false };
-                await dispatch('syncWithVault', updatedUser);
-                commit('UPDATE_USER', updatedUser);
+                const updatedAdmin = await adminAPI.deactivate(adminId);
+                const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
 
-                logger.info('✅ Админ деактивирован:', admin.username || admin.full_name);
-                return updatedUser;
+                commit('UPDATE_USER', convertedAdmin);
+                logger.info('✅ Администратор деактивирован:', adminId);
+                return convertedAdmin;
+
             } catch (error) {
-                const errorMessage = error.response?.data?.message || error.message || 'Ошибка деактивации администратора';
-                commit('SET_ERROR', errorMessage);
+                logger.error('❌ Ошибка деактивации администратора:', error);
                 throw error;
-            } finally {
-                commit('SET_LOADING', false);
             }
         },
 
-
-        async setFilters({ commit, dispatch }, filters) {
+        setFilters({ commit }, filters) {
             commit('SET_FILTERS', filters);
-            commit('SET_PAGINATION', { page: 1 });
-            await dispatch('fetchUsers');
         },
 
-        async setPage({ commit, dispatch }, page) {
-            commit('SET_PAGINATION', { page });
-            await dispatch('fetchUsers');
+        clearFilters({ commit }) {
+            commit('SET_FILTERS', {
+                search: '',
+                isActive: null,
+                isSuperAdmin: null
+            });
         },
 
-        async setPageSize({ commit, dispatch }, size) {
-            commit('SET_PAGINATION', { page: 1, size });
-            await dispatch('fetchUsers');
-        },
-
-        async resetFilters({ commit, dispatch }) {
-            commit('RESET_FILTERS');
-            commit('SET_PAGINATION', { page: 1 });
-            await dispatch('fetchUsers');
-        },
-
-        async search({ dispatch }, searchTerm) {
-            await dispatch('setFilters', { search: searchTerm });
-        },
-
-        async changePassword({ commit }, { id, oldPassword, newPassword }) {
-            commit('SET_LOADING', true);
-            commit('CLEAR_ERROR');
-
-            try {
-                await adminAPI.changePassword(id, oldPassword, newPassword);
-                logger.info('✅ Пароль изменен для админа ID:', id);
-            } catch (error) {
-                const errorMessage = error.response?.data?.message || error.message || 'Ошибка смены пароля';
-                commit('SET_ERROR', errorMessage);
-                throw error;
-            } finally {
-                commit('SET_LOADING', false);
-            }
+        updateCurrentAdmin({ commit }, adminData) {
+            commit('SET_CURRENT_USER', adminData);
         }
     }
 };

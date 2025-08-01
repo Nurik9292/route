@@ -2,7 +2,7 @@
   <article :class="{ me: isCurrentAdmin }"
            class="admin-card p-4 flex items-center rounded-md bg-k-bg-secondary border border-k-border gap-3 transition-[border-color] duration-200 ease-in-out hover:border-white/15">
 
-    <UserAvatar :admin="admin" width="48"/>
+    <AdminAvatar :admin="admin" width="48"/>
 
     <main class="flex flex-col justify-between relative flex-1 gap-1">
       <h3 class="font-medium flex gap-2 items-center">
@@ -14,22 +14,22 @@
               class="you text-k-highlight"
               title="Это вы!"/>
 
-        <Icon v-if="isSuperAdmin"
+        <Icon v-if="isAdminSuper"
               :icon="['fas', 'shield']"
               class="is-admin text-k-primary"
               title="Супер-администратор"/>
       </h3>
 
-      <div class="user-details">
+      <div class="admin-details">
         <div class="flex items-center gap-2">
-          <p v-if="isSuperAdmin" class="text-k-text-secondary">
+          <p v-if="isAdminSuper" class="text-k-text-secondary text-sm">
             Супер-администратор
           </p>
-          <p v-else class="text-k-text-secondary">
+          <p v-else class="text-k-text-secondary text-sm">
             Администратор
           </p>
 
-          <span v-if="!admin.isActive"
+          <span v-if="!adminIsActive"
                 class="status-badge inactive">
             Неактивен
           </span>
@@ -41,7 +41,7 @@
         <div class="text-xs text-k-text-secondary mt-1 flex items-center gap-3">
           <span>@{{ admin.username }}</span>
           <span v-if="admin.createdAt || admin.created_at">
-            Создан: {{ formatDate(user.createdAt || user.created_at) }}
+            Создан: {{ formatDate(admin.createdAt || admin.created_at) }}
           </span>
           <span v-if="admin.lastLoginAt || admin.last_login_at">
             Вход: {{ formatLastLogin(admin.lastLoginAt || admin.last_login_at) }}
@@ -61,11 +61,11 @@
 
       <BtnComponent
           v-if="!isCurrentAdmin && canToggleStatus"
-          :class="admin.isActive ? 'warning' : 'success'"
+          :class="adminIsActive ? 'warning' : 'success'"
           small
           @click="toggleStatus"
           :disabled="loading">
-        {{ admin.isActive ? 'Деактивировать' : 'Активировать' }}
+        {{ adminIsActive ? 'Деактивировать' : 'Активировать' }}
       </BtnComponent>
 
       <BtnComponent
@@ -99,7 +99,7 @@ export default {
 
   components: {
     BtnComponent,
-    UserAvatar: AdminAvatar,
+    AdminAvatar,
   },
 
   props: {
@@ -108,6 +108,8 @@ export default {
       required: true
     }
   },
+
+  emits: ['refresh'],
 
   setup() {
     const { currentAdmin, isSuperAdmin } = useAuthorization();
@@ -132,7 +134,6 @@ export default {
   },
 
   computed: {
-
     isCurrentAdmin() {
       const current = this.currentAdmin;
       return current && this.admin.id === current.id;
@@ -142,18 +143,20 @@ export default {
       return this.admin.fullName || this.admin.full_name || this.admin.name || this.admin.username;
     },
 
+    adminIsActive() {
+      return this.admin.isActive !== false && this.admin.is_active !== false;
+    },
+
+    isAdminSuper() {
+      return this.admin.isSuperAdmin || this.admin.is_super_admin || this.admin.admin;
+    },
+
     canDeleteAdmin() {
-      const current = this.currentAdmin;
-      return current &&
-          (current.isSuperAdmin || current.is_super_admin || current.admin) &&
-          this.admin.id !== current.id;
+      return this.isSuperAdmin && !this.isCurrentAdmin;
     },
 
     canToggleStatus() {
-      const current = this.currentAdmin;
-      return current &&
-          (current.isSuperAdmin || current.is_super_admin || current.admin) &&
-          this.admin.id !== current.id;
+      return this.isSuperAdmin && !this.isCurrentAdmin;
     }
   },
 
@@ -170,21 +173,17 @@ export default {
       if (this.isCurrentAdmin) {
         this.go('profile');
       } else {
-        eventBus.emit('MODAL_SHOW_EDIT_USER_FORM', this.user);
+        eventBus.emit('MODAL_SHOW_EDIT_USER_FORM', this.admin);
       }
     },
 
     async toggleStatus() {
       if (this.loading) return;
 
-      const action = this.admin.isActive ? 'деактивировать' : 'активировать';
-      const adminName = this.adminName || 'пользователя';
-
+      const action = this.adminIsActive ? 'деактивировать' : 'активировать';
       const confirmed = await this.showConfirmDialog(
-          `${action.charAt(0).toUpperCase() + action.slice(1)} ${adminName}?`,
-          this.admin.isActive
-              ? 'Пользователь потеряет доступ к системе.'
-              : 'Пользователь получит доступ к системе.'
+          `${action.charAt(0).toUpperCase() + action.slice(1)} администратора?`,
+          `Вы уверены, что хотите ${action} администратора "${this.adminName}"?`
       );
 
       if (!confirmed) return;
@@ -192,16 +191,17 @@ export default {
       this.loading = true;
 
       try {
-        if (this.admin.isActive) {
-          await this.deactivateAdmin(this.admin);
-          this.toastSuccess(`Пользователь "${adminName}" деактивирован`);
+        if (this.adminIsActive) {
+          await this.deactivateAdmin(this.admin.id);
+          this.toastSuccess('Администратор деактивирован');
         } else {
-          await this.activateAdmin(this.user);
-          this.toastSuccess(`Пользователь "${adminName}" активирован`);
+          await this.activateAdmin(this.admin.id);
+          this.toastSuccess('Администратор активирован');
         }
+
+        this.$emit('refresh');
       } catch (error) {
-        console.error('Ошибка изменения статуса:', error);
-        this.handleError(error, 'изменении статуса');
+        this.toastError(`Ошибка: ${error.message || 'Не удалось изменить статус'}`);
       } finally {
         this.loading = false;
       }
@@ -210,11 +210,9 @@ export default {
     async destroy() {
       if (this.loading) return;
 
-      const adminName = this.adminName || 'этого пользователя';
-
       const confirmed = await this.showConfirmDialog(
-          `Удалить ${adminName}?`,
-          'Это действие нельзя отменить. Пользователь потеряет доступ к системе навсегда.'
+          'Удалить администратора?',
+          `Вы уверены, что хотите удалить администратора "${this.adminName}"? Это действие нельзя отменить.`
       );
 
       if (!confirmed) return;
@@ -222,49 +220,65 @@ export default {
       this.loading = true;
 
       try {
-        await this.deleteAdmin(this.admin);
-        this.toastSuccess(`Пользователь "${adminName}" удален успешно`);
+        await this.deleteAdmin(this.admin.id);
+        this.toastSuccess('Администратор удален');
+        this.$emit('refresh');
       } catch (error) {
-        console.error('Ошибка удаления пользователя:', error);
-        this.handleError(error, 'удалении');
+        this.toastError(`Ошибка: ${error.message || 'Не удалось удалить администратора'}`);
       } finally {
         this.loading = false;
       }
     },
 
-
-    handleError(error, action) {
-      let errorMessage = `Произошла ошибка при ${action} пользователя`;
-
-      if (error.response?.status === 403) {
-        errorMessage = 'У вас нет прав для выполнения этого действия';
-      } else if (error.response?.status === 404) {
-        errorMessage = 'Пользователь не найден';
-      } else if (error.response?.status === 409) {
-        errorMessage = 'Конфликт данных. Возможно, пользователь уже изменен';
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
+    formatDate(dateString) {
+      if (!dateString) return '';
+      try {
+        const date = new Date(dateString);
+        return format(date, 'dd.MM.yyyy', { locale: ru });
+      } catch {
+        return '';
       }
-
-      this.toastError(errorMessage);
     },
 
-    formatDate(date) {
-      if (!date) return 'Неизвестно';
-      return format(new Date(date), 'dd.MM.yyyy', { locale: ru });
-    },
-
-    formatLastLogin(date) {
-      if (!date) return 'Никогда';
-      return formatDistanceToNow(new Date(date), {
-        addSuffix: true,
-        locale: ru
-      });
+    formatLastLogin(dateString) {
+      if (!dateString) return '';
+      try {
+        const date = new Date(dateString);
+        return formatDistanceToNow(date, { addSuffix: true, locale: ru });
+      } catch {
+        return '';
+      }
     }
   }
-}
+};
 </script>
 
 <style lang="postcss" scoped>
+.admin-card.me {
+  @apply border-k-primary/30 bg-k-primary/5;
+}
 
+.status-badge {
+  @apply px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-badge.active {
+  @apply bg-green-100 text-green-800;
+}
+
+.status-badge.inactive {
+  @apply bg-red-100 text-red-800;
+}
+
+.you {
+  @apply text-k-highlight;
+}
+
+.is-admin {
+  @apply text-k-primary;
+}
+
+.admin-details {
+  @apply space-y-1;
+}
 </style>
