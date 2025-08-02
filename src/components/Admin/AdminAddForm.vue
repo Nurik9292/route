@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="submit" class="add-admin-form">
-    <header class="form-header">
+    <header class="form-header w-full flex-1 overflow-hidden flex flex-col">
       <h1>Добавить администратора</h1>
       <p>Создайте новую учетную запись администратора для системы</p>
     </header>
@@ -384,7 +384,7 @@ export default {
 }
 
 .form-header {
-  @apply mb-6 text-center;
+  @apply  mb-6 text-center;
 }
 
 .form-header h1 {
@@ -404,7 +404,9 @@ export default {
 }
 
 .permissions-section {
-  @apply flex items-start space-x-3 p-4 bg-gray-50 rounded-lg border;
+  @apply flex items-start space-x-3 p-4 rounded-lg border;
+  background-color: color-mix(in srgb, var(--color-bg-secondary) 80%, transparent);
+  border-color: var(--color-border);
 }
 
 .permission-label {
@@ -416,7 +418,8 @@ export default {
 }
 
 .form-footer {
-  @apply border-t border-k-bg-secondary pt-4;
+  @apply border-t pt-4;
+  border-color: var(--color-border);
 }
 
 .button-group {
@@ -424,6 +427,9 @@ export default {
 }
 
 .general-error {
-  @apply mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm;
+  @apply mt-4 p-3 rounded-lg text-sm;
+  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent);
+  color: var(--color-danger);
 }
 </style>

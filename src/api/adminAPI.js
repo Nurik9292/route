@@ -83,34 +83,34 @@ class AdminAPI {
     convertBackendAdmin(backendUser) {
         return {
             id: backendUser.id,
-            name: backendUser.fullName,
-            fullName: backendUser.fullName,
+            fullName: backendUser.full_name,
             username: backendUser.username,
-            isSuperAdmin: backendUser.isSuperAdmin,
-            isActive: backendUser.isActive,
+            isSuperAdmin: backendUser.is_super_admin,
+            isActive: backendUser.is_active,
             createdAt: backendUser.createdAt,
-            updatedAt: backendUser.updatedAt
+            updatedAt: backendUser.updatedAt,
+            lastLoginAt: backendUser.last_login_at
         };
     }
 
     convertFrontendUser(frontendUser) {
         return {
             username: frontendUser.username,
-            fullName: frontendUser.name || frontendUser.fullName,
+            fullName: frontendUser.fullName,
             password: frontendUser.password,
-            isSuperAdmin: frontendUser.admin || frontendUser.isAdmin || frontendUser.isSuperAdmin,
+            isSuperAdmin: frontendUser.isSuperAdmin,
             isActive: frontendUser.isActive !== false
         };
     }
 
     async getAllWithConversion() {
-        const users = await this.getAll();
-        return users.map(user => this.convertBackendUser(user));
+        const admins = await this.getAll();
+        return admins.map(admin => this.convertBackendAdmin(admin));
     }
 
     async getByIdWithConversion(id) {
-        const user = await this.getById(id);
-        return this.convertBackendUser(user);
+        const admin = await this.getById(id);
+        return this.convertBackendAdmin(admin);
     }
 }
 

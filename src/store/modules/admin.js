@@ -9,7 +9,6 @@ export default {
         return {
             admins: [],
             currentAdmin: null,
-            current: null,
             avatar: null,
             vault: new Map(),
 
@@ -33,23 +32,23 @@ export default {
     },
 
     getters: {
-        currentAdmin: (state) => state.current || state.currentAdmin,
+        currentAdmin: (state) =>  state.currentAdmin,
 
-        isAuthenticated: (state) => !!(state.current || state.currentAdmin),
+        isAuthenticated: (state) => !!state.currentAdmin,
 
         adminFullName: (state) => {
-            const admin = state.current || state.currentAdmin;
-            return admin?.full_name || admin?.fullName || admin?.name || 'Гость';
+            const admin = state.currentAdmin;
+            return admin?.username || admin?.fullName || admin?.name || 'Гость';
         },
 
         isSuperAdmin: (state) => {
-            const admin = state.current || state.currentAdmin;
-            return admin?.is_super_admin || admin?.isSuperAdmin || admin?.admin || false;
+            const admin = state.currentAdmin;
+            return  admin?.isSuperAdmin || admin?.admin || false;
         },
 
         adminInitials: (state) => {
-            const admin = state.current || state.currentAdmin;
-            const fullName = admin?.full_name || admin?.fullName || admin?.name;
+            const admin =  state.currentAdmin;
+            const fullName =  admin?.fullName || admin?.username;
 
             if (!fullName) return 'A';
 
@@ -77,7 +76,7 @@ export default {
 
         superAdmins: (state) => {
             return state.admins.filter(admin =>
-                admin.isSuperAdmin || admin.is_super_admin || admin.admin
+                admin.isSuperAdmin || admin.admin
             );
         },
 
@@ -103,7 +102,7 @@ export default {
 
             if (state.filters.isSuperAdmin !== null) {
                 filtered = filtered.filter(admin => {
-                    const isSuper = admin.isSuperAdmin || admin.is_super_admin || admin.admin;
+                    const isSuper = admin.isSuperAdmin  || admin.admin;
                     return isSuper === state.filters.isSuperAdmin;
                 });
             }
@@ -125,12 +124,11 @@ export default {
             state.lastError = null;
         },
 
-        SET_USERS(state, admins) {
+        SET_ADMINS(state, admins) {
             state.admins = Array.isArray(admins) ? admins : [];
         },
 
-        SET_CURRENT_USER(state, admin) {
-            state.current = admin;
+        SET_CURRENT_ADMIN(state, admin) {
             state.currentAdmin = admin;
         },
 
@@ -155,14 +153,14 @@ export default {
             });
         },
 
-        ADD_USER(state, admin) {
+        ADD_ADMIN(state, admin) {
             if (admin && admin.id) {
                 state.admins.push(admin);
                 state.vault.set(admin.id, admin);
             }
         },
 
-        UPDATE_USER(state, updatedAdmin) {
+        UPDATE_ADMIN(state, updatedAdmin) {
             if (!updatedAdmin || !updatedAdmin.id) return;
 
             const index = state.admins.findIndex(admin => admin.id === updatedAdmin.id);
@@ -189,13 +187,12 @@ export default {
 
     actions: {
         async init({ commit, state }, adminData) {
-            if (state.isInitialized && state.current) {
-                return state.current;
+            if (state.isInitialized && state.currentAdmin) {
+                return state.currentAdmin;
             }
-
             try {
                 if (adminData) {
-                    commit('SET_CURRENT_USER', adminData);
+                    commit('SET_CURRENT_ADMIN', adminData);
                 }
 
                 commit('SET_INITIALIZED', true);
@@ -212,32 +209,30 @@ export default {
             commit('CLEAR_ERROR');
 
             try {
-                logger.info('🔍 Загрузка списка администраторов...', params);
+                const response = await adminAPI.getAll({});
 
-                const response = await adminAPI.getAll(params);
+                if (response && response.admins && Array.isArray(response.admins)) {
+                    const convertedAdmins = response.admins.map(admin => ({
+                        id: admin.id,
+                        username: admin.username,
+                        fullName: admin.full_name,
+                        name: admin.full_name,
+                        isActive: admin.is_active,
+                        isSuperAdmin: admin.is_super_admin,
+                        lastLoginAt: admin.last_login_at,
+                        createdAt: admin.created_at
+                    }));
 
-                if (response.content && Array.isArray(response.content)) {
-                    await dispatch('syncWithVault', response.content);
-                    commit('SET_USERS', response.content);
-                    commit('SET_PAGINATION', {
-                        page: response.page,
-                        size: response.size,
-                        total: response.total,
-                        totalPages: response.totalPages
-                    });
-                } else if (Array.isArray(response)) {
-                    await dispatch('syncWithVault', response);
-                    commit('SET_USERS', response);
+                    await dispatch('syncWithVault', convertedAdmins);
+                    commit('SET_ADMINS', convertedAdmins);
+
                 } else {
                     throw new Error('Неожиданный формат ответа от API');
                 }
 
-                logger.info('✅ Администраторы загружены:', response.length || response.content?.length);
-
             } catch (error) {
-                const errorMessage = error.response?.data?.message || error.message || 'Ошибка загрузки администраторов';
-                commit('SET_ERROR', errorMessage);
                 logger.error('❌ Ошибка загрузки администраторов:', error);
+                commit('SET_ERROR', error.message);
                 throw error;
             } finally {
                 commit('SET_LOADING', false);
@@ -378,7 +373,7 @@ export default {
         },
 
         updateCurrentAdmin({ commit }, adminData) {
-            commit('SET_CURRENT_USER', adminData);
+            commit('SET_CURRENT_ADMIN', adminData);
         }
     }
 };

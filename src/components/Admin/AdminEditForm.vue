@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="submit" class="edit-admin-form">
-    <header class="form-header">
+    <header class="form-header w-full flex-1 overflow-hidden flex flex-col">
       <h1>Редактировать администратора</h1>
       <p>Изменение данных администратора "{{ adminData.fullName || adminData.username }}"</p>
     </header>
@@ -46,7 +46,6 @@
         </template>
       </FormRow>
 
-      <!-- Секция смены пароля -->
       <div class="password-section">
         <div class="section-header">
           <h3>Смена пароля</h3>
@@ -90,7 +89,6 @@
         </FormRow>
       </div>
 
-      <!-- Права доступа -->
       <div class="permissions-section-wrapper">
         <div class="section-header">
           <h3>Права доступа</h3>
@@ -164,12 +162,13 @@
 
 <script>
 import { mapActions } from 'vuex';
-import { useMessageToaster, useDialogBox } from '@/composables';
+import {useMessageToaster, useDialogBox, useModal} from '@/composables';
 import FormRow from '../Ui/Form/FormRow.vue';
 import TextInput from '../Ui/Form/TextInput.vue';
 import CheckBox from '../Ui/Form/CheckBox.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import TooltipIcon from '../Ui/TooltipIcon.vue';
+import {logger} from "@/utils/index.js";
 
 export default {
   name: 'AdminEditForm',
@@ -182,23 +181,19 @@ export default {
     TooltipIcon
   },
 
-  props: {
-    admin: {
-      type: Object,
-      required: true
-    }
-  },
-
   emits: ['close', 'success'],
 
   setup() {
     const { toastSuccess, toastError } = useMessageToaster();
     const { showConfirmDialog } = useDialogBox();
+    const { getFromContext, updateContext } = useModal();
+    const admin = getFromContext('admin');
 
     return {
       toastSuccess,
       toastError,
-      showConfirmDialog
+      showConfirmDialog,
+      admin
     };
   },
 
@@ -232,7 +227,6 @@ export default {
           this.adminData.username.trim().length >= 3 &&
           this.adminData.fullName.trim().length >= 2;
 
-      // Если пароль указан, проверяем его валидность
       const passwordValid = !this.adminData.password ||
           (this.adminData.password.length >= 8 &&
               this.adminData.confirmPassword === this.adminData.password);
@@ -265,7 +259,7 @@ export default {
     }),
 
     initializeForm() {
-      // Сохраняем оригинальные данные для сравнения
+      logger.info(this.admin)
       this.originalData = {
         username: this.admin.username || '',
         fullName: this.admin.fullName || this.admin.full_name || this.admin.name || '',
@@ -273,7 +267,6 @@ export default {
         isActive: this.admin.isActive !== false && this.admin.is_active !== false
       };
 
-      // Инициализируем форму
       this.adminData = {
         ...this.originalData,
         password: '',
@@ -306,7 +299,6 @@ export default {
           isActive: this.adminData.isActive
         };
 
-        // Добавляем пароль только если он указан
         if (this.adminData.password.trim()) {
           updateData.password = this.adminData.password;
         }
@@ -366,7 +358,6 @@ export default {
     validatePassword() {
       const password = this.adminData.password;
 
-      // Пароль не обязателен при редактировании
       if (!password) {
         this.fieldErrors.password = null;
         this.adminData.confirmPassword = '';
@@ -470,24 +461,11 @@ export default {
   @apply text-red-500;
 }
 
-.password-section {
-  @apply space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg;
-}
-
-.permissions-section-wrapper {
-  @apply space-y-4 p-4 bg-gray-50 border border-gray-200 rounded-lg;
-}
-
-.section-header {
-  @apply border-b border-gray-200 pb-2 mb-4;
-}
-
-.section-header h3 {
-  @apply text-lg font-semibold text-k-text-primary;
-}
-
+/* ✅ ИСПРАВЛЕНИЕ - убираем белый фон */
 .permissions-section {
-  @apply flex items-start space-x-3 p-3 bg-white rounded border;
+  @apply flex items-start space-x-3 p-4 rounded-lg border;
+  background-color: color-mix(in srgb, var(--color-bg-secondary) 80%, transparent);
+  border-color: var(--color-border);
 }
 
 .permission-label {
@@ -499,7 +477,8 @@ export default {
 }
 
 .form-footer {
-  @apply border-t border-k-bg-secondary pt-4;
+  @apply border-t pt-4;
+  border-color: var(--color-border);
 }
 
 .button-group {
@@ -507,6 +486,16 @@ export default {
 }
 
 .general-error {
-  @apply mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm;
+  @apply mt-4 p-3 rounded-lg text-sm;
+  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent);
+  color: var(--color-danger);
+}
+
+.warning-message {
+  @apply mt-4 p-3 rounded-lg text-sm;
+  background-color: color-mix(in srgb, #f59e0b 15%, transparent);
+  border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);
+  color: #f59e0b;
 }
 </style>

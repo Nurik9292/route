@@ -16,13 +16,10 @@ class Http {
         this.silent = false;
 
         this.client.interceptors.request.use((config) => {
-            if (!this.silent) this.showLoadingIndicator();
-
             const token = authService.getApiToken() || localStorage.getItem('auth_token');
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
-
             return config;
         });
 

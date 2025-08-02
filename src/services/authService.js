@@ -86,9 +86,9 @@ export const authService = {
 
   async initializeFromStorage() {
     const token = this.getApiToken();
-    const userData = this.getUserData();
+    const adminData = this.getAdminData();
 
-    if (!token || !userData) {
+    if (!token || !adminData) {
       logger.info('ℹ️ Нет сохраненной сессии');
       return null;
     }
@@ -99,10 +99,10 @@ export const authService = {
       return null;
     }
 
-    await store.dispatch('admin/init', userData);
+    await store.dispatch('admin/init', adminData);
 
-    logger.info('✅ Сессия восстановлена:', userData.username);
-    return userData;
+    logger.info('✅ Сессия восстановлена:', adminData.username);
+    return adminData;
   },
 
   async restoreSession() {
@@ -210,8 +210,8 @@ export const authService = {
   },
 
   getCurrentAdmin() {
-    const storeUser = store.getters['admin/currentUser'];
-    if (storeUser) return storeUser;
+    const storeAdmin = store.getters['admin/currentAdmin'];
+    if (storeAdmin) return storeAdmin;
 
     return this.getAdminData();
   },

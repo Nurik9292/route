@@ -9,7 +9,8 @@
         </template>
 
         <template #controls>
-          <div class="controls w-full min-h-[32px] flex justify-between items-center gap-4">
+
+          <div class="controls  min-h-[32px] flex justify-between items-center gap-4">
             <ListFilter
                 v-if="sortedAdmins.length > 0 && !isPhone"
                 :placeholder="'Поиск администраторов...'"
@@ -21,7 +22,7 @@
                 v-if="canManageAdmins"
                 success
                 @click="showAddAdminForm">
-              <Icon :icon="['fas', 'plus']" />
+              <Icon :icon="['fas', 'plus']" class="mr-2" />
               Добавить
             </BtnComponent>
           </BtnGroup>
@@ -131,17 +132,15 @@ export default {
             if (a.id === this.currentAdmin?.id) return -1;
             if (b.id === this.currentAdmin?.id) return 1;
 
-            const aIsSuper = a.isSuperAdmin || a.is_super_admin || a.admin;
-            const bIsSuper = b.isSuperAdmin || b.is_super_admin || b.admin;
+            const aIsSuper = a.isSuperAdmin || a.admin;
+            const bIsSuper = b.isSuperAdmin  || b.admin;
 
             if (aIsSuper && !bIsSuper) return -1;
             if (!aIsSuper && bIsSuper) return 1;
 
-            // Активные выше неактивных
             if (a.isActive && !b.isActive) return -1;
             if (!a.isActive && b.isActive) return 1;
 
-            // По имени
             const aName = a.fullName || a.name || a.username || '';
             const bName = b.fullName || b.name || b.username || '';
             return aName.localeCompare(bName);
@@ -155,7 +154,7 @@ export default {
 
   methods: {
     ...mapActions('admin', {
-      fetchAdmins: 'fetchAdmins'
+      fetchAdmins: 'index'
     }),
 
     pluralizeAdmins() {

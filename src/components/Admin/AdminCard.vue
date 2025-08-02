@@ -2,7 +2,7 @@
   <article :class="{ me: isCurrentAdmin }"
            class="admin-card p-4 flex items-center rounded-md bg-k-bg-secondary border border-k-border gap-3 transition-[border-color] duration-200 ease-in-out hover:border-white/15">
 
-    <AdminAvatar :admin="admin" width="48"/>
+    <UserAvatar :admin="admin" width="48"/>
 
     <main class="flex flex-col justify-between relative flex-1 gap-1">
       <h3 class="font-medium flex gap-2 items-center">
@@ -14,22 +14,22 @@
               class="you text-k-highlight"
               title="Это вы!"/>
 
-        <Icon v-if="isAdminSuper"
+        <Icon v-if="admin.isSuperAdmin"
               :icon="['fas', 'shield']"
               class="is-admin text-k-primary"
               title="Супер-администратор"/>
       </h3>
 
-      <div class="admin-details">
+      <div class="user-details">
         <div class="flex items-center gap-2">
-          <p v-if="isAdminSuper" class="text-k-text-secondary text-sm">
+          <p v-if="admin.isSuperAdmin" class="text-k-text-secondary">
             Супер-администратор
           </p>
-          <p v-else class="text-k-text-secondary text-sm">
+          <p v-else class="text-k-text-secondary">
             Администратор
           </p>
 
-          <span v-if="!adminIsActive"
+          <span v-if="!admin.isActive"
                 class="status-badge inactive">
             Неактивен
           </span>
@@ -40,11 +40,11 @@
 
         <div class="text-xs text-k-text-secondary mt-1 flex items-center gap-3">
           <span>@{{ admin.username }}</span>
-          <span v-if="admin.createdAt || admin.created_at">
-            Создан: {{ formatDate(admin.createdAt || admin.created_at) }}
+          <span v-if="admin.createdAt">
+            Создан: {{ formatDate(admin.createdAt ) }}
           </span>
-          <span v-if="admin.lastLoginAt || admin.last_login_at">
-            Вход: {{ formatLastLogin(admin.lastLoginAt || admin.last_login_at) }}
+          <span v-if="admin.lastLoginAt">
+            Вход: {{ formatLastLogin(admin.lastLoginAt) }}
           </span>
         </div>
       </div>
@@ -61,11 +61,11 @@
 
       <BtnComponent
           v-if="!isCurrentAdmin && canToggleStatus"
-          :class="adminIsActive ? 'warning' : 'success'"
+          :class="admin.isActive ? 'warning' : 'success'"
           small
           @click="toggleStatus"
           :disabled="loading">
-        {{ adminIsActive ? 'Деактивировать' : 'Активировать' }}
+        {{ admin.isActive ? 'Деактивировать' : 'Активировать' }}
       </BtnComponent>
 
       <BtnComponent
@@ -99,7 +99,7 @@ export default {
 
   components: {
     BtnComponent,
-    AdminAvatar,
+    UserAvatar: AdminAvatar,
   },
 
   props: {
@@ -108,8 +108,6 @@ export default {
       required: true
     }
   },
-
-  emits: ['refresh'],
 
   setup() {
     const { currentAdmin, isSuperAdmin } = useAuthorization();
@@ -140,23 +138,21 @@ export default {
     },
 
     adminName() {
-      return this.admin.fullName || this.admin.full_name || this.admin.name || this.admin.username;
-    },
-
-    adminIsActive() {
-      return this.admin.isActive !== false && this.admin.is_active !== false;
-    },
-
-    isAdminSuper() {
-      return this.admin.isSuperAdmin || this.admin.is_super_admin || this.admin.admin;
+      return this.admin.fullName || this.admin.name || this.admin.username;
     },
 
     canDeleteAdmin() {
-      return this.isSuperAdmin && !this.isCurrentAdmin;
+      const current = this.currentAdmin;
+      return current &&
+          (current.isSuperAdmin || current.is_super_admin || current.admin) &&
+          this.admin.id !== current.id;
     },
 
     canToggleStatus() {
-      return this.isSuperAdmin && !this.isCurrentAdmin;
+      const current = this.currentAdmin;
+      return current &&
+          (current.isSuperAdmin || current.is_super_admin || current.admin) &&
+          this.admin.id !== current.id;
     }
   },
 
@@ -169,7 +165,6 @@ export default {
 
     async edit() {
       if (this.loading) return;
-
       if (this.isCurrentAdmin) {
         this.go('profile');
       } else {
@@ -180,10 +175,10 @@ export default {
     async toggleStatus() {
       if (this.loading) return;
 
-      const action = this.adminIsActive ? 'деактивировать' : 'активировать';
+      const action = this.admin.isActive ? 'деактивировать' : 'активировать';
       const confirmed = await this.showConfirmDialog(
-          `${action.charAt(0).toUpperCase() + action.slice(1)} администратора?`,
-          `Вы уверены, что хотите ${action} администратора "${this.adminName}"?`
+          `Подтвердите действие`,
+          `Вы уверены, что хотите ${action} администратора ${this.adminName}?`
       );
 
       if (!confirmed) return;
@@ -191,17 +186,16 @@ export default {
       this.loading = true;
 
       try {
-        if (this.adminIsActive) {
+        if (this.admin.isActive) {
           await this.deactivateAdmin(this.admin.id);
           this.toastSuccess('Администратор деактивирован');
         } else {
           await this.activateAdmin(this.admin.id);
           this.toastSuccess('Администратор активирован');
         }
-
-        this.$emit('refresh');
       } catch (error) {
-        this.toastError(`Ошибка: ${error.message || 'Не удалось изменить статус'}`);
+        console.error('Toggle status error:', error);
+        this.toastError('Ошибка при изменении статуса');
       } finally {
         this.loading = false;
       }
@@ -211,8 +205,8 @@ export default {
       if (this.loading) return;
 
       const confirmed = await this.showConfirmDialog(
-          'Удалить администратора?',
-          `Вы уверены, что хотите удалить администратора "${this.adminName}"? Это действие нельзя отменить.`
+          'Удалить администратора',
+          `Вы уверены, что хотите удалить администратора ${this.adminName}? Это действие нельзя отменить.`
       );
 
       if (!confirmed) return;
@@ -222,63 +216,56 @@ export default {
       try {
         await this.deleteAdmin(this.admin.id);
         this.toastSuccess('Администратор удален');
-        this.$emit('refresh');
       } catch (error) {
-        this.toastError(`Ошибка: ${error.message || 'Не удалось удалить администратора'}`);
+        console.error('Delete admin error:', error);
+        this.toastError('Ошибка при удалении администратора');
       } finally {
         this.loading = false;
       }
     },
 
-    formatDate(dateString) {
-      if (!dateString) return '';
-      try {
-        const date = new Date(dateString);
-        return format(date, 'dd.MM.yyyy', { locale: ru });
-      } catch {
-        return '';
-      }
+    formatDate(date) {
+      if (!date) return '';
+      return format(new Date(date), 'dd.MM.yyyy', { locale: ru });
     },
 
-    formatLastLogin(dateString) {
-      if (!dateString) return '';
-      try {
-        const date = new Date(dateString);
-        return formatDistanceToNow(date, { addSuffix: true, locale: ru });
-      } catch {
-        return '';
-      }
+    formatLastLogin(date) {
+      if (!date) return 'Никогда';
+      return formatDistanceToNow(new Date(date), {
+        addSuffix: true,
+        locale: ru
+      });
     }
   }
 };
 </script>
 
 <style lang="postcss" scoped>
+/* ✅ ИСПРАВЛЕНИЕ - без прозрачности Tailwind */
 .admin-card.me {
-  @apply border-k-primary/30 bg-k-primary/5;
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  background-color: color-mix(in srgb, var(--color-primary) 5%, transparent);
 }
 
+/* ✅ БЕЗ @apply с прозрачностью - используем чистый CSS */
 .status-badge {
-  @apply px-2 py-1 rounded-full text-xs font-medium;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  border-width: 1px;
 }
 
 .status-badge.active {
-  @apply bg-green-100 text-green-800;
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 25%, transparent);
 }
 
 .status-badge.inactive {
-  @apply bg-red-100 text-red-800;
-}
-
-.you {
-  @apply text-k-highlight;
-}
-
-.is-admin {
-  @apply text-k-primary;
-}
-
-.admin-details {
-  @apply space-y-1;
+  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 25%, transparent);
 }
 </style>

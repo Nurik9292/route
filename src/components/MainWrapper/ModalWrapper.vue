@@ -42,20 +42,17 @@ export default {
         (name) => (name ? this.$refs.dialog.showModal() : this.$refs.dialog.close())
     );
 
-    eventBus.on('MODAL_SHOW_ADD_USER_FORM', () => {
-      this.context = {};
-      this.activeModalName = 'add-user-form';
-    });
+
+    eventBus.on('MODAL_SHOW_ADD_USER_FORM', () => (this.activeModalName = 'add-user-form'));
+    eventBus.on('MODAL_SHOW_ADD_STOP_FORM', () => (this.activeModalName = 'add-stop-form'));
+    eventBus.on('MODAL_SHOW_ADD_ROUTE_FORM', () => (this.activeModalName = 'add-route-form'));
+    eventBus.on('MODAL_SHOW_ADD_CITY_FORM', () => (this.activeModalName = 'add-city-form'));
+    eventBus.on('MODAL_SHOW_ADD_BANNER_FORM', () => (this.activeModalName = 'add-banner-form'));
 
     eventBus.on('MODAL_SHOW_EDIT_USER_FORM', (admin) => {
       this.context = { admin };
       this.activeModalName = 'edit-user-form';
     });
-
-    eventBus.on('MODAL_SHOW_ADD_STOP_FORM', () => (this.activeModalName = 'add-stop-form'));
-    eventBus.on('MODAL_SHOW_ADD_ROUTE_FORM', () => (this.activeModalName = 'add-route-form'));
-    eventBus.on('MODAL_SHOW_ADD_CITY_FORM', () => (this.activeModalName = 'add-city-form'));
-    eventBus.on('MODAL_SHOW_ADD_BANNER_FORM', () => (this.activeModalName = 'add-banner-form'));
 
     eventBus.on('MODAL_SHOW_EDIT_STOP_FORM', (stop) => {
       this.context = { stop };

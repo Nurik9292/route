@@ -24,8 +24,7 @@
 
 <script>
 import { useFileDialog } from '@vueuse/core';
-import { useFileReader } from '@/composables';
-import { mapGetters } from 'vuex';
+import {useAuthorization, useFileReader} from '@/composables';
 
 import AdminAvatar from '@/components/Admin/AdminAvatar.vue';
 import ImageCropper from '../Utils/ImageCropper.vue';
@@ -33,8 +32,16 @@ import ImageCropper from '../Utils/ImageCropper.vue';
 export default {
     name: 'EditableProfileAvatar',
 
+    setup() {
+      const { currentAdmin } = useAuthorization();
+
+      return {
+        currentAdmin
+      };
+    },
+
     components: {
-        UserAvatar: AdminAvatar,
+        AdminAvatar,
         ImageCropper,
         
     },
@@ -53,10 +60,8 @@ export default {
     },
 
     computed: {
-        ...mapGetters('user',['currentUser']),
-
         avatarChanged() {
-            return this.profile.avatar !== this.currentUser.avatar;
+            return this.profile.avatar !== this.currentAdmin.avatar;
         }
     },
     methods: {
@@ -70,7 +75,7 @@ export default {
         },
 
         resetAvatar() {
-            this.profile.avatar = this.currentUser.avatar;
+            this.profile.avatar = this.currentAdmin.avatar;
             this.cropperSource = null;
         },
 
@@ -95,7 +100,7 @@ export default {
 
         onChange(files => {
             if (!files?.length) {
-                this.profile.avatar = this.currentUser.avatar;
+                this.profile.avatar = this.currentAdmin.avatar;
                 this.cropperSource = null;
                 return;
             }

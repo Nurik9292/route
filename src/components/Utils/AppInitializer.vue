@@ -26,7 +26,7 @@ export default {
 
 
   computed: {
-    ...mapGetters('admin', ['currentUser', 'isSuperAdmin'])
+    ...mapGetters('admin', ['currentAdmin', 'isSuperAdmin'])
   },
 
   methods: {
@@ -98,27 +98,6 @@ export default {
 
         this.updateOverlayMessage('Загружаем остановки и маршруты...');
 
-        // if (this.isSuperAdmin) {
-        //   loadingTasks.push(
-        //       this.$store.dispatch('stops/fetchAll').catch(err => {
-        //         logger.warn('⚠️ Не удалось загрузить остановки:', err);
-        //       }),
-        //
-        //       this.$store.dispatch('routes/fetchAll').catch(err => {
-        //         logger.warn('⚠️ Не удалось загрузить маршруты:', err);
-        //       }),
-        //
-        //       this.$store.dispatch('cities/fetchAll').catch(err => {
-        //         logger.warn('⚠️ Не удалось загрузить города:', err);
-        //       }),
-        //
-        //       this.$store.dispatch('banners/paginate', { page: 1 }).catch(err => {
-        //         logger.warn('⚠️ Не удалось загрузить баннеры:', err);
-        //       })
-        //   );
-        // }
-
-
         await Promise.race([
           Promise.all(loadingTasks),
           this.delay(10000)
@@ -180,12 +159,12 @@ export default {
     updateOverlayMessage(message) {
 
       try {
-        if (this.$refs?.overlay?.updateMessage) {
+        if (this.$refs?.overlay?.updateMessage(message)) {
           this.$refs.overlay.updateMessage(message);
         }
       } catch (error) {
 
-        logger.debug('Не удалось обновить сообщение overlay:', error);
+        logger.info('Не удалось обновить сообщение overlay:', error);
       }
     },
 

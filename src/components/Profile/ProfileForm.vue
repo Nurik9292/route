@@ -72,15 +72,15 @@ export default {
     },
 
     computed: {
-        ...mapGetters('user', ['getAvatar']),
+        ...mapGetters('admin', ['getAvatar']),
 
-        currentUser() {
-            return useAuthorization().currentUser.value;
+      currentAdmin() {
+            return useAuthorization().currentAdmin.value;
         }
     },
 
     methods: {
-        ...mapActions('user', ['fetchAvatar']),
+        ...mapActions('admin', ['fetchAvatar']),
 
         async update() {    
             const { toastSuccess } = useMessageToaster();
@@ -97,9 +97,9 @@ export default {
 
         async initializeProfile() {
             this.profile = {
-                id: this.currentUser.id,
-                name: this.currentUser.name,
-                avatar: this.currentUser.avatar,
+                id: this.currentAdmin.id,
+                name: this.currentAdmin.name,
+                avatar: this.currentAdmin.avatar,
                 current_password: null
             }
         }

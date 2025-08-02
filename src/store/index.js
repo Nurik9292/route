@@ -19,7 +19,7 @@ const store = createStore({
 
 
     getters: {
-        currentUser: (state, getters) => getters['admin/currentUser'],
+        currentAdmin: (state, getters) => getters['admin/currentAdmin'],
 
         isAuthenticated: (state, getters) => getters['admin/isAuthenticated'],
 
@@ -35,14 +35,14 @@ const store = createStore({
 
                 await dispatch('common/init');
 
-                if (userData.isSuperAdmin || userData.admin) {
-                    await Promise.all([
-                        dispatch('stops/fetchAll'),
-                        dispatch('routes/fetchAll'),
-                        dispatch('cities/fetchAll'),
-                        dispatch('banners/paginate', { page: 1 })
-                    ]);
-                }
+                // if (userData.isSuperAdmin || userData.admin) {
+                //     await Promise.all([
+                //         dispatch('stops/fetchAll'),
+                //         dispatch('routes/fetchAll'),
+                //         dispatch('cities/fetchAll'),
+                //         dispatch('banners/paginate', { page: 1 })
+                //     ]);
+                // }
 
                 console.log('🎉 Приложение инициализировано успешно');
 

@@ -6,8 +6,8 @@
         href="/#/profile"
         title="Profile and preferences"
     >
-        <UserAvatar 
-            :user="currentUser"
+        <AdminAvatar
+            :admin="currentAdmin"
             class="p-0.5 border border-solid border-white/10 transition duration-200 ease-in-out hover:border-white/30 active:scale-95"
             width="40"
         />
@@ -22,11 +22,11 @@ export default {
     name: 'ProfileAvatar',
 
     components: {
-        UserAvatar: AdminAvatar
+      AdminAvatar
     },
 
     computed: {
-        ...mapGetters('user', ['currentUser'])
+        ...mapGetters('admin', ['currentAdmin'])
     },
 
 }
