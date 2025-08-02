@@ -33,23 +33,30 @@ export default class Router {
 
   static go(path, reload = false) {
     if (typeof path === 'number') {
-      history.go(path)
-      return
+      history.go(path);
+      return;
     }
 
     if (!path.startsWith('/')) {
-      path = `/${path}`
+      path = `/${path}`;  // profile → /profile
     }
 
     if (!path.startsWith('/#')) {
-      path = `/#${path}`
+      path = `/#${path}`;  // /profile → /#/profile
     }
 
-    path = path.substring(1)
-    location.assign(`${location.origin}${location.pathname}${path}`)
+    const newHash = path.substring(1); // /#/profile → #/profile
 
     if (reload) {
-      forceReloadWindow()
+      location.assign(`${location.origin}${location.pathname}${newHash}`);
+      forceReloadWindow();
+    } else {
+      location.hash = newHash; // Устанавливаем hash: #/profile
+
+      const router = window.__router_instance__;
+      if (router) {
+        router.resolve();
+      }
     }
   }
 

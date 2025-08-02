@@ -175,7 +175,7 @@ export default {
             }
         },
 
-        REMOVE_USER(state, adminId) {
+        REMOVE_ADMIN(state, adminId) {
             state.admins = state.admins.filter(admin => admin.id !== adminId);
             state.vault.delete(adminId);
         },
@@ -264,7 +264,7 @@ export default {
                 const createdAdmin = await adminAPI.store(data);
                 const convertedAdmin = adminAPI.convertBackendAdmin(createdAdmin);
 
-                commit('ADD_USER', convertedAdmin);
+                commit('ADD_ADMIN', convertedAdmin);
 
                 logger.info('✅ Администратор создан:', convertedAdmin.username);
                 return convertedAdmin;
@@ -289,7 +289,7 @@ export default {
                 const updatedAdmin = await adminAPI.update(id, data);
                 const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
 
-                commit('UPDATE_USER', convertedAdmin);
+                commit('UPDATE_ADMIN', convertedAdmin);
 
                 logger.info('✅ Администратор обновлен:', convertedAdmin.username);
                 return convertedAdmin;
@@ -312,7 +312,7 @@ export default {
                 logger.info('🗑️ Удаление администратора:', adminId);
 
                 await adminAPI.destroy(adminId);
-                commit('REMOVE_USER', adminId);
+                commit('REMOVE_ADMIN', adminId);
 
                 logger.info('✅ Администратор удален:', adminId);
 

@@ -83,6 +83,9 @@
             @blur="validateConfirmPassword"
             @input="clearFieldError('confirmPassword')"
         />
+        <div v-if="fieldErrors.password" class="text-red-500 text-sm mt-1">
+          {{ fieldErrors.password }}
+        </div>
       </FormRow>
 
       <FormRow>
@@ -208,15 +211,21 @@ export default {
 
   computed: {
     isFormValid() {
-      const basicValid =
-          this.newAdmin.username.trim().length >= 3 &&
-          this.newAdmin.fullName.trim().length >= 2 &&
-          this.newAdmin.password.length >= 8 &&
-          this.newAdmin.confirmPassword === this.newAdmin.password;
+      const hasUsername = this.newAdmin.username.trim().length >= 3;
+      const hasFullName = this.newAdmin.fullName.trim().length >= 2;
+      const hasPassword = this.newAdmin.password.length >= 8;
+      const hasConfirmPassword = this.newAdmin.confirmPassword.length > 0;
+      const passwordsMatch = this.newAdmin.confirmPassword === this.newAdmin.password;
+      const noErrors = Object.values(this.fieldErrors).every(error => error === null);
 
-      const noErrors = Object.values(this.fieldErrors).every(error => !error);
+      console.log('Валидация:', {
+        hasUsername, hasFullName, hasPassword,
+        hasConfirmPassword, passwordsMatch, noErrors,
+        errors: this.fieldErrors
+      });
 
-      return basicValid && noErrors;
+      return hasUsername && hasFullName && hasPassword &&
+          hasConfirmPassword && passwordsMatch && noErrors;
     }
   },
 
@@ -226,6 +235,7 @@ export default {
     }),
 
     async submit() {
+      console.log('submit test')
       if (!this.isFormValid || this.loading) return;
 
       this.validateAllFields();
@@ -249,7 +259,7 @@ export default {
         await this.createAdmin(adminData);
 
         this.toastSuccess(`Администратор "${adminData.fullName}" успешно создан`);
-        this.$emit('success'); // ✅ УВЕДОМЛЯЕМ ModalWrapper О УСПЕХЕ
+        this.$emit('success');
 
       } catch (error) {
         console.error('Ошибка создания администратора:', error);

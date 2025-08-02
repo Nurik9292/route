@@ -25,9 +25,9 @@ class AdminAPI {
         const payload = {
             username: data.username,
             password: data.password,
-            fullName: data.fullName || data.name,
-            isSuperAdmin: data.isSuperAdmin || data.isAdmin || false,
-            isActive: data.isActive !== false
+            full_name: data.fullName || data.name,
+            is_super_admin: data.isSuperAdmin || false,
+            is_active: data.isActive !== false
         };
 
         return await http.post('/admin/users', payload);
@@ -36,13 +36,13 @@ class AdminAPI {
     async update(id, data) {
         const payload = {
             username: data.username,
-            fullName: data.fullName || data.name,
-            isSuperAdmin: data.isSuperAdmin || data.isAdmin,
-            isActive: data.isActive
+            full_name: data.fullName || data.name,
+            is_super_admin: data.isSuperAdmin,
+            is_active: data.isActive,
         };
 
         if (data.password && data.password.trim()) {
-            payload.password = data.password;
+            payload.new_password = data.password;
         }
 
         return await http.put(`/admin/users/${id}`, payload);

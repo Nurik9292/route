@@ -259,7 +259,6 @@ export default {
     }),
 
     initializeForm() {
-      logger.info(this.admin)
       this.originalData = {
         username: this.admin.username || '',
         fullName: this.admin.fullName || this.admin.full_name || this.admin.name || '',

@@ -56,11 +56,11 @@
           small
           @click="edit"
           :disabled="loading">
-        {{ isCurrentAdmin ? 'Ваш профиль' : 'Изменить' }}
+        {{ isCurrentAdmin ? 'Ваш профиль' : (canEditAdmin ? 'Изменить' : 'Просмотр') }}
       </BtnComponent>
 
       <BtnComponent
-          v-if="!isCurrentAdmin && canToggleStatus"
+          v-if="canToggleStatus"
           :class="admin.isActive ? 'warning' : 'success'"
           small
           @click="toggleStatus"
@@ -69,7 +69,7 @@
       </BtnComponent>
 
       <BtnComponent
-          v-if="!isCurrentAdmin && canDeleteAdmin"
+          v-if="canDeleteAdmin"
           danger
           small
           @click="destroy"
@@ -141,18 +141,30 @@ export default {
       return this.admin.fullName || this.admin.name || this.admin.username;
     },
 
-    canDeleteAdmin() {
+    isCurrentUserSuperAdmin() {
       const current = this.currentAdmin;
-      return current &&
-          (current.isSuperAdmin || current.is_super_admin || current.admin) &&
-          this.admin.id !== current.id;
+      return current && (
+          current.isSuperAdmin === true ||
+          current.is_super_admin === true
+      );
+    },
+
+    canEditAdmin() {
+      if (this.isCurrentAdmin) return true;
+
+      return this.isCurrentUserSuperAdmin;
+    },
+
+    canDeleteAdmin() {
+      if (this.isCurrentAdmin) return false;
+
+      return this.isCurrentUserSuperAdmin;
     },
 
     canToggleStatus() {
-      const current = this.currentAdmin;
-      return current &&
-          (current.isSuperAdmin || current.is_super_admin || current.admin) &&
-          this.admin.id !== current.id;
+      if (this.isCurrentAdmin) return false;
+
+      return this.isCurrentUserSuperAdmin;
     }
   },
 
@@ -165,15 +177,24 @@ export default {
 
     async edit() {
       if (this.loading) return;
+
       if (this.isCurrentAdmin) {
+        console.log('🔍 Переход на профиль...');
         this.go('profile');
-      } else {
+      } else if (this.canEditAdmin) {
         eventBus.emit('MODAL_SHOW_EDIT_USER_FORM', this.admin);
+      } else {
+        this.toastError('У вас нет прав для редактирования других администраторов');
       }
     },
 
     async toggleStatus() {
       if (this.loading) return;
+
+      if (!this.canToggleStatus) {
+        this.toastError('У вас нет прав для изменения статуса администраторов');
+        return;
+      }
 
       const action = this.admin.isActive ? 'деактивировать' : 'активировать';
       const confirmed = await this.showConfirmDialog(
@@ -203,6 +224,11 @@ export default {
 
     async destroy() {
       if (this.loading) return;
+
+      if (!this.canDeleteAdmin) {
+        this.toastError('У вас нет прав для удаления администраторов');
+        return;
+      }
 
       const confirmed = await this.showConfirmDialog(
           'Удалить администратора',
