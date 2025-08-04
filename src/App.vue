@@ -30,8 +30,9 @@
 <script>
 import { defineAsyncComponent, computed } from 'vue';
 import { useRouter } from './composables';
+import Router from './router';
 import { authService } from './services';
-import { logger } from "@/utils/index.js";
+import {logger, use} from "@/utils/index.js";
 import { MessageToasterKey, OverlayKey, DialogBoxKey } from './symbols';
 
 import OverlayComponent from './components/Ui/OverlayComponent.vue';
@@ -39,6 +40,7 @@ import DialogBox from './components/Ui/DialogBox.vue';
 import MessageToaster from './components/Ui/Toaster/MessageToaster.vue';
 import GlobalEventListeners from './components/Utils/GlobalEventListeners.vue';
 import AppInitializer from './components/Utils/AppInitializer.vue';
+import {mapActions} from "vuex";
 
 export default {
   name: 'App',
@@ -53,7 +55,6 @@ export default {
     GlobalEventListeners,
     AppInitializer
   },
-
 
   data() {
     return {
@@ -78,62 +79,113 @@ export default {
 
   async mounted() {
     await this.initializeApp();
-    this.setupGlobalHandlers();
+
+    this.scheduleTokenRefresh();
+
+    window.addEventListener('401-error', () => {
+      this.onUserLoggedOut();
+    });
+    // this.setupGlobalHandlers();
   },
 
 
   methods: {
-    async initializeApp() {
 
+    ...mapActions('admin', [
+              'init'
+        ]),
+
+
+    async initializeApp() {
       this.isInitializing = true;
       this.initializationMessage = 'Проверяем сохраненную сессию...';
 
       try {
-        if (window.AUTH_TOKEN) {
-
-          authService.setApiToken(window.AUTH_TOKEN);
+        if (window.__app_initializing__) {
+          await this.waitForInitialization();
         }
 
-        this.initializationMessage = 'Восстанавливаем сессию...';
-        const restoredUser = await authService.restoreSession();
-
-        if (restoredUser) {
-
+        if (window.__user_authenticated__) {
           this.initializationMessage = 'Сессия восстановлена, загружаем приложение...';
-
-          this.triggerAppInitialization();
-          return;
+          await this.onUserAuthenticated();
+        } else {
+          await this.showAuthForm();
         }
-
-
-        await this.showAuthForm();
 
       } catch (error) {
         logger.error('❌ Ошибка инициализации приложения:', error);
-
         await this.showAuthForm();
-
       } finally {
         this.isInitializing = false;
+      }
+    },
+
+    async waitForInitialization() {
+      let attempts = 0;
+      const maxAttempts = 50;
+
+      while (window.__app_initializing__ && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+
+      if (attempts >= maxAttempts) {
+        logger.warn('⚠️ Таймаут ожидания инициализации');
+      }
+    },
+
+    async onUserAuthenticated() {
+      try {
+        const currentUser = window.__current_user__ || authService.getAdminData();
+
+        if (!currentUser) {
+          throw new Error('Нет данных текущего пользователя');
+        }
+
+        if (!currentUser.isActive) {
+          throw new Error('Учетная запись пользователя неактивна');
+        }
+
+        logger.info('👤 Инициализируем пользователя:', {
+          username: currentUser.username,
+          fullName: currentUser.fullName,
+          isActive: currentUser.isActive,
+          isSuperAdmin: currentUser.isSuperAdmin
+        });
+
+        await this.init(currentUser);
+
+        this.authenticated = true;
+        this.initialized = true;
+        this.layout = 'main';
+
+        Router.restoreRouteAfterLogin();
+
+        logger.info('✅ Пользователь успешно аутентифицирован');
+
+      } catch (error) {
+        logger.error('❌ Ошибка при обработке аутентификации:', error);
+        await this.showAuthForm();
       }
     },
 
     async showAuthForm() {
       this.initializationMessage = 'Подготавливаем форму входа...';
 
-      await this.resolveRoute();
+      this.authenticated = false;
+      this.initialized = false;
+      this.layout = 'auth';
 
-      const currentScreen = this.getCurrentScreen();
-      switch (currentScreen) {
-        default:
-          this.layout = 'auth';
+      const currentHash = window.location.hash;
+      if (!currentHash.includes('/login') && !currentHash.includes('/sign-in')) {
+        useRouter().go('/login');
       }
+
+      await this.resolveRoute();
 
       document.documentElement.classList.add(
           navigator.userAgent.includes('Mac') ? 'mac' : 'non-mac'
       );
-
-
     },
 
     triggerAppInitialization() {
@@ -142,21 +194,96 @@ export default {
     },
 
 
-    async onUserLoggedIn() {
+    async onUserLoggedIn(userData) {
+      try {
+        logger.info('🔐 Обработка входа пользователя...');
 
+        let currentUser = userData;
 
-      this.layout = 'main';
-      this.triggerAppInitialization();
+        if (!currentUser) {
+          logger.warn('⚠️ Данные пользователя не переданы, пытаемся получить...');
+
+          currentUser = window.__current_user__ ||
+              authService.getAdminData();
+
+          if (!currentUser) {
+            logger.info('📡 Загружаем данные пользователя с сервера...');
+            currentUser = await authService.getCurrentAdmin();
+          }
+        }
+
+        if (!currentUser || !currentUser.username) {
+          throw new Error('Нет корректных данных пользователя');
+        }
+
+        logger.info('✅ Данные пользователя получены:', currentUser.username);
+
+        window.__user_authenticated__ = true;
+        window.__current_user__ = currentUser;
+
+        await this.onUserAuthenticated();
+
+      } catch (error) {
+        logger.error('❌ Ошибка при обработке входа:', error);
+
+        this.$refs.toaster?.error(
+            `Ошибка входа: ${error.message || 'Неизвестная ошибка'}`
+        );
+
+        this.onInitError(error);
+      }
     },
 
-    async onInitSuccess() {
+    async onUserLoggedOut() {
+      try {
+        const currentUser = window.__current_user__ || authService.getAdminData();
 
+        if (!currentUser) {
+          throw new Error('Нет данных текущего пользователя');
+        }
 
-      this.authenticated = false;
-      this.initialized = true;
+        if (!currentUser.isActive) {
+          throw new Error('Учетная запись пользователя неактивна');
+        }
 
-      await this.resolveRoute();
-      this.layout = 'main';
+        logger.info('👤 Инициализируем пользователя:', {
+          username: currentUser.username,
+          fullName: currentUser.fullName,
+          isActive: currentUser.isActive,
+          isSuperAdmin: currentUser.isSuperAdmin
+        });
+
+        await this.init(currentUser);
+
+        this.authenticated = true;
+        this.initialized = true;
+        this.layout = 'main';
+
+        Router.restoreRouteAfterLogin();
+
+        logger.info('✅ Пользователь успешно аутентифицирован');
+
+      } catch (error) {
+        logger.error('❌ Ошибка при обработке аутентификации:', error);
+        throw error;
+      }
+    },
+
+    async scheduleTokenRefresh() {
+      const checkInterval = 60000;
+
+      setInterval(async () => {
+        if (window.__user_authenticated__ && authService.shouldRefreshToken()) {
+          try {
+            logger.info('🔄 Автоматическое обновление токена...');
+            await authService.refreshToken();
+            logger.info('✅ Токен автоматически обновлен');
+          } catch (error) {
+            logger.error('❌ Ошибка автоматического обновления токена:', error);
+            await this.onUserLoggedOut();
+          }
+        }
+      }, checkInterval);
     },
 
     onInitError(error) {

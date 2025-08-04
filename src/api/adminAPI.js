@@ -2,7 +2,6 @@ import {http} from '@/services';
 
 class AdminAPI {
 
-
     async activate(id) {
         return await http.post(`/admin/users/${id}/activate`);
     }

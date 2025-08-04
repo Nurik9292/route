@@ -1,56 +1,57 @@
 import 'primeicons/primeicons.css';
-import { createApp } from 'vue';
-import { authService } from "@/services/index.js";
-import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome';
-import { library } from '@fortawesome/fontawesome-svg-core';
-import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet';
-import { 
-    faBars, 
-    faHome, 
-    faTimes, 
-    faArrowRightFromBracket, 
-    faShop, 
-    faRoute, 
-    faCity, 
-    faUsers, 
-    faAngleLeft, 
-    faFilter, 
-    faPlus,
-    faCaretUp,
+import {createApp} from 'vue';
+import {authService} from "@/services/index.js";
+import {FontAwesomeIcon, FontAwesomeLayers} from '@fortawesome/vue-fontawesome';
+import {library} from '@fortawesome/fontawesome-svg-core';
+import {LMap, LMarker, LTileLayer} from '@vue-leaflet/vue-leaflet';
+import {
+    faAngleLeft,
+    faArrowRightFromBracket,
+    faBars,
+    faBuildingCircleExclamation,
     faCaretDown,
-    faInfo,
+    faCaretUp,
     faCheck,
-    faTriangleExclamation,
-    faExclamation,
-    faQuestion,
-    faTimesCircle,
     faCircleCheck,
-    faCircleInfo,
     faCircleExclamation,
-    faWarning,
+    faCircleInfo,
+    faCircleQuestion,
+    faCity,
+    faExclamation,
     faEye,
     faEyeSlash,
+    faFilter,
+    faHome,
+    faImage,
+    faInfo,
+    faPlus,
+    faQuestion,
     faRefresh,
-    faUpload,
+    faRoute,
     faShield,
-    faCircleQuestion,
+    faShop,
     faShopSlash,
-    faBuildingCircleExclamation,
-    faImage, 
-    faSquareXmark} from '@fortawesome/free-solid-svg-icons';
+    faSquareXmark,
+    faTimes,
+    faTimesCircle,
+    faTriangleExclamation,
+    faUpload,
+    faUsers,
+    faWarning
+} from '@fortawesome/free-solid-svg-icons';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 import PickList from 'primevue/picklist';
 import Listbox from 'primevue/listbox';
-import { definePreset } from '@primevue/themes';
+import {definePreset} from '@primevue/themes';
 
 
 import App from './App.vue';
 import Router from './router';
 import directives from './directives';
 import store from './store';
-import { RouterKey } from './symbols';
-import { routes } from '@/config';
+import {RouterKey} from './symbols';
+import {routes} from '@/config';
 
 
 import './assets/app.pcss';
@@ -109,6 +110,7 @@ function setupApp(app) {
         }
     });
 
+    window.__router_instance__ = new Router(routes);
 
     app.provide(RouterKey, new Router(routes));
     app.use(store);
@@ -143,12 +145,61 @@ async function initializeApp() {
     setupApp(app);
 
     try {
-        await authService.restoreSession();
+        console.log('🚀 Инициализация приложения...');
+        window.__app_initializing__ = true;
+
+        const restoredUser = await authService.restoreSession(); await authService.restoreSession();
+
+        if (restoredUser) {
+            console.log('✅ Сессия восстановлена:', restoredUser.username);
+
+            window.__user_authenticated__ = true;
+            window.__current_user__ = restoredUser;
+
+        } else {
+            console.log('ℹ️ Нет валидной сессии, требуется вход');
+
+            window.__user_authenticated__ = false;
+            window.__current_user__ = null;
+
+            const currentPath = window.location.hash;
+            if (currentPath && !currentPath.includes('/login') && !currentPath.includes('/sign-in')) {
+                console.log('🔄 Редирект на страницу входа...');
+                window.location.hash = '#/login';
+            }
+        }
+
     } catch (error) {
-        console.warn('⚠️ Новая сессия');
+        console.error('❌ Ошибка восстановления сессии:', error);
+
+        authService.destroy();
+        window.__user_authenticated__ = false;
+        window.__current_user__ = null;
+
+        window.location.hash = '#/login';
+    } finally {
+        window.__app_initializing__ = false;
     }
 
     app.mount('#app');
 }
+
+window.addEventListener('unhandledrejection', (event) => {
+    const error = event.reason;
+
+    if (error?.response?.status === 401) {
+        console.warn('🔐 Получена ошибка 401, очищаем сессию');
+
+        authService.destroy();
+        window.__user_authenticated__ = false;
+        window.__current_user__ = null;
+
+        if (!window.location.hash.includes('/login')) {
+            window.location.hash = '#/login';
+        }
+
+        event.preventDefault();
+    }
+});
 
 initializeApp().catch(console.error);

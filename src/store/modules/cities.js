@@ -55,20 +55,21 @@ export default {
     actions: {
           
           async paginate({ commit, dispatch }, params) {
-            let page = params.page;
-            const cities = await cityAPI.getAll(params);     
-                             
-            await dispatch('syncWithVault', cities.items);
-            commit('SET_CITIES', cities.items);
-
-            return cities.isLastPage ? null : ++page;
+            // let page = params.page;
+            // const cities = await cityAPI.getAll(params);
+            //
+            // await dispatch('syncWithVault', cities.items);
+            // commit('SET_CITIES', cities.items);
+            //
+            // return cities.isLastPage ? null : ++page;
+              return null;
           },
 
           async fetchAll({ dispatch, commit }) {
-            const cities = await cityAPI.fetchAll();     
-            
-            await dispatch('syncWithVault', cities);
-            commit('SET_CITIES', cities);
+            // const cities = await cityAPI.fetchAll();
+            //
+            // await dispatch('syncWithVault', cities);
+            // commit('SET_CITIES', cities);
 
           },
 

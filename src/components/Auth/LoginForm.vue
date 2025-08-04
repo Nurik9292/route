@@ -139,18 +139,35 @@ export default {
       try {
         logger.info('🔐 Попытка входа для пользователя:', this.credentials.username);
 
-        await authService.login(
+        const adminData = await authService.login(
             this.credentials.username.trim(),
             this.credentials.password
         );
 
+        console.log(adminData);
+
         logger.info('✅ Вход выполнен успешно');
 
         this.credentials.password = '';
-
         this.toastSuccess('Добро пожаловать!');
 
-        this.$emit('loggedin');
+        const userData = adminData ||
+            window.__current_user__ ||
+            authService.getAdminData();
+
+        if (userData) {
+          logger.info('📤 Отправляем данные пользователя:', userData.username);
+          this.$emit('loggedin', userData);
+        } else {
+          logger.error('❌ Нет данных пользователя для передачи');
+          try {
+            const currentAdmin = await authService.getCurrentAdmin();
+            this.$emit('loggedin', currentAdmin);
+          } catch (error) {
+            logger.error('❌ Не удалось получить данные текущего пользователя:', error);
+            this.$emit('loggedin', null);
+          }
+        }
 
       } catch (error) {
         logger.error('❌ Ошибка входа:', error);

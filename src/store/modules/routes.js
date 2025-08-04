@@ -43,16 +43,15 @@ export default {
 
     actions: {
         async paginate({ commit, dispatch }, params) {
-            console.log('1');
-            
-            let page = params.page;
-            const routes = await routeAPI.getAll(params);  
-            console.log(routes);
-            
-            await dispatch('syncWithVault', routes.items);      
-            commit('SET_ROUTES', routes.items);
+
+            // let page = params.page;
+            // const routes = await routeAPI.getAll(params);
+            //
+            // await dispatch('syncWithVault', routes.items);
+            // commit('SET_ROUTES', routes.items);
          
-            return routes.isLastPage ? null : ++page;
+            // return routes.isLastPage ? null : ++page;
+            return null;
         },
 
         async store({commit}, data) {

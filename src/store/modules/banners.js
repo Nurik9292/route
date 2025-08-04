@@ -55,14 +55,16 @@ export default {
     actions: {
           
           async paginate({ commit, dispatch }, params) {
-            let page = params.page;
-            
-            const banners = await bannerAPI.getAll(params);     
-                             
-            await dispatch('syncWithVault', banners.items);
-            commit('SET_BANNERS', banners.items);
+            // let page = params.page;
+            //
+            // const banners = await bannerAPI.getAll(params);
+            //
+            // await dispatch('syncWithVault', banners.items);
+            // commit('SET_BANNERS', banners.items);
+            //
+            // return banners.isLastPage ? null : ++page;
 
-            return banners.isLastPage ? null : ++page;
+              return null;
           },
 
           syncWithVault({ commit }, cities) {

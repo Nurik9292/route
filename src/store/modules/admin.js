@@ -182,6 +182,28 @@ export default {
 
         SET_INITIALIZED(state, initialized) {
             state.isInitialized = initialized;
+        },
+
+        CLEAR_ALL(state) {
+            state.currentAdmin = null;
+            state.current = null;
+            state.admins = [];
+            state.vault = new Map();
+            state.avatar = null;
+            state.isInitialized = false;
+            state.loading = false;
+            state.error = null;
+            state.pagination = {
+                currentPage: 1,
+                totalPages: 1,
+                totalCount: 0,
+                perPage: 20
+            };
+            state.filters = {
+                search: '',
+                isActive: null,
+                isSuperAdmin: null
+            };
         }
     },
 
@@ -370,6 +392,15 @@ export default {
                 isActive: null,
                 isSuperAdmin: null
             });
+        },
+
+        async clear({ commit }) {
+            try {
+                commit('CLEAR_ALL');
+            } catch (error) {
+                logger.error('❌ Ошибка очистки данных администраторов:', error);
+                throw error;
+            }
         },
 
         updateCurrentAdmin({ commit }, adminData) {

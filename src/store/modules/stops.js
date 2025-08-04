@@ -81,19 +81,20 @@ export default {
         },
 
         async fetchAll({commit, dispatch}) {
-            const stops = await stopAPI.fetchAll(); 
-            await dispatch('syncWithVault', stops);
-            commit('SET_STOPS', stops);
+            // const stops = await stopAPI.fetchAll();
+            // await dispatch('syncWithVault', stops);
+            // commit('SET_STOPS', stops);
         },
 
         async paginate({ commit, dispatch }, params) {
-            let page = params.page;
-            const stops = await stopAPI.getAll(params);  
-          
-            await dispatch('syncWithVault', stops.items);      
-            commit('SET_STOPS', stops.items);
-
-            return stops.isLastPage ? null : ++page;
+            // let page = params.page;
+            // const stops = await stopAPI.getAll(params);
+            //
+            // await dispatch('syncWithVault', stops.items);
+            // commit('SET_STOPS', stops.items);
+            //
+            // return stops.isLastPage ? null : ++page;
+            return null;
         },
 
         syncWithVault({ state, commit }, stops) {
