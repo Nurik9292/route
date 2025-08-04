@@ -154,7 +154,7 @@ export default class Router {
       logger.info('🔄 Восстанавливаем роут после входа:', savedRoute);
       location.hash = savedRoute;
     } else {
-        Router.go('/dashboard'); // или главная страница
+        Router.go('/home');
     }
   }
 

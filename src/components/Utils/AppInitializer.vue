@@ -50,7 +50,7 @@ export default {
 
         this.updateOverlayMessage('Проверяем профиль пользователя...');
 
-        const currentUser = await authService.getProfile();
+        const currentUser = this.getCurrentUserFromCache();
 
         if (!currentUser) {
           throw new Error('Не удалось получить профиль пользователя');
@@ -68,7 +68,7 @@ export default {
 
         await this.initializeApp(currentUser);
 
-        if (currentUser.isSuperAdmin || currentUser.admin) {
+        if (currentUser.isSuperAdmin) {
           this.updateOverlayMessage('Загружаем административные данные...');
           await this.loadAdminData();
         }
@@ -90,6 +90,27 @@ export default {
         this.hideOverlay();
       }
     },
+
+    getCurrentUserFromCache() {
+
+      let currentUser = window.__current_user__;
+
+      if (currentUser) {
+        logger.info('📍 Используем данные из window.__current_user__');
+        return currentUser;
+      }
+
+      currentUser = authService.getAdminData();
+
+      if (currentUser) {
+        logger.info('📂 Используем данные из localStorage');
+        return currentUser;
+      }
+
+      logger.error('❌ Нет данных пользователя ни в window.__current_user__, ни в localStorage');
+      return null;
+    },
+
 
 
     async loadAdminData() {
@@ -184,7 +205,7 @@ export default {
         isSuperAdmin: this.isSuperAdmin,
         storeModules: Object.keys(this.$store.state),
         authToken: !!authService.getApiToken(),
-        hasValidToken: authService.hasValidToken()
+
       });
     }
   },

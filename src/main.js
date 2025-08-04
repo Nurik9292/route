@@ -148,7 +148,7 @@ async function initializeApp() {
         console.log('🚀 Инициализация приложения...');
         window.__app_initializing__ = true;
 
-        const restoredUser = await authService.restoreSession(); await authService.restoreSession();
+        const restoredUser = await authService.restoreSession();
 
         if (restoredUser) {
             console.log('✅ Сессия восстановлена:', restoredUser.username);
@@ -172,7 +172,6 @@ async function initializeApp() {
     } catch (error) {
         console.error('❌ Ошибка восстановления сессии:', error);
 
-        authService.destroy();
         window.__user_authenticated__ = false;
         window.__current_user__ = null;
 

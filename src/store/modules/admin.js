@@ -355,7 +355,7 @@ export default {
                 const updatedAdmin = await adminAPI.activate(adminId);
                 const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
 
-                commit('UPDATE_USER', convertedAdmin);
+                commit('UPDATE_ADMIN', convertedAdmin);
                 logger.info('✅ Администратор активирован:', adminId);
                 return convertedAdmin;
 
@@ -372,7 +372,7 @@ export default {
                 const updatedAdmin = await adminAPI.deactivate(adminId);
                 const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
 
-                commit('UPDATE_USER', convertedAdmin);
+                commit('UPDATE_ADMIN', convertedAdmin);
                 logger.info('✅ Администратор деактивирован:', adminId);
                 return convertedAdmin;
 

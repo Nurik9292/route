@@ -267,13 +267,11 @@ export default {
 </script>
 
 <style lang="postcss" scoped>
-/* ✅ ИСПРАВЛЕНИЕ - без прозрачности Tailwind */
 .admin-card.me {
   border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
   background-color: color-mix(in srgb, var(--color-primary) 5%, transparent);
 }
 
-/* ✅ БЕЗ @apply с прозрачностью - используем чистый CSS */
 .status-badge {
   padding: 0.25rem 0.5rem;
   font-size: 0.75rem;

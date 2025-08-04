@@ -68,26 +68,26 @@ export const authService = {
       return null;
     }
 
-    if (!this.hasValidTokenLocally()) {
-      logger.warn('⚠️ Токен истек локально');
-
-      if (refreshToken) {
-        try {
-          logger.info('🔄 Пытаемся обновить истекший токен...');
-          await this.refreshToken();
-
-          return await this.validateSessionWithServer();
-        } catch (error) {
-          logger.error('❌ Не удалось обновить токен:', error);
-          this.destroy();
-          return null;
-        }
-      } else {
-        logger.warn('⚠️ Нет refresh token для обновления');
-        this.destroy();
-        return null;
-      }
-    }
+    // if (!this.hasValidTokenLocally()) {
+    //   logger.warn('⚠️ Токен истек локально');
+    //
+    //   if (refreshToken) {
+    //     try {
+    //       logger.info('🔄 Пытаемся обновить истекший токен...');
+    //       await this.refreshToken();
+    //
+    //       return await this.validateSessionWithServer();
+    //     } catch (error) {
+    //       logger.error('❌ Не удалось обновить токен:', error);
+    //       this.destroy();
+    //       return null;
+    //     }
+    //   } else {
+    //     logger.warn('⚠️ Нет refresh token для обновления');
+    //     this.destroy();
+    //     return null;
+    //   }
+    // }
 
     return await this.validateSessionWithServer();
   },
@@ -121,9 +121,6 @@ export const authService = {
     }
   },
 
-  async getProfile() {
-    return await this.getCurrentAdmin();
-  },
 
   async validateSessionWithServer() {
     try {
@@ -250,9 +247,9 @@ export const authService = {
   },
 
   destroy() {
-    lsRemove(API_TOKEN_STORAGE_KEY);
-    lsRemove(REFRESH_TOKEN_STORAGE_KEY);
-    lsRemove(ADMIN_DATA_STORAGE_KEY);
+    // lsRemove(API_TOKEN_STORAGE_KEY);
+    // lsRemove(REFRESH_TOKEN_STORAGE_KEY);
+    // lsRemove(ADMIN_DATA_STORAGE_KEY);
   },
 
 

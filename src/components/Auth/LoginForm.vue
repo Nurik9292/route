@@ -158,15 +158,6 @@ export default {
         if (userData) {
           logger.info('📤 Отправляем данные пользователя:', userData.username);
           this.$emit('loggedin', userData);
-        } else {
-          logger.error('❌ Нет данных пользователя для передачи');
-          try {
-            const currentAdmin = await authService.getCurrentAdmin();
-            this.$emit('loggedin', currentAdmin);
-          } catch (error) {
-            logger.error('❌ Не удалось получить данные текущего пользователя:', error);
-            this.$emit('loggedin', null);
-          }
         }
 
       } catch (error) {

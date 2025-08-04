@@ -103,12 +103,51 @@ export default {
       try {
         if (window.__app_initializing__) {
           await this.waitForInitialization();
+          return;
         }
 
-        if (window.__user_authenticated__) {
-          this.initializationMessage = 'Сессия восстановлена, загружаем приложение...';
-          await this.onUserAuthenticated();
+        window.__app_initializing__ = true;
+
+        const token = authService.getApiToken();
+        const savedUser = authService.getAdminData();
+
+        if (token && savedUser) {
+          logger.info('🔄 Найдены сохраненные данные пользователя:', savedUser.username);
+
+          if (authService.hasValidTokenLocally()) {
+            logger.info('✅ Токен локально валиден, запускаем приложение');
+
+            window.__user_authenticated__ = true;
+            window.__current_user__ = savedUser;
+
+            this.initializationMessage = 'Загружаем приложение...';
+            await this.onUserAuthenticated();
+
+          } else {
+            const refreshToken = authService.getRefreshToken();
+
+            if (refreshToken) {
+              try {
+                logger.info('🔄 Токен истек, пытаемся обновить...');
+                this.initializationMessage = 'Обновляем токен...';
+
+                await authService.refreshToken();
+
+                window.__user_authenticated__ = true;
+                window.__current_user__ = savedUser;
+                await this.onUserAuthenticated();
+
+              } catch (refreshError) {
+                logger.warn('⚠️ Не удалось обновить токен:', refreshError);
+                await this.showAuthForm();
+              }
+            } else {
+              logger.info('ℹ️ Нет refresh токена, показываем форму входа');
+              await this.showAuthForm();
+            }
+          }
         } else {
+          logger.info('ℹ️ Нет сохраненных данных, показываем форму входа');
           await this.showAuthForm();
         }
 
@@ -117,6 +156,7 @@ export default {
         await this.showAuthForm();
       } finally {
         this.isInitializing = false;
+        window.__app_initializing__ = false;
       }
     },
 
@@ -201,19 +241,12 @@ export default {
         let currentUser = userData;
 
         if (!currentUser) {
-          logger.warn('⚠️ Данные пользователя не переданы, пытаемся получить...');
-
-          currentUser = window.__current_user__ ||
-              authService.getAdminData();
-
-          if (!currentUser) {
-            logger.info('📡 Загружаем данные пользователя с сервера...');
-            currentUser = await authService.getCurrentAdmin();
-          }
+          logger.warn('⚠️ Данные пользователя не переданы из LoginForm');
+          currentUser = authService.getAdminData();
         }
 
         if (!currentUser || !currentUser.username) {
-          throw new Error('Нет корректных данных пользователя');
+          throw new Error('Нет корректных данных пользователя после входа');
         }
 
         logger.info('✅ Данные пользователя получены:', currentUser.username);
@@ -235,38 +268,13 @@ export default {
     },
 
     async onUserLoggedOut() {
-      try {
-        const currentUser = window.__current_user__ || authService.getAdminData();
+      logger.info('🚪 Пользователь вышел из системы');
 
-        if (!currentUser) {
-          throw new Error('Нет данных текущего пользователя');
-        }
+      await authService.logout();
 
-        if (!currentUser.isActive) {
-          throw new Error('Учетная запись пользователя неактивна');
-        }
-
-        logger.info('👤 Инициализируем пользователя:', {
-          username: currentUser.username,
-          fullName: currentUser.fullName,
-          isActive: currentUser.isActive,
-          isSuperAdmin: currentUser.isSuperAdmin
-        });
-
-        await this.init(currentUser);
-
-        this.authenticated = true;
-        this.initialized = true;
-        this.layout = 'main';
-
-        Router.restoreRouteAfterLogin();
-
-        logger.info('✅ Пользователь успешно аутентифицирован');
-
-      } catch (error) {
-        logger.error('❌ Ошибка при обработке аутентификации:', error);
-        throw error;
-      }
+      this.authenticated = false;
+      this.initialized = false;
+      this.layout = 'auth';
     },
 
     async scheduleTokenRefresh() {
@@ -288,11 +296,6 @@ export default {
 
     onInitError(error) {
       logger.error('❌ Ошибка инициализации приложения:', error);
-
-      if (error.response?.status === 401) {
-        logger.log('🔐 Проблемы с аутентификацией, очищаем сессию');
-        authService.destroy();
-      }
 
 
       this.authenticated = false;
