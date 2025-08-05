@@ -169,7 +169,7 @@ export default {
             }
             state.vault.set(updatedAdmin.id, updatedAdmin);
 
-            if (state.current?.id === updatedAdmin.id) {
+            if (state.currentAdmin?.id === updatedAdmin.id) {
                 state.current = updatedAdmin;
                 state.currentAdmin = updatedAdmin;
             }
@@ -306,14 +306,11 @@ export default {
             commit('CLEAR_ERROR');
 
             try {
-                logger.info('🔄 Обновление администратора:', id, data);
-
                 const updatedAdmin = await adminAPI.update(id, data);
                 const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
 
                 commit('UPDATE_ADMIN', convertedAdmin);
 
-                logger.info('✅ Администратор обновлен:', convertedAdmin.username);
                 return convertedAdmin;
 
             } catch (error) {
@@ -403,8 +400,24 @@ export default {
             }
         },
 
-        updateCurrentAdmin({ commit }, adminData) {
-            commit('SET_CURRENT_ADMIN', adminData);
+        async updateCurrentAdmin({ commit }, adminData) {
+            commit('SET_LOADING', true);
+            commit('CLEAR_ERROR');
+
+            try {
+                const updatedAdmin = await adminAPI.updateProfile(adminData);
+                const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
+
+                commit('SET_CURRENT_ADMIN', adminData);
+                return convertedAdmin;
+            } catch (error) {
+                const errorMessage = error.response?.data?.message || error.message || 'Ошибка обновления профиля';
+                commit('SET_ERROR', errorMessage);
+                logger.error('❌ Ошибка обновления профиля:', error);
+                throw error;
+            } finally {
+                commit('SET_LOADING', false);
+            }
         }
     }
 };

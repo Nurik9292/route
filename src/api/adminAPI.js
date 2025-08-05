@@ -62,12 +62,7 @@ class AdminAPI {
 
 
     async updateProfile(data) {
-        const payload = {
-            fullName: data.fullName || data.name,
-            username: data.username
-        };
-
-        return await http.patch('/admin/auth/profile', payload);
+        return await http.patch('/admin/auth/profile', data);
     }
 
     async me(data) {

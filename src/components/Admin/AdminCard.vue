@@ -179,7 +179,6 @@ export default {
       if (this.loading) return;
 
       if (this.isCurrentAdmin) {
-        console.log('🔍 Переход на профиль...');
         this.go('profile');
       } else if (this.canEditAdmin) {
         eventBus.emit('MODAL_SHOW_EDIT_USER_FORM', this.admin);
