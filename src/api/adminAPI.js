@@ -62,7 +62,7 @@ class AdminAPI {
 
 
     async updateProfile(data) {
-        return await http.patch('/admin/auth/profile', data);
+        return await http.patch('/admin/users/profile', data);
     }
 
     async me(data) {
@@ -72,6 +72,14 @@ class AdminAPI {
 
     async destroy(id) {
         return await this.delete(id);
+    }
+
+    async updateCurrentAdminAvatar(data) {
+        return await http.patch('/admin/users/profile/avatar', data);
+    }
+
+    async removeCurrentAdminAvatar() {
+        return await http.delete('/admin/users/profile/avatar');
     }
 
     convertBackendAdmin(backendUser) {
@@ -106,6 +114,8 @@ class AdminAPI {
         const admin = await this.getById(id);
         return this.convertBackendAdmin(admin);
     }
+
+
 }
 
 export default new AdminAPI();

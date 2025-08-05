@@ -3,7 +3,6 @@
     <div class="flex flex-col gap-3 md:flex-row md:gap-8 w-full md:w-[640px]">
       <div class="flex-1 space-y-5">
 
-        <!-- Current Password Field -->
         <FormRow>
           <template #label>Текущий Пароль *</template>
           <TextInput
@@ -129,7 +128,6 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex';
-import { authService } from '@/services';
 import { useAuthorization, useErrorHandler, useMessageToaster } from '@/composables';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import PasswordField from '../Ui/Form/PasswordField.vue';
@@ -204,7 +202,12 @@ export default {
   },
 
   methods: {
-    ...mapActions('admin', ['fetchAvatar', 'updateCurrentAdmin']),
+    ...mapActions('admin', [
+        'fetchAvatar',
+        'updateCurrentAdmin',
+        'removeCurrentAdminAvatar',
+        'updateCurrentAdminAvatar'
+    ]),
 
     async update() {
       if (!this.isFormValid) return;
@@ -214,6 +217,10 @@ export default {
       this.successMessage = null;
 
       try {
+        if (this.profile.avatar !== this.originalProfile.avatar) {
+          console.log('send avatar', this.profile.avatar)
+          await this.updateAvatar(this.profile.avatar);
+        }
 
         const updateData = {
           id: this.profile.id,
@@ -225,15 +232,9 @@ export default {
           updateData.newPassword = this.profile.newPassword;
         }
 
+        console.log('Updating profile data:', updateData);
 
-        if (this.profile.avatar !== this.originalProfile.avatar) {
-          updateData.avatar = this.profile.avatar;
-        }
-
-        console.log(updateData)
-
-         const response = await this.updateCurrentAdmin(updateData);
-
+        const response = await this.updateCurrentAdmin(updateData);
 
         this.profile.currentPassword = '';
         this.profile.newPassword = '';
@@ -244,28 +245,36 @@ export default {
           avatar: response.avatar
         };
 
-        this.originalProfile = {
-          id: this.profile.id,
-          name: this.profile.name,
-          fullName: this.profile.fullName,
-          avatar: this.profile.avatar
-        };
+        this.originalProfile = { ...this.profile };
 
         this.successMessage = 'Профиль успешно обновлен!';
         const { toastSuccess } = useMessageToaster();
         toastSuccess('Профиль обновлен.');
 
-        setTimeout(() => {
-          this.successMessage = null;
-        }, 3000);
-
       } catch (error) {
         console.error('Profile update error:', error);
-        this.handleUpdateError(error);
+        this.generalError = error.response?.data?.message || error.message || 'Ошибка обновления профиля';
+        const { toastError } = useMessageToaster();
+        toastError(this.generalError);
       } finally {
         this.loading = false;
       }
     },
+
+    async updateAvatar(avatarData) {
+      try {
+        console.log('avatar', avatarData)
+        if (avatarData === null) {
+          await this.removeCurrentAdminAvatar();
+        } else {
+          await this.updateCurrentAdminAvatar({ avatar: avatarData });
+        }
+      } catch (error) {
+        console.error('Avatar update error:', error);
+        throw new Error('Не удалось обновить аватар: ' + (error.response?.data?.message || error.message));
+      }
+    },
+
 
     handleUpdateError(error) {
       if (error.response?.status === 400) {

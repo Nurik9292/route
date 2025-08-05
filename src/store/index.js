@@ -62,23 +62,6 @@ const store = createStore({
         }
     },
 
-    strict: import.meta.env.DEV,
-
-    plugins: import.meta.env.DEV ? [
-        (store) => {
-            store.subscribe((mutation, state) => {
-                if (mutation.type.includes('SET_LOADING')) return;
-
-                console.log('🔄 Vuex Mutation:', mutation.type, mutation.payload);
-            });
-
-            store.subscribeAction((action, state) => {
-                if (action.type.includes('fetch') || action.type.includes('sync')) {
-                    console.log('⚡ Vuex Action:', action.type);
-                }
-            });
-        }
-    ] : []
 
 });
 

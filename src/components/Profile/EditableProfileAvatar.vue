@@ -1,7 +1,6 @@
 <template>
   <div class="avatar-section">
     <div class="avatar-wrapper">
-      <!-- ИСПРАВЛЕНО: Правильное использование AdminAvatar с реактивными данными -->
       <AdminAvatar
           :admin="avatarData"
           class="avatar-display"
@@ -9,7 +8,6 @@
           :key="avatarKey"
       />
 
-      <!-- Overlay с кнопками управления -->
       <div class="avatar-overlay">
         <button
             class="control-btn upload"
@@ -44,13 +42,11 @@
         </button>
       </div>
 
-      <!-- Индикатор загрузки -->
       <div v-if="loading" class="loading-overlay">
         <Icon :icon="['fas', 'refresh']" class="animate-spin text-white" />
       </div>
     </div>
 
-    <!-- Предпросмотр и кроп -->
     <ImageCropper
         v-if="cropperSource"
         :source="cropperSource"
@@ -58,7 +54,6 @@
         @crop="onCropComplete"
     />
 
-    <!-- Информация о файле -->
     <div class="avatar-info mt-2 text-center">
       <p class="text-sm text-k-text-secondary">
         Рекомендуемый размер: 200x200px
@@ -117,11 +112,14 @@ export default {
       return this.profile.avatar !== this.currentAdmin?.avatar;
     },
 
+    avatarKey() {
+      return `${this.profile.id}-${this.avatarUpdateKey}-${this.profile.avatar ? 'has' : 'no'}-avatar`;
+    },
 
     avatarData() {
       return {
         id: this.profile.id,
-        name: this.profile.name || this.currentAdmin?.name,
+        username: this.profile.username || '',
         avatar: this.profile.avatar,
         fullName: this.profile.name || this.currentAdmin?.fullName
       };
@@ -163,21 +161,35 @@ export default {
 
     onCropComplete(croppedImageData) {
 
+      const sizeKB = Math.round(croppedImageData.length / 1024);
+      const sizeMB = (croppedImageData.length / 1024 / 1024).toFixed(2);
+
+      console.log('✂️ After optimized cropping:', {
+        format: croppedImageData.includes('jpeg') ? 'JPEG' : 'PNG',
+        sizeKB: sizeKB + ' KB',
+        sizeMB: sizeMB + ' MB',
+        reductionFromOriginal: ((180904 / croppedImageData.length) * 100).toFixed(1) + 'x smaller',
+        acceptable: sizeKB < 500 ? '✅ Отличный размер!' :
+            sizeKB < 1000 ? '⚠️ Приемлемый размер' :
+                '❌ Все еще большой'
+      });
+
+      if (croppedImageData.length > 2_000_000) {
+        this.toastError(`Изображение все еще слишком большое: ${sizeKB} KB. Попробуйте уменьшить качество в кропере.`);
+        return;
+      }
+
       this.profile.avatar = croppedImageData;
       this.cropperSource = null;
-
 
       this.avatarUpdateKey++;
       this.$nextTick(() => {
         this.$forceUpdate();
       });
 
-
       this.$emit('avatar-changed', croppedImageData);
 
-      this.toastSuccess('Аватар обновлен');
-
-      console.log('Avatar updated:', croppedImageData.substring(0, 50) + '...');
+      this.toastSuccess(`Аватар обновлен: ${sizeKB} KB`);
     },
 
     onCropCancel() {
@@ -191,9 +203,9 @@ export default {
         return false;
       }
 
-      const maxSize = 2 * 1024 * 1024;
+      const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
-        this.toastError('Размер файла не должен превышать 2MB');
+        this.toastError('Размер файла не должен превышать 10MB');
         return false;
       }
 
@@ -201,15 +213,20 @@ export default {
     },
 
     processSelectedFile(files) {
-      if (!files?.length) {
-        return;
-      }
+      if (!files?.length) return;
 
       const file = files[0];
 
-      if (!this.validateFile(file)) {
-        return;
-      }
+
+      console.log('📁 Original file:', {
+        name: file.name,
+        size: file.size,
+        sizeMB: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+        sizeKB: Math.round(file.size / 1024) + ' KB',
+        type: file.type
+      });
+
+      if (!this.validateFile(file)) return;
 
       this.loading = true;
 
@@ -219,6 +236,14 @@ export default {
         this.loading = false;
 
         if (dataUrl) {
+          const sizeKB = Math.round(dataUrl.length / 1024);
+          console.log('📊 Base64 encoded (FileReader):', {
+            length: dataUrl.length,
+            sizeKB: sizeKB + ' KB',
+            expectedSize: Math.round(file.size * 1.33 / 1024) + ' KB',
+            increasePercent: ((dataUrl.length / file.size - 1) * 100).toFixed(1) + '%'
+          });
+
           this.cropperSource = dataUrl;
         } else {
           this.toastError('Ошибка при чтении файла');
@@ -227,6 +252,42 @@ export default {
         this.loading = false;
         console.error('FileReader error:', error);
         this.toastError('Ошибка при загрузке файла');
+      });
+    },
+
+    async preOptimizeImage(file) {
+      return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = () => {
+          const maxDimension = 1200;
+          let { width, height } = img;
+
+          if (width > maxDimension || height > maxDimension) {
+            const ratio = Math.min(maxDimension / width, maxDimension / height);
+            width *= ratio;
+            height *= ratio;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+          console.log('🔧 Pre-optimization:', {
+            originalSize: file.size,
+            newSize: optimizedDataUrl.length,
+            reduction: ((file.size / optimizedDataUrl.length) * 100).toFixed(1) + '%'
+          });
+
+          resolve(optimizedDataUrl);
+        };
+
+        img.src = URL.createObjectURL(file);
       });
     }
   },

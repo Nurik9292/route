@@ -175,6 +175,17 @@ export default {
             }
         },
 
+        UPDATE_CURRENT_ADMIN(state, admin) {
+            if (state.currentAdmin && state.currentAdmin.id === admin.id) {
+                state.currentAdmin = admin;
+            }
+
+            const index = state.admins.findIndex(a => a.id === admin.id);
+            if (index !== -1) {
+                state.admins.splice(index, 1, admin);
+            }
+        },
+
         REMOVE_ADMIN(state, adminId) {
             state.admins = state.admins.filter(admin => admin.id !== adminId);
             state.vault.delete(adminId);
@@ -414,6 +425,57 @@ export default {
                 const errorMessage = error.response?.data?.message || error.message || 'Ошибка обновления профиля';
                 commit('SET_ERROR', errorMessage);
                 logger.error('❌ Ошибка обновления профиля:', error);
+                throw error;
+            } finally {
+                commit('SET_LOADING', false);
+            }
+        },
+
+        async updateCurrentAdminAvatar({ commit }, avatarData) {
+            commit('SET_LOADING', true);
+            commit('CLEAR_ERROR');
+
+            try {
+                logger.info('🖼️ Обновление аватара текущего админа');
+
+                const updatedAdmin = await adminAPI.updateCurrentAdminAvatar(avatarData)
+
+                const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
+
+                commit('UPDATE_CURRENT_ADMIN', convertedAdmin);
+
+                logger.info('✅ Аватар обновлен:', convertedAdmin.username);
+                return convertedAdmin;
+
+            } catch (error) {
+                const errorMessage = error.response?.data?.message || error.message || 'Ошибка обновления аватара';
+                commit('SET_ERROR', errorMessage);
+                logger.error('❌ Ошибка обновления аватара:', error);
+                throw error;
+            } finally {
+                commit('SET_LOADING', false);
+            }
+        },
+
+        async removeCurrentAdminAvatar({ commit }) {
+            commit('SET_LOADING', true);
+            commit('CLEAR_ERROR');
+
+            try {
+                logger.info('🗑️ Удаление аватара текущего админа');
+
+                const updatedAdmin = await adminAPI.removeCurrentAdminAvatar();
+                const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
+
+                commit('UPDATE_CURRENT_ADMIN', convertedAdmin);
+
+                logger.info('✅ Аватар удален:', convertedAdmin.username);
+                return convertedAdmin;
+
+            } catch (error) {
+                const errorMessage = error.response?.data?.message || error.message || 'Ошибка удаления аватара';
+                commit('SET_ERROR', errorMessage);
+                logger.error('❌ Ошибка удаления аватара:', error);
                 throw error;
             } finally {
                 commit('SET_LOADING', false);
