@@ -49,7 +49,7 @@ export default {
     iconName() {
       const iconMap = {
         'route': ['fas', 'route'],
-        'map-marker': ['fas', 'map-marker-alt'],
+        'map-marker': ['fas', 'fa-location-dot'],
         'bus': ['fas', 'bus'],
         'user-plus': ['fas', 'user-plus'],
         'cog': ['fas', 'cog']

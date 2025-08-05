@@ -4,25 +4,6 @@
       <div class="flex-1 space-y-5">
 
         <FormRow>
-          <template #label>Текущий Пароль *</template>
-          <TextInput
-              v-model="profile.currentPassword"
-              v-focus
-              data-testid="currentPassword"
-              name="current_password"
-              placeholder="Введите текущий пароль для подтверждения"
-              required
-              type="password"
-              :class="{ 'input-error': fieldErrors.currentPassword }"
-              @blur="validateCurrentPassword"
-              @input="clearFieldError('currentPassword')"
-          />
-          <div v-if="fieldErrors.currentPassword" class="text-red-600 text-sm mt-1">
-            {{ fieldErrors.currentPassword }}
-          </div>
-        </FormRow>
-
-        <FormRow>
           <template #label>Имя пользователя</template>
           <TextInput
               v-model="profile.name"
@@ -108,7 +89,6 @@
       </BtnComponent>
     </footer>
 
-    <!-- General Error -->
     <div v-if="generalError" class="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
       <div class="flex items-center">
         <Icon :icon="['fas', 'exclamation-triangle']" class="text-red-500 mr-2" />
@@ -116,7 +96,6 @@
       </div>
     </div>
 
-    <!-- Success Message -->
     <div v-if="successMessage" class="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
       <div class="flex items-center">
         <Icon :icon="['fas', 'check-circle']" class="text-green-500 mr-2" />
@@ -127,7 +106,7 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex';
+import { mapActions } from 'vuex';
 import { useAuthorization, useErrorHandler, useMessageToaster } from '@/composables';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import PasswordField from '../Ui/Form/PasswordField.vue';
@@ -161,7 +140,6 @@ export default {
         name: '',
         fullName: '',
         avatar: null,
-        currentPassword: '',
         newPassword: ''
       },
 
@@ -171,7 +149,6 @@ export default {
       successMessage: null,
 
       fieldErrors: {
-        currentPassword: null,
         name: null,
         fullName: null,
         newPassword: null
@@ -180,11 +157,9 @@ export default {
   },
 
   computed: {
-    ...mapGetters('admin', ['getAvatar']),
 
     isFormValid() {
-      const hasValidFields = this.validateCurrentPassword() &&
-          this.validateName() &&
+      const hasValidFields = this.validateName() &&
           this.validateFullName() &&
           this.validateNewPassword();
       const hasChanges = this.hasProfileChanges;
@@ -216,9 +191,10 @@ export default {
       this.generalError = null;
       this.successMessage = null;
 
+      console.log('update', this.profile)
+
       try {
         if (this.profile.avatar !== this.originalProfile.avatar) {
-          console.log('send avatar', this.profile.avatar)
           await this.updateAvatar(this.profile.avatar);
         }
 
@@ -309,14 +285,6 @@ export default {
       }
     },
 
-    validateCurrentPassword() {
-      if (!this.profile.currentPassword?.trim()) {
-        this.fieldErrors.currentPassword = 'Текущий пароль обязателен для обновления профиля';
-        return false;
-      }
-      this.fieldErrors.currentPassword = null;
-      return true;
-    },
 
     validateName() {
       const name = this.profile.name?.trim();

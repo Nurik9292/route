@@ -27,7 +27,7 @@
             @click.prevent="resetAvatar"
             :disabled="loading"
         >
-          <Icon :icon="['fas', 'undo']" />
+          <Icon :icon="['fa', 'rotate-left']" />
         </button>
 
         <button
@@ -71,6 +71,7 @@ import { useAuthorization, useFileReader, useMessageToaster } from '@/composable
 
 import AdminAvatar from '@/components/Admin/AdminAvatar.vue';
 import ImageCropper from '../Utils/ImageCropper.vue';
+import {mapActions} from "vuex";
 
 export default {
   name: 'EditableProfileAvatar',
@@ -127,6 +128,9 @@ export default {
   },
 
   methods: {
+
+    ...mapActions('admin', ['removeCurrentAdminAvatar']),
+
     openFileDialog() {
       if (this.loading) return;
       this.fileDialog?.open();

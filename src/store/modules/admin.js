@@ -250,6 +250,7 @@ export default {
                         username: admin.username,
                         fullName: admin.full_name,
                         name: admin.full_name,
+                        avatar: admin.avatar,
                         isActive: admin.is_active,
                         isSuperAdmin: admin.is_super_admin,
                         lastLoginAt: admin.last_login_at,

@@ -5,6 +5,11 @@ import {FontAwesomeIcon, FontAwesomeLayers} from '@fortawesome/vue-fontawesome';
 import {library} from '@fortawesome/fontawesome-svg-core';
 import {LMap, LMarker, LTileLayer} from '@vue-leaflet/vue-leaflet';
 import {
+    faTrash,
+    faRotateLeft,
+    faUserPlus,
+    faBus,
+    faLocationDot,
     faAngleLeft,
     faArrowRightFromBracket,
     faBars,
@@ -58,6 +63,11 @@ import './assets/app.pcss';
 
 function setupApp(app) {
     library.add(
+        faTrash,
+        faRotateLeft,
+        faUserPlus,
+        faBus,
+        faLocationDot,
         faHome,
         faTimes,
         faBars,

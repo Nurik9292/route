@@ -1,4 +1,3 @@
-// src/views/HomeView.vue
 <template>
   <BaseView>
     <template #header>
@@ -13,17 +12,14 @@
       </ScreenHeader>
     </template>
 
-    <!-- Загрузка -->
     <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <DashboardCardSkeleton v-for="i in 6" :key="i" />
     </div>
 
-    <!-- Основной контент -->
     <div v-else class="space-y-8">
       <!-- Приветствие -->
       <WelcomeCard :admin="currentAdmin" />
 
-      <!-- Статистика -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
             title="Всего маршрутов"
@@ -55,10 +51,8 @@
         />
       </div>
 
-      <!-- Быстрые действия -->
       <QuickActions />
 
-      <!-- Последние обновления и системная информация -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RecentActivity />
         <SystemInfo />

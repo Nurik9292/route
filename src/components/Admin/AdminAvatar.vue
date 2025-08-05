@@ -12,6 +12,7 @@
 
 <script>
 import { defaultAvatar } from '@/utils'
+import {process} from "@juggle/resize-observer/lib/utils/process.js";
 
 export default {
   name: 'AdminAvatar',
@@ -33,7 +34,9 @@ export default {
 
   data() {
     return {
-      imageError: false
+      isLoading: false,
+      imageError: false,
+      imageSize: null
     }
   },
 
@@ -43,26 +46,22 @@ export default {
     },
 
     avatarUrl() {
-      // Если произошла ошибка загрузки, показываем дефолтный аватар
+      const baseUrl = import.meta.env.VITE_API_BASE_URL;
       if (this.imageError) {
         return defaultAvatar;
       }
 
-      // Если есть аватар в профиле
       if (this.admin.avatar) {
-        // Проверяем, является ли это data URL (base64)
         if (this.admin.avatar.startsWith('data:image')) {
           return this.admin.avatar;
         }
-        // Если это URL файла
         if (this.admin.avatar.startsWith('http')) {
           return this.admin.avatar;
         }
-        // Если это относительный путь
-        return `/avatars/${this.admin.avatar}`;
+
+        return `${baseUrl}${this.admin.avatar}`;
       }
 
-      // Если аватара нет, показываем дефолтный
       return defaultAvatar;
     }
   },
@@ -75,7 +74,6 @@ export default {
   },
 
   watch: {
-    // Сбрасываем ошибку при изменении аватара
     'admin.avatar': function() {
       this.imageError = false;
     }
@@ -84,7 +82,6 @@ export default {
 </script>
 
 <style scoped>
-/* Обеспечиваем правильное отображение */
 img {
   min-width: var(--width, 40px);
   min-height: var(--width, 40px);

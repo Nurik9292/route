@@ -2,7 +2,7 @@
   <article :class="{ me: isCurrentAdmin }"
            class="admin-card p-4 flex items-center rounded-md bg-k-bg-secondary border border-k-border gap-3 transition-[border-color] duration-200 ease-in-out hover:border-white/15">
 
-    <UserAvatar :admin="admin" width="48"/>
+    <AdminAvatar :admin="admin" width="48"/>
 
     <main class="flex flex-col justify-between relative flex-1 gap-1">
       <h3 class="font-medium flex gap-2 items-center">
@@ -99,7 +99,7 @@ export default {
 
   components: {
     BtnComponent,
-    UserAvatar: AdminAvatar,
+    AdminAvatar,
   },
 
   props: {
