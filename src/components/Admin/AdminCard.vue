@@ -90,6 +90,7 @@ import { eventBus } from '@/utils';
 import { mapActions } from 'vuex';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { formatDate, formatLastLogin, debugTimestamps } from '@/composables';
 
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import AdminAvatar from './AdminAvatar.vue';
@@ -249,19 +250,13 @@ export default {
       }
     },
 
-    formatDate(date) {
-      if (!date) return '';
-      return format(new Date(date), 'dd.MM.yyyy', { locale: ru });
+    formatDate(timestamp) {
+      return formatDate(timestamp);
     },
 
-    formatLastLogin(date) {
-      console.log('vhod ', date)
-      if (!date) return 'Никогда';
-      return formatDistanceToNow(new Date(date), {
-        addSuffix: true,
-        locale: ru
-      });
-    }
+    formatLastLogin(timestamp) {
+      return formatLastLogin(timestamp);
+    },
   }
 };
 </script>

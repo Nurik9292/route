@@ -89,9 +89,9 @@ class AdminAPI {
             username: backendUser.username,
             isSuperAdmin: backendUser.is_super_admin,
             isActive: backendUser.is_active,
-            createdAt: backendUser.createdAt,
-            updatedAt: backendUser.updatedAt,
-            lastLoginAt: backendUser.last_login_at,
+            createdAt: backendUser.created_at ? new Date(backendUser.created_at) : null,
+            updatedAt: backendUser.updated_at ? new Date(backendUser.updated_at) : null,
+            lastLoginAt: backendUser.last_login_at ? new Date(backendUser.last_login_at) : null,
             avatar: backendUser.avatar
         };
     }

@@ -75,7 +75,53 @@ export default {
       if (!lastLogin) return 'никогда';
 
       try {
-        return format(new Date(lastLogin), 'dd.MM.yyyy HH:mm', { locale: ru });
+        let date;
+        if (typeof lastLogin === 'number') {
+          if (lastLogin > 1000000000000) {
+            date = new Date(lastLogin);
+          } else {
+            date = new Date(lastLogin * 1000);
+          }
+        } else if (typeof lastLogin === 'string') {
+          date = new Date(lastLogin);
+        } else {
+          date = lastLogin;
+        }
+
+        if (isNaN(date.getTime())) {
+          console.warn('Invalid date:', lastLogin);
+          return 'неизвестно';
+        }
+
+        return format(date, 'dd.MM.yyyy HH:mm', { locale: ru });
+      } catch (error) {
+        console.error('Date formatting error:', error, lastLogin);
+        return 'неизвестно';
+      }
+    },
+
+
+    createdAtFormatted() {
+      const createdAt = this.admin?.createdAt || this.admin?.created_at;
+      if (!createdAt) return 'неизвестно';
+
+      try {
+        let date;
+        if (typeof createdAt === 'number') {
+          if (createdAt > 1000000000000) {
+            date = new Date(createdAt);
+          } else {
+            date = new Date(createdAt * 1000);
+          }
+        } else {
+          date = new Date(createdAt);
+        }
+
+        if (isNaN(date.getTime())) {
+          return 'неизвестно';
+        }
+
+        return format(date, 'dd.MM.yyyy', { locale: ru });
       } catch {
         return 'неизвестно';
       }

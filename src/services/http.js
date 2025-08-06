@@ -40,7 +40,7 @@ class Http {
 
             if (error.response?.status === 401) {
                 if (!(error.config.method === 'post' && error.config.url === 'me')) {
-                    // eventBus.emit('LOG_OUT');
+                    eventBus.emit('LOG_OUT');
                 }
             }
 
