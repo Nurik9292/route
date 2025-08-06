@@ -255,6 +255,7 @@ export default {
     },
 
     formatLastLogin(date) {
+      console.log('vhod ', date)
       if (!date) return 'Никогда';
       return formatDistanceToNow(new Date(date), {
         addSuffix: true,

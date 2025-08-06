@@ -18,7 +18,15 @@ export default class Router {
       this.routeChangedHandlers.forEach(handler => handler(newValue, oldValue))
     }, { deep: true, immediate: true })
 
-    addEventListener('popstate', () => this.resolve(), true)
+    this.resolveDebounced = this.debounce(this.resolve.bind(this), 100)
+    addEventListener('popstate', () => this.resolveDebounced(), true)
+
+    setTimeout(() => {
+      if (location.hash && location.hash !== '#/' && location.hash !== '#!/') {
+        console.log('🚀 Автоматический resolve при инициализации:', location.hash)
+        this.resolve()
+      }
+    }, 50)
   }
 
   static go(path, reload = false) {
@@ -32,9 +40,11 @@ export default class Router {
 
     const newHash = path.substring(1)
 
-    if (newHash && newHash !== '/' && newHash !== '/home' && newHash !== '/login' && newHash !== '#/home') {
+    console.log(`🧭 Router.go: ${path} (reload: ${reload})`)
+
+    if (newHash && Router.isValidRouteStatic(newHash)) {
       sessionStorage.setItem('last_route', newHash)
-      console.log('💾 Сохраняем роут:', newHash)
+      console.log('💾 Сохраняем роут в go():', newHash)
     }
 
     if (reload) {
@@ -45,8 +55,17 @@ export default class Router {
     }
   }
 
-  async resolve() {
+  static isValidRouteStatic(path) {
+    if (!path) return false
 
+    const excludedRoutes = ['/', '/home', '/login', '/sign-in', '/404']
+    if (excludedRoutes.includes(path)) return false
+
+    const validRoutes = ['/routes', '/stops', '/admins', '/cities', '/profile', '/banners']
+    return validRoutes.some(route => path.startsWith(route))
+  }
+
+  async resolve() {
     if (this.isResolving || window.__app_initializing__) {
       console.log('⏳ Роутер занят или приложение инициализируется')
       return
@@ -56,31 +75,42 @@ export default class Router {
 
     try {
       const currentPath = this.getCurrentPath()
-      console.log('🔄 Обрабатываем роут:', currentPath)
+      const currentHash = location.hash
 
+      console.log('🔄 Обрабатываем роут:', currentPath, 'Hash:', currentHash)
 
-      if (!location.hash || location.hash === '#/' || location.hash === '#!/') {
+      if (!currentHash || currentHash === '#/' || currentHash === '#!/') {
+        console.log('📍 Пустой hash, обрабатываем как empty route')
         return this.handleEmptyRoute()
       }
 
-
       const matched = this.tryMatchRoute()
       if (!matched) {
+        console.log('❌ Роут не найден для:', currentHash)
+
+        const savedRoute = sessionStorage.getItem('last_route')
+        if (savedRoute && savedRoute !== currentPath && this.isValidRoute(savedRoute)) {
+          console.log('🔄 Роут не найден, пробуем восстановить сохраненный:', savedRoute)
+          Router.go(savedRoute)
+          return
+        }
+
         return this.triggerNotFound()
       }
 
       const { route, params } = matched
+      console.log('✅ Найден роут:', route.screen, 'Params:', params)
 
       if (route.onResolve && (await route.onResolve(params)) === false) {
+        console.log('❌ onResolve вернул false')
         return this.triggerNotFound()
       }
 
-
       if (route.redirect) {
+        console.log('🔀 Редирект из:', route.path)
         const to = route.redirect(params)
         return typeof to === 'string' ? Router.go(to) : this.activateRoute(to, params)
       }
-
 
       this.saveCurrentRoute()
       return this.activateRoute(route, params)
@@ -91,17 +121,17 @@ export default class Router {
   }
 
   handleEmptyRoute() {
+    console.log('🏠 Обрабатываем пустой роут')
+
     const savedRoute = sessionStorage.getItem('last_route')
 
-
-    if (savedRoute && savedRoute !== '/home' && savedRoute !== '/' && savedRoute !== '/login') {
+    if (savedRoute && this.isValidRoute(savedRoute)) {
       console.log('🔄 Восстанавливаем сохраненный роут:', savedRoute)
       location.hash = `#${savedRoute}`
       return
     }
 
-
-    console.log('🏠 Переход на главную')
+    console.log('🏠 Переход на главную (нет валидного сохраненного роута)')
     Router.go(this.homeRoute.path)
   }
 
@@ -114,10 +144,26 @@ export default class Router {
 
   saveCurrentRoute() {
     const currentPath = this.getCurrentPath()
-    if (currentPath && currentPath !== '/' && currentPath !== '/home' && currentPath !== '/login') {
+
+    if (this.isValidRoute(currentPath)) {
       sessionStorage.setItem('last_route', currentPath)
       console.log('💾 Сохранили текущий роут:', currentPath)
     }
+  }
+
+  isValidRoute(path) {
+    if (!path) return false
+
+    const excludedRoutes = ['/', '/home', '/login', '/sign-in', '/404']
+    if (excludedRoutes.includes(path)) return false
+
+    const routeExists = this.routes.some(route => {
+      const regex = new RegExp(`^${route.path}/?(?:\\?(.*))?$`)
+      return regex.test(path)
+    })
+
+    console.log('🔍 Проверка валидности роута:', path, '→', routeExists)
+    return routeExists
   }
 
   isUserAuthenticated() {
@@ -125,11 +171,11 @@ export default class Router {
   }
 
   getCurrentUser() {
-    return  authService.getAdminData()
+    return authService.getAdminData()
   }
 
-
   async triggerNotFound() {
+    console.log('❌ Активируем 404')
     return this.activateRoute(this.notFoundRoute)
   }
 
@@ -138,8 +184,14 @@ export default class Router {
   }
 
   async activateRoute(route, params = {}) {
-    this.$currentRoute.value = route
-    this.$currentRoute.value.params = params
+    console.log('🎯 Активируем роут:', route?.screen || 'unknown', 'с параметрами:', params)
+
+    this.$currentRoute.value = {
+      ...route,
+      params: { ...params }
+    }
+
+    console.log('✅ Роут активирован:', this.$currentRoute.value)
   }
 
   tryMatchRoute() {
@@ -163,5 +215,17 @@ export default class Router {
     }
 
     return this.cache.get(hash)
+  }
+
+  debounce(func, wait) {
+    let timeout
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout)
+        func(...args)
+      }
+      clearTimeout(timeout)
+      timeout = setTimeout(later, wait)
+    }
   }
 }

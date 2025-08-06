@@ -107,6 +107,14 @@ export default {
         this.initialized = true;
         this.layout = 'main';
 
+        setTimeout(() => {
+          const router = window.__router_instance__;
+          if (router && location.hash && location.hash !== '#/' && location.hash !== '#!/') {
+            console.log('🔧 Принудительный resolve после инициализации, hash:', location.hash);
+            router.resolve();
+          }
+        }, 100);
+
         logger.info('✅ Пользователь аутентифицирован');
 
       } catch (error) {

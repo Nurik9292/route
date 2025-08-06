@@ -126,6 +126,7 @@ export default {
     },
 
     sortedAdmins() {
+      console.log(this.filteredAdmins)
       return this.filteredAdmins
           .slice()
           .sort((a, b) => {
