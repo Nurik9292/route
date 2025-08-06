@@ -22,7 +22,6 @@
 <script>
 import { defineAsyncComponent, computed } from 'vue';
 import { useRouter } from './composables';
-import Router from './router';
 import { authService } from './services';
 import { logger } from "@/utils/index.js";
 import { MessageToasterKey, OverlayKey, DialogBoxKey } from './symbols';
@@ -59,7 +58,7 @@ export default {
 
   async mounted() {
     await this.initializeApp();
-    this.scheduleTokenRefresh();
+    await this.scheduleTokenRefresh();
 
     window.addEventListener('401-error', () => {
       this.onUserLoggedOut();
@@ -73,15 +72,11 @@ export default {
       try {
         console.log('🔄 Инициализация App.vue...');
 
-        // Ждем завершения базовой инициализации
-        while (window.__app_initializing__) {
-          await new Promise(resolve => setTimeout(resolve, 50));
-        }
 
         const token = authService.getApiToken();
         const savedUser = authService.getAdminData();
 
-        if (token && savedUser && window.__user_authenticated__) {
+        if (token && savedUser) {
           console.log('✅ Найдена действующая сессия');
           await this.onUserAuthenticated();
         } else {
@@ -97,9 +92,10 @@ export default {
 
     async onUserAuthenticated() {
       try {
-        const currentUser = window.__current_user__ || authService.getAdminData();
+        const currentUser =  authService.getAdminData();
+
         console.log("App App", currentUser)
-        if (!currentUser || !currentUser.is_active) {
+        if (!currentUser || !currentUser.isActive) {
           throw new Error('Некорректные данные пользователя');
         }
 
@@ -110,10 +106,6 @@ export default {
         this.authenticated = true;
         this.initialized = true;
         this.layout = 'main';
-
-        setTimeout(() => {
-          Router.restoreRouteAfterLogin();
-        }, 100);
 
         logger.info('✅ Пользователь аутентифицирован');
 
@@ -147,9 +139,6 @@ export default {
           throw new Error('Нет данных пользователя');
         }
 
-        window.__user_authenticated__ = true;
-        window.__current_user__ = currentUser;
-
         await this.onUserAuthenticated();
 
       } catch (error) {
@@ -171,7 +160,7 @@ export default {
 
     async scheduleTokenRefresh() {
       setInterval(async () => {
-        if (window.__user_authenticated__ && authService.shouldRefreshToken()) {
+        if (authService.shouldRefreshToken()) {
           try {
             logger.info('🔄 Обновление токена...');
             await authService.refreshToken();
@@ -195,7 +184,6 @@ export default {
       logger.info('✅ Инициализация завершена успешно');
     },
 
-    // Обработчики drag&drop
     onDragOver(e) {
       this.showDropZone = e.dataTransfer?.types.includes('Files') &&
           !this.isCurrentScreen('Upload');
@@ -214,7 +202,6 @@ export default {
       this.showDropZone = false;
     },
 
-    // Утилиты роутера
     async resolveRoute() {
       const { resolveRoute } = useRouter();
       return await resolveRoute();

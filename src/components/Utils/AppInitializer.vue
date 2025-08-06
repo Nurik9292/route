@@ -31,9 +31,6 @@ export default {
       initCommon: 'init'
     }),
 
-    ...mapActions({
-      initializeApp: 'initializeApp'
-    }),
 
     async init() {
       this.showOverlay({
@@ -51,14 +48,12 @@ export default {
         logger.info('✅ Пользователь найден:', currentUser.username);
 
         this.updateMessage('Инициализируем модули...');
-        await this.initializeApp(currentUser);
 
         if (currentUser.isSuperAdmin) {
           this.updateMessage('Загружаем административные данные...');
           await this.loadAdminData();
         }
 
-        this.updateMessage('Завершаем настройку...');
         await this.delay(300);
 
         logger.info('🎉 AppInitializer завершен');
@@ -73,15 +68,13 @@ export default {
     },
 
     getCurrentUser() {
-      return window.__current_user__ || authService.getAdminData();
+      return  authService.getAdminData();
     },
 
     async loadAdminData() {
       try {
-        // Здесь загружаем административные данные
         logger.info('📊 Загрузка админ данных...');
 
-        // Добавьте свою логику загрузки
         await this.delay(500);
 
         logger.info('✅ Админ данные загружены');

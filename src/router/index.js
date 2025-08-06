@@ -5,6 +5,7 @@ import { logger } from '@/utils'
 
 export default class Router {
   constructor(routes) {
+    console.log(routes)
     this.routes = routes
     this.homeRoute = routes.find(({ screen }) => screen === 'Home')
     this.notFoundRoute = routes.find(({ screen }) => screen === '404')
@@ -31,8 +32,7 @@ export default class Router {
 
     const newHash = path.substring(1)
 
-    // Сохраняем только значимые роуты
-    if (newHash && newHash !== '/' && newHash !== '/home' && newHash !== '/login') {
+    if (newHash && newHash !== '/' && newHash !== '/home' && newHash !== '/login' && newHash !== '#/home') {
       sessionStorage.setItem('last_route', newHash)
       console.log('💾 Сохраняем роут:', newHash)
     }
@@ -46,7 +46,7 @@ export default class Router {
   }
 
   async resolve() {
-    // Защита от повторных вызовов
+
     if (this.isResolving || window.__app_initializing__) {
       console.log('⏳ Роутер занят или приложение инициализируется')
       return
@@ -58,12 +58,12 @@ export default class Router {
       const currentPath = this.getCurrentPath()
       console.log('🔄 Обрабатываем роут:', currentPath)
 
-      // Если пустой путь - восстанавливаем или идем на home
+
       if (!location.hash || location.hash === '#/' || location.hash === '#!/') {
         return this.handleEmptyRoute()
       }
 
-      // Ищем подходящий роут
+
       const matched = this.tryMatchRoute()
       if (!matched) {
         return this.triggerNotFound()
@@ -71,23 +71,17 @@ export default class Router {
 
       const { route, params } = matched
 
-      // Проверяем права доступа
-      if (!(await this.checkAuth(route))) {
-        return
-      }
-
-      // Вызываем onResolve если есть
       if (route.onResolve && (await route.onResolve(params)) === false) {
         return this.triggerNotFound()
       }
 
-      // Обрабатываем редирект
+
       if (route.redirect) {
         const to = route.redirect(params)
         return typeof to === 'string' ? Router.go(to) : this.activateRoute(to, params)
       }
 
-      // Сохраняем текущий роут и активируем
+
       this.saveCurrentRoute()
       return this.activateRoute(route, params)
 
@@ -99,14 +93,14 @@ export default class Router {
   handleEmptyRoute() {
     const savedRoute = sessionStorage.getItem('last_route')
 
-    // Восстанавливаем сохраненный роут если есть
+
     if (savedRoute && savedRoute !== '/home' && savedRoute !== '/' && savedRoute !== '/login') {
       console.log('🔄 Восстанавливаем сохраненный роут:', savedRoute)
       location.hash = `#${savedRoute}`
       return
     }
 
-    // Иначе идем на главную
+
     console.log('🏠 Переход на главную')
     Router.go(this.homeRoute.path)
   }
@@ -126,69 +120,14 @@ export default class Router {
     }
   }
 
-  async checkAuth(route) {
-    const publicRoutes = ['Login', 'SignIn', '404', 'NotFound']
-
-    // Публичные роуты
-    if (publicRoutes.includes(route.screen)) {
-      // Если уже залогинен, а пытается зайти на login - редирект на главную
-      if (this.isUserAuthenticated() && (route.screen === 'Login' || route.screen === 'SignIn')) {
-        console.log('🔄 Уже авторизован, переход на главную')
-        Router.go(this.homeRoute.path)
-        return false
-      }
-      return true
-    }
-
-    // Приватные роуты - нужна авторизация
-    if (!this.isUserAuthenticated()) {
-      console.log('🔐 Нет авторизации, переход на вход')
-      Router.go('/login')
-      return false
-    }
-
-    // Проверяем роли если нужно
-    if (route.requiresRole) {
-      const user = this.getCurrentUser()
-      if (!user || !this.hasRequiredRole(user, route.requiresRole)) {
-        console.log('🚫 Недостаточно прав')
-        Router.go('/access-denied')
-        return false
-      }
-    }
-
-    return true
-  }
-
   isUserAuthenticated() {
-    return window.__user_authenticated__ === true && this.getCurrentUser() !== null
+    return this.getCurrentUser() !== null
   }
 
   getCurrentUser() {
-    return window.__current_user__ || authService.getAdminData()
+    return  authService.getAdminData()
   }
 
-  hasRequiredRole(user, requiredRole) {
-    if (requiredRole === 'admin') {
-      return user.isActive === true
-    }
-    if (requiredRole === 'super_admin') {
-      return user.isSuperAdmin === true && user.isActive === true
-    }
-    return true
-  }
-
-  static restoreRouteAfterLogin() {
-    const savedRoute = sessionStorage.getItem('redirect_after_login')
-    sessionStorage.removeItem('redirect_after_login')
-
-    if (savedRoute && savedRoute !== '#/login' && savedRoute !== '#/sign-in') {
-      console.log('🔄 Восстанавливаем роут после входа:', savedRoute)
-      location.hash = savedRoute
-    } else {
-      Router.go('/home')
-    }
-  }
 
   async triggerNotFound() {
     return this.activateRoute(this.notFoundRoute)

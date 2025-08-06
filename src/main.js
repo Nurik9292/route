@@ -4,15 +4,7 @@ import {authService} from "@/services/index.js";
 import {FontAwesomeIcon, FontAwesomeLayers} from '@fortawesome/vue-fontawesome';
 import {library} from '@fortawesome/fontawesome-svg-core';
 import {LMap, LMarker, LTileLayer} from '@vue-leaflet/vue-leaflet';
-import {
-    faTrash,
-    faRotateLeft,
-    faUserPlus,
-    faBus,
-    faLocationDot,
-    faAngleLeft,
-    faArrowRightFromBracket,
-    faBars,
+import {faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot,  faAngleLeft, faArrowRightFromBracket, faBars,
     faBuildingCircleExclamation,
     faCaretDown,
     faCaretUp,
@@ -87,10 +79,10 @@ function setupApp(app) {
             }
         }
     });
+    const newRoute = new Router(routes);
+    window.__router_instance__ = newRoute;
 
-    window.__router_instance__ = new Router(routes);
-
-    app.provide(RouterKey, new Router(routes));
+    app.provide(RouterKey, newRoute);
     app.use(store);
     app.use(PrimeVue, {
         ripple: true,
@@ -117,57 +109,9 @@ function setupApp(app) {
     });
 }
 
-async function initializeApp() {
-    const app = createApp(App);
-    setupApp(app);
 
-    console.log('🚀 Запуск приложения...');
-    window.__app_initializing__ = true;
 
-    try {
-        // Пытаемся восстановить сессию
-        const restoredUser = await authService.restoreSession();
+const app = createApp(App);
+setupApp(app);
 
-        if (restoredUser) {
-            console.log('✅ Сессия найдена:', restoredUser.username);
-            window.__user_authenticated__ = true;
-            window.__current_user__ = restoredUser;
-        } else {
-            console.log('ℹ️ Сессии нет, нужен вход');
-            window.__user_authenticated__ = false;
-            window.__current_user__ = null;
-        }
-
-    } catch (error) {
-        console.error('❌ Ошибка проверки сессии:', error);
-        window.__user_authenticated__ = false;
-        window.__current_user__ = null;
-    }
-
-    // Монтируем приложение - пусть App.vue сам разбирается с маршрутизацией
-    app.mount('#app');
-
-    // Завершаем инициализацию
-    window.__app_initializing__ = false;
-}
-
-// Глобальный обработчик 401 ошибок
-window.addEventListener('unhandledrejection', (event) => {
-    const error = event.reason;
-
-    if (error?.response?.status === 401) {
-        console.warn('🔐 401 ошибка - сбрасываем сессию');
-
-        authService.destroy();
-        window.__user_authenticated__ = false;
-        window.__current_user__ = null;
-
-        if (!window.location.hash.includes('/login')) {
-            window.location.hash = '#/login';
-        }
-
-        event.preventDefault();
-    }
-});
-
-initializeApp().catch(console.error);
+app.mount('#app');

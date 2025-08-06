@@ -44,6 +44,7 @@ export default {
     mounted() {
         const { onRouteChanged, getCurrentScreen } = useRouter();
         onRouteChanged(this.onRouteChanged);
+      console.log(getCurrentScreen())
         this.screen = getCurrentScreen();
     },
      
