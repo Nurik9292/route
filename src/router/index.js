@@ -49,6 +49,11 @@ export default class Router {
 
     const newHash = path.substring(1);
 
+    if (newHash && newHash !== '/' && newHash !== '/home') {
+      sessionStorage.setItem('last_route', newHash);
+      console.log('💾 Saving route before navigation:', newHash);
+    }
+
     if (reload) {
       location.assign(`${location.origin}${location.pathname}${newHash}`);
       forceReloadWindow();
@@ -57,21 +62,38 @@ export default class Router {
 
       const router = window.__router_instance__;
       if (router) {
-        router.resolve();
+         router.resolve().then(r => logger.info(r));
       }
     }
   }
 
   async resolve() {
-    if (!location.hash || location.hash === '#/' || location.hash === '#!/') {
-      return Router.go(this.homeRoute.path)
+    const currentPath = this.getCurrentPath();
+
+    console.log('🔄 Router resolving:', {
+      locationHash: location.hash,
+      currentPath,
+      isReload: !location.hash && sessionStorage.getItem('last_route')
+    });
+
+    if ((!location.hash || location.hash === '#/' || location.hash === '#!/')) {
+      const savedRoute = sessionStorage.getItem('last_route');
+
+      if (savedRoute && savedRoute !== '/home' && savedRoute !== '/') {
+        console.log('🔄 Restoring route after page reload:', savedRoute);
+        location.hash = `#${savedRoute}`;
+        return this.resolve();
+      }
+
+      console.log('🏠 No saved route, going to home');
+      return Router.go(this.homeRoute.path);
     }
 
-    const matched = this.tryMatchRoute()
-    const [route, params] = matched ? [matched.route, matched.params] : [null, null]
+    const matched = this.tryMatchRoute();
+    const [route, params] = matched ? [matched.route, matched.params] : [null, null];
 
     if (!route) {
-      return this.triggerNotFound()
+      return this.triggerNotFound();
     }
 
     const authCheckResult = await this.checkRouteAuthentication(route);
@@ -80,15 +102,34 @@ export default class Router {
     }
 
     if ((await route.onResolve?.(params)) === false) {
-      return this.triggerNotFound()
+      return this.triggerNotFound();
     }
 
     if (route.redirect) {
-      const to = route.redirect(params)
-      return typeof to === 'string' ? Router.go(to) : this.activateRoute(to, params)
+      const to = route.redirect(params);
+      return typeof to === 'string' ? Router.go(to) : this.activateRoute(to, params);
     }
 
-    return this.activateRoute(route, params)
+    this.saveCurrentRoute();
+
+    return this.activateRoute(route, params);
+  }
+
+  getCurrentPath() {
+    if (!location.hash) return '/';
+
+    let path = location.hash.replace(/^#!?/, '');
+    if (!path.startsWith('/')) path = '/' + path;
+
+    return path;
+  }
+
+  saveCurrentRoute() {
+    const currentPath = this.getCurrentPath();
+    if (currentPath && currentPath !== '/') {
+      sessionStorage.setItem('last_route', currentPath);
+      console.log('💾 Saved current route:', currentPath);
+    }
   }
 
   async checkRouteAuthentication(route) {
@@ -106,7 +147,6 @@ export default class Router {
     if (!this.isUserAuthenticated()) {
       logger.warn('🔐 Доступ к защищенному роуту без аутентификации:', route.screen);
 
-      // Сохраняем текущий роут для редиректа после входа
 
       Router.go('/login');
       return false;

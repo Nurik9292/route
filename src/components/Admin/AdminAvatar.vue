@@ -7,12 +7,12 @@
       class="object-cover rounded-full aspect-square bg-k-bg-primary"
       :width="width"
       :height="width"
+      :key="avatarKey"
   >
 </template>
 
 <script>
 import { defaultAvatar } from '@/utils'
-import {process} from "@juggle/resize-observer/lib/utils/process.js";
 
 export default {
   name: 'AdminAvatar',
@@ -36,7 +36,8 @@ export default {
     return {
       isLoading: false,
       imageError: false,
-      imageSize: null
+      imageSize: null,
+      forceReload: 0
     }
   },
 
@@ -45,23 +46,41 @@ export default {
       return this.admin.fullName || this.admin.name || this.admin.username || 'Admin';
     },
 
+    avatarKey() {
+      return `${this.admin.id || 'no-id'}-${this.admin.avatar || 'no-avatar'}-${this.forceReload}`;
+    },
+
     avatarUrl() {
       const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+      console.log('🖼️ AdminAvatar computing URL:', {
+        adminId: this.admin.id,
+        avatar: this.admin.avatar,
+        imageError: this.imageError,
+        baseUrl
+      });
+
       if (this.imageError) {
+        console.log('🚫 Using default avatar due to image error');
         return defaultAvatar;
       }
 
       if (this.admin.avatar) {
         if (this.admin.avatar.startsWith('data:image')) {
+          console.log('📄 Using base64 avatar');
           return this.admin.avatar;
         }
         if (this.admin.avatar.startsWith('http')) {
+          console.log('🌐 Using HTTP avatar');
           return this.admin.avatar;
         }
 
-        return `${baseUrl}${this.admin.avatar}`;
+        const fullUrl = `${baseUrl}${this.admin.avatar}`;
+        console.log('🔗 Using relative avatar:', fullUrl);
+        return fullUrl;
       }
 
+      console.log('🎭 Using default avatar (no avatar set)');
       return defaultAvatar;
     }
   },
@@ -70,12 +89,39 @@ export default {
     onError() {
       console.warn('Avatar loading error for admin:', this.adminName);
       this.imageError = true;
+      this.forceReload++;
+    },
+
+    onLoad() {
+      console.log('✅ Avatar loaded successfully for admin:', this.adminName);
+      this.imageError = false;
     }
   },
 
   watch: {
-    'admin.avatar': function() {
-      this.imageError = false;
+    'admin.avatar': {
+      handler(newAvatar, oldAvatar) {
+        console.log('🔄 AdminAvatar: avatar changed', {
+          adminName: this.adminName,
+          oldAvatar,
+          newAvatar
+        });
+
+        this.imageError = false;
+        this.forceReload++;
+      },
+      immediate: false
+    },
+
+    admin: {
+      handler(newAdmin, oldAdmin) {
+        if (newAdmin?.avatar !== oldAdmin?.avatar) {
+          console.log('👤 AdminAvatar: admin object changed, avatar updated');
+          this.imageError = false;
+          this.forceReload++;
+        }
+      },
+      deep: true
     }
   }
 }

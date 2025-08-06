@@ -175,14 +175,27 @@ export default {
             }
         },
 
-        UPDATE_CURRENT_ADMIN(state, admin) {
-            if (state.currentAdmin && state.currentAdmin.id === admin.id) {
-                state.currentAdmin = admin;
+        UPDATE_CURRENT_ADMIN(state, adminData) {
+            console.log('🔄 Store: Updating currentAdmin with:', adminData);
+
+            if (state.currentAdmin) {
+                state.currentAdmin = {
+                    ...state.currentAdmin,
+                    ...adminData
+                };
+            } else {
+                state.currentAdmin = { ...adminData };
             }
 
-            const index = state.admins.findIndex(a => a.id === admin.id);
-            if (index !== -1) {
-                state.admins.splice(index, 1, admin);
+            console.log('✅ Store: Updated currentAdmin:', state.currentAdmin);
+        },
+
+        SET_CURRENT_ADMIN_AVATAR(state, avatarPath) {
+            console.log('🖼️ Store: Setting avatar:', avatarPath);
+
+            if (state.currentAdmin) {
+                state.currentAdmin.avatar = avatarPath;
+                console.log('✅ Store: Avatar set:', state.currentAdmin.avatar);
             }
         },
 
@@ -412,16 +425,31 @@ export default {
             }
         },
 
-        async updateCurrentAdmin({ commit }, adminData) {
+        async updateCurrentAdmin({ commit, state }, adminData) {
             commit('SET_LOADING', true);
             commit('CLEAR_ERROR');
 
             try {
-                const updatedAdmin = await adminAPI.updateProfile(adminData);
-                const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
+                console.log('📝 Store: Updating current admin profile...', adminData);
 
-                commit('SET_CURRENT_ADMIN', adminData);
+                const updatedAdmin = await adminAPI.updateProfile(adminData);
+                console.log('📡 Store: Profile update API response:', updatedAdmin);
+
+                const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
+                console.log('🔄 Store: Converted profile response:', convertedAdmin);
+
+                const mergedAdmin = {
+                    ...state.currentAdmin,
+                    ...convertedAdmin
+                };
+
+                console.log('🔀 Store: Merged admin data:', mergedAdmin);
+
+                commit('UPDATE_CURRENT_ADMIN', mergedAdmin);
+
+                logger.info('✅ Профиль обновлен:', convertedAdmin.username);
                 return convertedAdmin;
+
             } catch (error) {
                 const errorMessage = error.response?.data?.message || error.message || 'Ошибка обновления профиля';
                 commit('SET_ERROR', errorMessage);
@@ -430,18 +458,20 @@ export default {
             } finally {
                 commit('SET_LOADING', false);
             }
-        },
+        }
 
-        async updateCurrentAdminAvatar({ commit }, avatarData) {
+        async updateCurrentAdminAvatar({ commit, state }, avatarData) {
             commit('SET_LOADING', true);
             commit('CLEAR_ERROR');
 
             try {
-                logger.info('🖼️ Обновление аватара текущего админа');
+                console.log('🖼️ Store: Updating avatar via API...');
 
-                const updatedAdmin = await adminAPI.updateCurrentAdminAvatar(avatarData)
+                const updatedAdmin = await adminAPI.updateCurrentAdminAvatar(avatarData);
+                console.log('📡 Store: API response:', updatedAdmin);
 
                 const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
+                console.log('🔄 Store: Converted admin:', convertedAdmin);
 
                 commit('UPDATE_CURRENT_ADMIN', convertedAdmin);
 
@@ -463,10 +493,13 @@ export default {
             commit('CLEAR_ERROR');
 
             try {
-                logger.info('🗑️ Удаление аватара текущего админа');
+                console.log('🗑️ Store: Removing avatar via API...');
 
                 const updatedAdmin = await adminAPI.removeCurrentAdminAvatar();
+                console.log('📡 Store: API response:', updatedAdmin);
+
                 const convertedAdmin = adminAPI.convertBackendAdmin(updatedAdmin);
+                console.log('🔄 Store: Converted admin:', convertedAdmin);
 
                 commit('UPDATE_CURRENT_ADMIN', convertedAdmin);
 

@@ -91,7 +91,8 @@ class AdminAPI {
             isActive: backendUser.is_active,
             createdAt: backendUser.createdAt,
             updatedAt: backendUser.updatedAt,
-            lastLoginAt: backendUser.last_login_at
+            lastLoginAt: backendUser.last_login_at,
+            avatar: backendUser.avatar
         };
     }
 
@@ -101,7 +102,8 @@ class AdminAPI {
             fullName: frontendUser.fullName,
             password: frontendUser.password,
             isSuperAdmin: frontendUser.isSuperAdmin,
-            isActive: frontendUser.isActive !== false
+            isActive: frontendUser.isActive !== false,
+            avatar: frontendUser.avatar
         };
     }
 

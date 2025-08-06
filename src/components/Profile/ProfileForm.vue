@@ -195,8 +195,12 @@ export default {
 
       try {
         if (this.profile.avatar !== this.originalProfile.avatar) {
-          await this.updateAvatar(this.profile.avatar);
+          console.log('🖼️ Avatar changed, updating...');
+          const avatarResult = await this.updateAvatar(this.profile.avatar);
+          console.log('✅ Avatar API result:', avatarResult);
+
         }
+
 
         const updateData = {
           id: this.profile.id,
@@ -208,20 +212,23 @@ export default {
           updateData.newPassword = this.profile.newPassword;
         }
 
-        console.log('Updating profile data:', updateData);
-
+        console.log('📝 Updating profile data:', updateData);
         const response = await this.updateCurrentAdmin(updateData);
+        console.log('✅ Profile update response:', response);
 
-        this.profile.currentPassword = '';
-        this.profile.newPassword = '';
-        this.profile = {
-          id: response.id,
-          name: response.username,
-          fullName: response.fullName,
-          avatar: response.avatar
-        };
+        await this.$nextTick(() => {
+          console.log('🔄 Updating profile from currentAdmin:', this.currentAdmin);
+          this.profile = {
+            id: this.currentAdmin.id,
+            name: this.currentAdmin.username,
+            fullName: this.currentAdmin.fullName,
+            avatar: this.currentAdmin.avatar,
+            newPassword: ''
+          };
 
-        this.originalProfile = { ...this.profile };
+          this.originalProfile = {...this.profile};
+          console.log('✅ Profile updated locally:', this.profile);
+        });
 
         this.successMessage = 'Профиль успешно обновлен!';
         const { toastSuccess } = useMessageToaster();
