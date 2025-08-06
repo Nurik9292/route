@@ -50,7 +50,6 @@ import PickList from 'primevue/picklist';
 import Listbox from 'primevue/listbox';
 import {definePreset} from '@primevue/themes';
 
-
 import App from './App.vue';
 import Router from './router';
 import directives from './directives';
@@ -58,49 +57,18 @@ import store from './store';
 import {RouterKey} from './symbols';
 import {routes} from '@/config';
 
-
 import './assets/app.pcss';
 
 function setupApp(app) {
     library.add(
-        faTrash,
-        faRotateLeft,
-        faUserPlus,
-        faBus,
-        faLocationDot,
-        faHome,
-        faTimes,
-        faBars,
-        faArrowRightFromBracket,
-        faShop,
-        faRoute,
-        faCity,
-        faUsers,
-        faAngleLeft,
-        faFilter,
-        faPlus,
-        faCaretUp,
-        faCaretDown,
-        faInfo,
-        faCheck,
-        faTriangleExclamation,
-        faExclamation,
-        faQuestion,
-        faTimesCircle,
-        faCircleCheck,
-        faCircleInfo,
-        faCircleExclamation,
-        faWarning,
-        faEye,
-        faEyeSlash,
-        faRefresh,
-        faUpload,
-        faShield,
-        faCircleQuestion,
-        faShopSlash,
-        faBuildingCircleExclamation,
-        faImage,
-        faSquareXmark);
+        faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot, faHome, faTimes,
+        faBars, faArrowRightFromBracket, faShop, faRoute, faCity, faUsers, faAngleLeft,
+        faFilter, faPlus, faCaretUp, faCaretDown, faInfo, faCheck, faTriangleExclamation,
+        faExclamation, faQuestion, faTimesCircle, faCircleCheck, faCircleInfo,
+        faCircleExclamation, faWarning, faEye, faEyeSlash, faRefresh, faUpload,
+        faShield, faCircleQuestion, faShopSlash, faBuildingCircleExclamation,
+        faImage, faSquareXmark
+    );
 
     const MyPreset = definePreset(Aura, {
         semantic: {
@@ -124,7 +92,7 @@ function setupApp(app) {
 
     app.provide(RouterKey, new Router(routes));
     app.use(store);
-    app.use(PrimeVue,  {
+    app.use(PrimeVue, {
         ripple: true,
         theme: {
             preset: MyPreset,
@@ -133,9 +101,9 @@ function setupApp(app) {
                 darkModeSelector: '.p-dark',
                 cssLayer: false,
             }
-
         }
     });
+
     app.component('Icon', FontAwesomeIcon);
     app.component('IconLayers', FontAwesomeLayers);
     app.component('LMap', LMap);
@@ -146,58 +114,49 @@ function setupApp(app) {
 
     directives.forEach(directive => {
         app.directive(directive.name, directive);
-    })
+    });
 }
-
 
 async function initializeApp() {
     const app = createApp(App);
     setupApp(app);
 
-    try {
-        console.log('🚀 Инициализация приложения...');
-        window.__app_initializing__ = true;
+    console.log('🚀 Запуск приложения...');
+    window.__app_initializing__ = true;
 
+    try {
+        // Пытаемся восстановить сессию
         const restoredUser = await authService.restoreSession();
 
         if (restoredUser) {
-            console.log('✅ Сессия восстановлена:', restoredUser.username);
-
+            console.log('✅ Сессия найдена:', restoredUser.username);
             window.__user_authenticated__ = true;
             window.__current_user__ = restoredUser;
-
         } else {
-            console.log('ℹ️ Нет валидной сессии, требуется вход');
-
+            console.log('ℹ️ Сессии нет, нужен вход');
             window.__user_authenticated__ = false;
             window.__current_user__ = null;
-
-            const currentPath = window.location.hash;
-            if (currentPath && !currentPath.includes('/login') && !currentPath.includes('/sign-in')) {
-                console.log('🔄 Редирект на страницу входа...');
-                window.location.hash = '#/login';
-            }
         }
 
     } catch (error) {
-        console.error('❌ Ошибка восстановления сессии:', error);
-
+        console.error('❌ Ошибка проверки сессии:', error);
         window.__user_authenticated__ = false;
         window.__current_user__ = null;
-
-        window.location.hash = '#/login';
-    } finally {
-        window.__app_initializing__ = false;
     }
 
+    // Монтируем приложение - пусть App.vue сам разбирается с маршрутизацией
     app.mount('#app');
+
+    // Завершаем инициализацию
+    window.__app_initializing__ = false;
 }
 
+// Глобальный обработчик 401 ошибок
 window.addEventListener('unhandledrejection', (event) => {
     const error = event.reason;
 
     if (error?.response?.status === 401) {
-        console.warn('🔐 Получена ошибка 401, очищаем сессию');
+        console.warn('🔐 401 ошибка - сбрасываем сессию');
 
         authService.destroy();
         window.__user_authenticated__ = false;

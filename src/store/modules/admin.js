@@ -458,7 +458,7 @@ export default {
             } finally {
                 commit('SET_LOADING', false);
             }
-        }
+        },
 
         async updateCurrentAdminAvatar({ commit, state }, avatarData) {
             commit('SET_LOADING', true);

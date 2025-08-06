@@ -23,7 +23,6 @@ export default {
     methods: {
         async handleStopDelete(stop) {
             if (await this.showConfirmDialog(`Delete the stop "${stop.name}"?`)) {
-                await playlistStore.delete(stop);
                 this.toastSuccess(`Stop "${stop.name}" deleted.`);
                 this.go('stops');
             }
