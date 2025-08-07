@@ -144,7 +144,7 @@ export default {
             this.credentials.password
         );
 
-        console.log(adminData);
+        console.log("test test test test tes", adminData);
 
         logger.info('✅ Вход выполнен успешно');
 

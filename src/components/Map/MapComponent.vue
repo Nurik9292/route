@@ -34,7 +34,7 @@ export default {
             map: null,
             defaultCenter: [37.93585208752015, 58.39120934103419], 
             defaultZoom: 13, 
-            mapUrl: 'http://95.85.127.213:8083/tile/{z}/{x}/{y}.png',
+            mapUrl: 'https://osm.onlinetaxi.ulgam.biz/tile/{z}/{x}/{y}.png',
             icon: this.initialIcon
         }
     },

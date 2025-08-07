@@ -1,6 +1,5 @@
 <template>
   <div ref="wrapper" class="city-list-wrap">
-    <!-- Header with sorting - ИСПРАВЛЕННЫЕ РАЗМЕРЫ -->
     <div class="city-list-header flex items-center h-[48px] px-2 text-k-text-secondary bg-k-bg-secondary border-b border-k-border">
             <span class="track-number cursor-pointer flex items-center gap-2" @click="sort('displayOrder')">
                 <span class="truncate">Порядок</span>
@@ -13,7 +12,6 @@
       <span class="action">Действия</span>
     </div>
 
-    <!-- Virtual Scroller for performance -->
     <VirtualScroller
         ref="scroller"
         v-slot="{ item }"

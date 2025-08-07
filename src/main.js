@@ -7,12 +7,7 @@ import {LMap, LMarker, LTileLayer} from '@vue-leaflet/vue-leaflet';
 import {faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot,  faAngleLeft, faArrowRightFromBracket, faBars,
     faBuildingCircleExclamation, faCaretDown, faCaretUp, faCheck, faCircleCheck, faCircleExclamation, faCircleInfo,
     faCircleQuestion, faChevronDown, faCity, faExclamation, faEye, faEyeSlash, faFilter, faHome, faImage, faInfo,
-    faPlus,
-    faQuestion,
-    faRefresh,
-    faRoute,
-    faShield,
-    faShop,
+    faPlus, faQuestion, faRefresh, faSort, faRoute, faShield, faShop,
     faShopSlash,
     faSquareXmark,
     faTimes,
@@ -45,7 +40,7 @@ function setupApp(app) {
         faExclamation, faQuestion, faTimesCircle, faCircleCheck, faCircleInfo,
         faCircleExclamation, faWarning, faEye, faEyeSlash, faRefresh, faUpload,
         faShield, faCircleQuestion, faShopSlash, faBuildingCircleExclamation,
-        faImage, faSquareXmark, faSortUp, faChevronDown, faSortDown, faPenToSquare
+        faImage, faSquareXmark, faSortUp, faChevronDown, faSortDown, faPenToSquare, faSort
     );
 
     const MyPreset = definePreset(Aura, {
