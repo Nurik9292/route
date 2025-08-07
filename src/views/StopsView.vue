@@ -143,7 +143,7 @@ export default {
     },
 
     async created() {
-        this.fetchInitialStops();
+      await  this.fetchInitialStops();
     },
 
 

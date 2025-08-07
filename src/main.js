@@ -5,22 +5,8 @@ import {FontAwesomeIcon, FontAwesomeLayers} from '@fortawesome/vue-fontawesome';
 import {library} from '@fortawesome/fontawesome-svg-core';
 import {LMap, LMarker, LTileLayer} from '@vue-leaflet/vue-leaflet';
 import {faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot,  faAngleLeft, faArrowRightFromBracket, faBars,
-    faBuildingCircleExclamation,
-    faCaretDown,
-    faCaretUp,
-    faCheck,
-    faCircleCheck,
-    faCircleExclamation,
-    faCircleInfo,
-    faCircleQuestion,
-    faCity,
-    faExclamation,
-    faEye,
-    faEyeSlash,
-    faFilter,
-    faHome,
-    faImage,
-    faInfo,
+    faBuildingCircleExclamation, faCaretDown, faCaretUp, faCheck, faCircleCheck, faCircleExclamation, faCircleInfo,
+    faCircleQuestion, faChevronDown, faCity, faExclamation, faEye, faEyeSlash, faFilter, faHome, faImage, faInfo,
     faPlus,
     faQuestion,
     faRefresh,
@@ -34,7 +20,7 @@ import {faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot,  faAngleLeft, f
     faTriangleExclamation,
     faUpload,
     faUsers,
-    faWarning
+    faWarning, faSortUp, faSortDown, faPenToSquare
 } from '@fortawesome/free-solid-svg-icons';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
@@ -59,7 +45,7 @@ function setupApp(app) {
         faExclamation, faQuestion, faTimesCircle, faCircleCheck, faCircleInfo,
         faCircleExclamation, faWarning, faEye, faEyeSlash, faRefresh, faUpload,
         faShield, faCircleQuestion, faShopSlash, faBuildingCircleExclamation,
-        faImage, faSquareXmark
+        faImage, faSquareXmark, faSortUp, faChevronDown, faSortDown, faPenToSquare
     );
 
     const MyPreset = definePreset(Aura, {

@@ -1,66 +1,42 @@
 <template>
-    <div
-        ref="wrapper"
-        class="city-list-wrap relative flex flex-col flex-1 overflow-auto py-0 px-3 md:p-0"
-        data-testid="city-list"
-        tabindex="0"
-        @keydown.delete.prevent="handleDelete"
-        @keydown.enter.prevent="handleEnter"
-        @keydown.a.prevent="handleA"
-    >
-        <div
-            :class="config.sortable ? 'sortable' : 'unsortable'"
-            class="city-list-header flex z-[2] bg-k-bg-secondary"
-        >
-            <span
-                class="track-number"
-                data-testid="header-track-number"
-                role="button"
-                title="Sort by track number"
-                @click="sort('id')"
-            >
-                #
-                <template v-if="config.sortable">
-                    <Icon v-if="sortField === 'id' && sortOrder === 'asc'" :icon="['fas', 'caret-up']" class="text-k-highlight" />
-                    <Icon v-if="sortField === 'id' && sortOrder === 'desc'" :icon="['fas', 'caret-down']" class="text-k-highlight" />
-                </template>
+  <div ref="wrapper" class="city-list-wrap">
+    <!-- Header with sorting - ИСПРАВЛЕННЫЕ РАЗМЕРЫ -->
+    <div class="city-list-header flex items-center h-[48px] px-2 text-k-text-secondary bg-k-bg-secondary border-b border-k-border">
+            <span class="track-number cursor-pointer flex items-center gap-2" @click="sort('displayOrder')">
+                <span class="truncate">Порядок</span>
+                <Icon v-if="sortField === 'displayOrder'" :icon="getSortIcon()" class="text-xs flex-shrink-0" />
             </span>
-            
-            <span 
-                class="title-citiy"
-                data-testid="header-title"
-                role="button"
-                title="Sort by title"
-                @click="sort('title')"
-            >
-                Title
-                <template v-if="config.sortable">
-                    <Icon v-if="sortField === 'title' && sortOrder === 'asc'" :icon="['fas', 'caret-up']" class="text-k-highlight" />
-                    <Icon v-if="sortField === 'title' && sortOrder === 'desc'" :icon="['fas', 'caret-down']" class="text-k-highlight" />
-                </template>
+      <span class="title-city cursor-pointer flex items-center gap-2" @click="sort('name')">
+                <span class="truncate">Название</span>
+                <Icon v-if="sortField === 'name'" :icon="getSortIcon()" class="text-xs flex-shrink-0" />
             </span>
-
-          <span class="action">
-            Actions
-          </span>
-        </div>
-
-        <VirtualScroller
-          v-slot="{ item }"
-          :item-height="64"
-          :items="rows"
-          @click="onClick(item, $event)"
-          @scroll="onScroll"
-          @scrolled-to-end="$emit('scrolled-to-end')"
-         >
-        <ListItem
-          :key="item.city.id"
-          :item="item"
-          draggable="true"
-          @click="onClick(item, $event)"
-        />
-      </VirtualScroller>
+      <span class="action">Действия</span>
     </div>
+
+    <!-- Virtual Scroller for performance -->
+    <VirtualScroller
+        ref="scroller"
+        v-slot="{ item }"
+        :item-height="64"
+        :items="rows"
+        @click="onClick(item, $event)"
+        @scroll="onScroll"
+        @scrolled-to-end="$emit('scrolled-to-end')"
+    >
+      <ListItem
+          :key="`city-${item.city.id}`"
+          :item="item"
+          @click="onClick(item, $event)"
+      />
+    </VirtualScroller>
+
+    <!-- Loading indicator -->
+    <div v-if="isLoading" class="loading-indicator flex justify-center py-4">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Загрузка...</span>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -71,135 +47,140 @@ import { throttle } from 'lodash';
 import VirtualScroller from '../Ui/VirtualScroller.vue';
 import ListItem from './ListItem.vue';
 
-
 export default {
-    name: 'TableList',
+  name: 'TableList',
 
-    components: {
-      VirtualScroller,
-      ListItem
+  components: {
+    VirtualScroller,
+    ListItem,
+  },
+
+  props: {
+    cities: {
+      type: Array,
+      default: () => []
     },
+    selectedCities: {
+      type: Array,
+      default: () => []
+    },
+    config: {
+      type: Object,
+      default: () => ({})
+    },
+    sortField: {
+      type: String,
+      default: 'name'
+    },
+    sortOrder: {
+      type: String,
+      default: 'asc'
+    },
+    isLoading: {
+      type: Boolean,
+      default: false
+    }
+  },
 
-    props: {
-      cities: {
-        type: Array,
-        default: []
-      },
-      selectedCities: {
-        type: Array,
-        default: []
-      },
-      config: {
-        type: Object,
-        default: {}
-      },
-      sortField: {
-        type: String,
-        default: 'title'
-      },
-      sortOrder: {
-        
+  emits: ['sort', 'scroll-breakpoint', 'scrolled-to-end', 'resize'],
+
+  data() {
+    return {
+      wrapper: null,
+      rows: [],
+      lastScrollTop: 0,
+      throttledResize: null
+    };
+  },
+
+  mounted() {
+    nextTick(() => {
+      this.wrapper = this.$refs.wrapper;
+
+      if (isMobile.any) {
+        this.wrapper.setAttribute('tabindex', '0');
       }
-    },
 
-    data() {
-        return {
-            wrapper: null,
-            lastSelectedRow: null,
-            sortFields: [],
-            rows: [],
-            lastScrollTop: 0,
-            throttledResize: null,
+      this.throttledResize = throttle(() => {
+        this.$emit('resize');
+      }, 100);
 
-        }
-    },
+      window.addEventListener('resize', this.throttledResize);
+    });
 
+    this.render();
+  },
 
-    mounted() {   
-      nextTick(() => {
-          this.wrapper = this.$refs.wrapper;
-        
-          if (isMobile.any) {
-            this.wrapper.setAttribute('tabindex', '0');
-          }
-        
-          this.throttledResize = throttle(() => {
-            this.$emit('resize');
-          }, 100);
-
-          window.addEventListener('resize', this.throttledResize);
-      });
-      this.render()
-    },
-
-    beforeUnmount() {
+  beforeUnmount() {
+    if (this.throttledResize) {
       window.removeEventListener('resize', this.throttledResize);
+    }
+  },
+
+  watch: {
+    cities: {
+      handler() {
+        this.render();
+      },
+      deep: true
     },
-
-    watch: {
-      cities: {
-          handler() {
-            this.render();
-          },
-          deep: true,
+    selectedCities: {
+      handler() {
+        this.render();
       },
-    },
+      deep: true
+    }
+  },
 
-    methods: {
+  methods: {
+    onScroll(e) {
+      const scroller = e.target;
 
-      onScroll(e) {
-          const scroller = e.target;
-        
-          if (scroller.scrollTop > 512 && this.lastScrollTop < 512) {
-            this.$emit('scroll-breakpoint', 'down');
-          } else if (scroller.scrollTop < 512 && this.lastScrollTop > 512) {
-            this.$emit('scroll-breakpoint', 'up');
-          }
-        
-          this.lastScrollTop = scroller.scrollTop;
-      },
-
-      render() {
-        if (!this.config.sortable)
-          this.sortFields = [];
-
-        this.rows = this.generateRows();
-      },
-
-      generateRows() {        
-        const selectedIds = this.selectedCities.map(city => city.id);
-        return this.cities.map(city => ({
-          city,
-          selected: selectedIds.includes(city.id)
-        }));
-      },
-        
-      sort(field) {
-          if (!this.config.sortable) return;
-          const newSortField = field;
-          const newSortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-          this.$emit('sort',newSortField, newSortOrder);
-      },
-
-      onClick (row, event) {
-        
-        if (isMobile.any) {
-          toggleRow(row)
-          return;
-        }
-      },
-
-      toggleRow (row) {
-        row.selected = !row.selected;
-        this.lastSelectedRow = row;
+      if (scroller.scrollTop > 512 && this.lastScrollTop < 512) {
+        this.$emit('scroll-breakpoint', 'down');
+      } else if (scroller.scrollTop < 512 && this.lastScrollTop > 512) {
+        this.$emit('scroll-breakpoint', 'up');
       }
-      
+
+      this.lastScrollTop = scroller.scrollTop;
+    },
+
+    render() {
+      this.rows = this.generateRows();
+    },
+
+    generateRows() {
+      const selectedIds = this.selectedCities.map(city => city.id);
+      return this.cities.map(city => ({
+        city,
+        selected: selectedIds.includes(city.id)
+      }));
+    },
+
+    sort(field) {
+      if (!this.config.sortable) return;
+
+      const newSortOrder = this.sortField === field && this.sortOrder === 'asc' ? 'desc' : 'asc';
+      this.$emit('sort', field, newSortOrder);
+    },
+
+    getSortIcon() {
+      return this.sortOrder === 'asc' ? ['fas', 'sort-up'] : ['fas', 'sort-down'];
+    },
+
+    onClick(row, event) {
+      if (isMobile.any) {
+        this.toggleRow(row);
+        return;
+      }
+    },
+
+    toggleRow(row) {
+      row.selected = !row.selected;
+    }
   }
-
-}
+};
 </script>
-
-
 
 <style lang="postcss">
 .city-list-wrap {
@@ -211,75 +192,90 @@ export default {
     @apply pointer-events-none;
   }
 
+  /* ИСПРАВЛЕННЫЕ РАЗМЕРЫ КОЛОНОК */
   .city-list-header > span, .city-item > span {
-    @apply text-left p-2 align-middle text-ellipsis overflow-hidden whitespace-nowrap;
+    @apply text-left p-3 align-middle text-ellipsis overflow-hidden;
 
     &.track-number {
-      @apply basis-16 pl-6;
+      @apply basis-24 flex-shrink-0 min-w-0; /* Увеличили с basis-20 до basis-24 */
+      max-width: 6rem; /* 96px - достаточно для "Порядок" */
     }
 
     &.action {
-      @apply basis-56 text-center;
+      @apply basis-64 flex-shrink-0 text-center; /* Увеличили с basis-56 до basis-64 */
+      min-width: 16rem; /* 256px - для двух кнопок */
     }
 
-
-    &.added-at {
-      @apply basis-36 text-left;
-    }
-
-    &.extra {
-      @apply basis-12 text-center;
-    }
-
-    &.title-citiy {
-      @apply flex-1;
+    &.title-city {
+      @apply flex-1 min-w-0; /* Займет оставшееся место */
     }
   }
 
   .city-list-header {
-    @apply tracking-widest uppercase cursor-pointer text-k-text-secondary;
+    @apply tracking-wide uppercase cursor-pointer text-k-text-secondary font-medium text-sm;
 
-    .extra {
-      @apply px-0;
-    }
-  }
+    span {
+      @apply transition-colors duration-200;
 
-  .unsortable span {
-    @apply cursor-default;
-  }
-
-  @media only screen and (max-width: 768px) {
-    .scroller {
-      top: 0;
-
-      .item-container {
-        left: 12px;
-        right: 12px;
-        width: calc(200vw - 24px);
+      &:hover {
+        @apply text-k-text-primary;
       }
-    }
 
-    .city-item {
-      padding: 8px 12px;
-      position: relative;
+      /* Обеспечиваем что текст не переносится */
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 200%;
     }
 
-    .city-item :is(.track-number, .title-citiy, .action, .added-at),
-    .city-list-header :is(.track-number, .title-citiy, .action, .added-at) {
+    /* Иконки сортировки */
+    .text-xs {
+      @apply opacity-60;
+    }
+  }
+
+  .loading-indicator {
+    @apply border-t border-k-border bg-k-bg-secondary;
+  }
+
+  .spinner-border {
+    @apply inline-block w-6 h-6 border-2 border-solid border-r-transparent rounded-full animate-spin;
+    border-color: #3b82f6 transparent #3b82f6 transparent;
+  }
+
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  /* Mobile responsiveness */
+  @media only screen and (max-width: 768px) {
+    .city-list-header {
       display: none;
     }
 
-    .city-item span {
-      padding: 0;
-      vertical-align: bottom;
+    .city-item {
+      @apply p-4 border-b border-k-border;
+      flex-direction: column;
+      align-items: stretch;
+      height: auto;
+      min-height: 80px;
+    }
 
-      &.thumbnail {
-        display: block;
-        padding-right: 12px;
+    .city-item > span {
+      padding: 0;
+
+      &.track-number {
+        @apply absolute top-2 right-2 basis-auto;
+      }
+
+      &.title-city {
+        @apply mb-3;
+      }
+
+      &.action {
+        @apply basis-auto text-left;
+
+        .space-x-2 {
+          @apply flex gap-2;
+        }
       }
     }
   }

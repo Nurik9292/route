@@ -9,7 +9,7 @@
       v-bind="$attrs"
     />
   </template>
-  
+
   <script>
   export default {
     name: 'CheckBox',
@@ -20,7 +20,7 @@
         default: false,
       },
     },
-  
+
     computed: {
       value: {
         get() {
@@ -33,4 +33,3 @@
     },
   }
   </script>
-  

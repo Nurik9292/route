@@ -6,7 +6,7 @@
                 <slot name="icon">☕️</slot>
             </span>
             <div class="text text-center text-3xl font-light flex flex-col gap-2">
-                <slot>Placeholder text goes here.</slot>
+                <slot name="title">Placeholder text goes here.</slot>
             </div>
         </div>
     </article>
