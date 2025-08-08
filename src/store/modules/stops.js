@@ -181,7 +181,7 @@ export default {
                 };
 
                 const response = await stopAPI.getAll(requestParams);
-
+                console.log('res res stop', response)
                 await commit('SYNC_WITH_VAULT', response.stops || response.content || []);
 
                 if (requestParams.page === 1) {
@@ -264,7 +264,6 @@ export default {
         async update({ dispatch, commit }, { stopId, data }) {
             commit('SET_LOADING', true);
             commit('CLEAR_ERROR');
-
             try {
                 const updatedStop = await stopAPI.update(stopId, data);
                 await dispatch('syncWithVault', updatedStop);

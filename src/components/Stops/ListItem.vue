@@ -1,48 +1,49 @@
 <template>
   <div
-      class="stop-item flex items-center h-24 px-0 cursor-pointer transition-colors duration-150"
-      :class="{ 'selected': item.selected, 'inactive': !stop.is_active }"
+      class="stop-item flex items-center h-20 px-0 cursor-pointer transition-colors duration-150"
+      :class="{
+        'selected': item.selected,
+        'inactive': !stop.is_active,
+        'major-stop': stop.is_major_stop && stop.is_active
+      }"
       @click="handleRowClick"
   >
-    <!-- Порядковый номер -->
-    <span class="track-number" style="min-width: 7rem; max-width: 7rem; display: flex; justify-content: center;">
+    <span class="track-number">
       <div class="order-circle">
         {{ stop.displayOrder || '—' }}
       </div>
     </span>
 
-    <!-- Название остановки -->
-    <span class="title-stop" style="flex: 1; max-width: 30%;">
+    <span class="title-stop">
       <div class="stop-info">
-        <h3 class="stop-name">{{ stop.stop_name }}</h3>
-        <p class="stop-name-tm" v-if="stop.name_tm">{{ stop.name_tm }}</p>
-        <p class="stop-name-en" v-if="stop.name_en">{{ stop.name_en }}</p>
+        <div class="stop-name-row">
+          <h3 class="stop-name">{{ stop.stop_name }}</h3>
+          <div v-if="stop.is_major_stop" class="major-indicator" title="Главная остановка">
+            <Icon :icon="['fas', 'star']" />
+          </div>
+        </div>
 
-        <!-- Мобильная мета-информация -->
         <div class="mobile-meta md:hidden">
           <span class="city-badge" v-if="cityName">{{ cityName }}</span>
           <span class="coordinates-mobile">{{ formattedCoordinates }}</span>
+          <span v-if="stop.is_major_stop" class="major-badge-mobile">Главная</span>
         </div>
       </div>
     </span>
 
-    <!-- Туркменское название (скрыто на мобильных) -->
-    <span class="turkmen-name hidden md:block" style="min-width: 9rem; max-width: 9rem;">
-      <span class="secondary-text">{{ stop.name_tm || '—' }}</span>
+    <span class="turkmen-name hidden md:flex">
+      <span class="text-content">{{ stop.name_tm || '—' }}</span>
     </span>
 
-    <!-- Английское название (скрыто на планшетах) -->
-    <span class="english-name hidden lg:block" style="min-width: 9rem; max-width: 9rem;">
-      <span class="secondary-text">{{ stop.name_en || '—' }}</span>
+    <span class="english-name hidden lg:flex">
+      <span class="text-content">{{ stop.name_en || '—' }}</span>
     </span>
 
-    <!-- Город (скрыто на планшетах) -->
-    <span class="city-name hidden lg:block" style="min-width: 7rem; max-width: 7rem;">
-      <span class="secondary-text">{{ cityName || '—' }}</span>
+    <span class="city-name hidden lg:flex">
+      <span class="text-content">{{ cityName || '—' }}</span>
     </span>
 
-    <!-- Координаты (скрыто на мобильных) -->
-    <span class="coordinates hidden md:block" style="min-width: 9rem; max-width: 9rem;">
+    <span class="coordinates hidden md:flex">
       <div class="coordinates-info">
         <span class="coordinates-desktop">{{ formattedCoordinates }}</span>
         <button
@@ -56,16 +57,26 @@
       </div>
     </span>
 
+    <span class="type hidden md:flex">
+      <div class="type-indicator">
+        <Icon
+            :icon="stop.is_major_stop ? ['fas', 'star'] : ['far', 'star']"
+            :class="['type-icon', { 'major': stop.is_major_stop }]"
+            :title="stop.is_major_stop ? 'Главная остановка' : 'Обычная остановка'"
+        />
+      </div>
+    </span>
+
     <!-- Статус -->
-    <span class="status" style="min-width: 5rem; max-width: 5rem; display: flex; justify-content: center;">
-      <StatusBadge :is-active="stop.isActive" size="small" />
+    <span class="status">
+      <StatusBadge :is-active="stop.is_active" size="small" />
     </span>
 
     <!-- Действия -->
-    <span class="action" style="min-width: 13rem; display: flex; justify-content: center;">
+    <span class="action">
       <div class="actions-menu">
         <BtnComponent
-            @click.stop="edit()"
+            @click.stop="showFormEdit"
             small
             class="edit-button"
             title="Изменить"
@@ -95,6 +106,7 @@ import { mapGetters } from 'vuex';
 
 import StatusBadge from '../Ui/StatusBadge.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
+import {eventBus} from "@/utils/index.js";
 
 export default {
   name: 'StopListItem',
@@ -129,8 +141,9 @@ export default {
     },
 
     cityName() {
-      if (!this.stop.cityId) return null;
-      const city = this.getCityById(this.stop.cityId);
+      if (!this.stop.cityId && !this.stop.city_id) return null;
+      const cityId = this.stop.cityId || this.stop.city_id;
+      const city = this.getCityById(cityId);
       return city?.name || null;
     },
 
@@ -153,17 +166,15 @@ export default {
     async confirmDelete() {
       const result = await this.showConfirmDialog(
           `Вы действительно хотите удалить остановку "${this.stop.stop_name}"?`,
-          {
-            title: 'Подтверждение удаления',
-            confirmText: 'Удалить',
-            cancelText: 'Отмена',
-            type: 'danger'
-          }
       );
 
       if (result) {
         this.$emit('delete', this.stop);
       }
+    },
+
+    showFormEdit() {
+      eventBus.emit('MODAL_SHOW_EDIT_STOP_FORM', this.item.stop);
     },
 
     showOnMap() {
@@ -172,7 +183,6 @@ export default {
         return;
       }
 
-      // Открыть координаты в Google Maps
       const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${this.stop.latitude},${this.stop.longitude}`;
       window.open(mapsUrl, '_blank');
     }
@@ -184,6 +194,7 @@ export default {
 .stop-item {
   background-color: var(--color-bg-secondary);
   border-bottom: 1px solid var(--color-border);
+  min-height: 80px;
 }
 
 .stop-item:hover {
@@ -194,40 +205,112 @@ export default {
   @apply opacity-60;
 }
 
+.stop-item.major-stop {
+  background-color: color-mix(in srgb, var(--color-bg-secondary) 95%, #ffd700 5%);
+  border-left: 3px solid #ffd700;
+}
+
+.stop-item.major-stop:hover {
+  background-color: color-mix(in srgb, var(--color-bg-secondary) 85%, #ffd700 15%);
+}
+
 .stop-item.selected {
   background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
 }
 
-/* Порядковый номер (как в Cities) */
+.stop-item > span {
+  @apply p-3 text-left align-middle overflow-hidden;
+
+  &.track-number {
+    min-width: 5rem;
+    max-width: 5rem;
+    @apply flex-shrink-0 justify-center;
+  }
+
+  &.title-stop {
+    flex: 1;
+    min-width: 16rem;
+    @apply min-w-0;
+  }
+
+  &.turkmen-name {
+    min-width: 10rem;
+    max-width: 12rem;
+    @apply flex-shrink-0 items-center;
+  }
+
+  &.english-name {
+    min-width: 10rem;
+    max-width: 12rem;
+    @apply flex-shrink-0 items-center;
+  }
+
+  &.city-name {
+    min-width: 8rem;
+    max-width: 10rem;
+    @apply flex-shrink-0 items-center;
+  }
+
+  &.coordinates {
+    min-width: 10rem;
+    max-width: 12rem;
+    @apply flex-shrink-0 items-center;
+  }
+
+  &.type {
+    min-width: 5rem;
+    max-width: 5rem;
+    @apply flex-shrink-0 justify-center items-center;
+  }
+
+  &.status {
+    min-width: 6rem;
+    max-width: 6rem;
+    @apply flex-shrink-0 justify-center items-center;
+  }
+
+  &.action {
+    min-width: 14rem;
+    max-width: 16rem;
+    @apply flex-shrink-0 justify-center items-center;
+  }
+}
+
+.text-content {
+  @apply block;
+  color: var(--color-text-secondary);
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
 .order-circle {
-  @apply w-10 h-8 rounded-full flex items-center justify-center text-sm font-medium mx-auto;
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium;
   background-color: var(--color-bg-primary);
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
-  min-width: 2.5rem; /* Минимальная ширина для текста "ПОРЯДОК" */
 }
 
 .stop-info {
-  @apply min-w-0;
+  @apply min-w-0 w-full;
+}
+
+.stop-name-row {
+  @apply flex items-center gap-2;
 }
 
 .stop-name {
-  @apply font-medium truncate text-base;
-  color: var(--color-accent); /* Оранжевый как в Cities */
+  @apply font-medium text-base truncate;
+  color: var(--color-accent);
 }
 
-.stop-name-tm,
-.stop-name-en {
-  @apply text-xs mt-1;
-  color: var(--color-text-secondary);
-}
-
-.secondary-text {
-  color: var(--color-text-secondary);
+.major-indicator {
+  @apply flex-shrink-0;
+  color: #ffd700;
+  font-size: 14px;
 }
 
 .mobile-meta {
-  @apply flex flex-wrap items-center gap-2 mt-2;
+  @apply flex flex-wrap items-center gap-2 mt-1;
 }
 
 .city-badge {
@@ -237,18 +320,38 @@ export default {
   border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
+.major-badge-mobile {
+  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+  background-color: color-mix(in srgb, #ffd700 20%, transparent);
+  color: #b8860b;
+  border: 1px solid color-mix(in srgb, #ffd700 30%, transparent);
+}
+
 .coordinates-info {
-  @apply flex items-center space-x-2;
+  @apply flex items-center space-x-2 w-full;
+}
+
+.type-indicator {
+  @apply flex justify-center;
+}
+
+.type-icon {
+  @apply text-lg transition-colors duration-200;
+  color: var(--color-text-secondary);
+}
+
+.type-icon.major {
+  color: #ffd700;
 }
 
 .coordinates-desktop,
 .coordinates-mobile {
-  @apply font-mono text-xs;
+  @apply font-mono text-xs truncate;
   color: var(--color-text-secondary);
 }
 
 .map-button {
-  @apply p-1 rounded transition-colors duration-150;
+  @apply p-1 rounded transition-colors duration-150 flex-shrink-0;
   color: var(--color-text-secondary);
 }
 
@@ -285,19 +388,44 @@ export default {
   border-color: color-mix(in srgb, var(--color-danger) 90%, black 10%);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
+  .stop-item {
+    @apply p-4 h-auto;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 100px;
+  }
+
+  .stop-item > span {
+    padding: 0;
+    min-width: auto !important;
+    max-width: none !important;
+
+    &.track-number {
+      @apply absolute top-2 right-2 basis-auto;
+    }
+
+    &.title-stop {
+      @apply mb-3 max-w-none;
+      flex: none;
+    }
+
+    &.action {
+      @apply basis-auto justify-start;
+    }
+  }
+
   .stop-name {
     @apply text-sm;
   }
 
   .actions-menu {
-    @apply flex-col space-x-0 space-y-1;
+    @apply justify-start space-x-2;
   }
 
   .edit-button,
   .delete-button {
-    @apply px-2 py-1 text-xs;
+    @apply px-3 py-2 text-xs;
   }
 }
 </style>

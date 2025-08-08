@@ -190,13 +190,12 @@ export default {
     @apply pointer-events-none;
   }
 
-  /* ИСПРАВЛЕННЫЕ РАЗМЕРЫ КОЛОНОК */
   .city-list-header > span, .city-item > span {
     @apply text-left p-3 align-middle text-ellipsis overflow-hidden;
 
     &.track-number {
-      @apply basis-24 flex-shrink-0 min-w-0; /* Увеличили с basis-20 до basis-24 */
-      max-width: 6rem; /* 96px - достаточно для "Порядок" */
+      @apply basis-24 flex-shrink-0 min-w-0;
+      max-width: 6rem;
     }
 
     &.action {

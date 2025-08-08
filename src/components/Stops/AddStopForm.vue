@@ -33,8 +33,8 @@
         <template #label>Название (английский)</template>
         <TextInput
             v-model="newStop.nameEn"
-            name="stopNameTm"
-            placeholder="Введите название на туркменском"
+            name="stopNameEn"
+            placeholder="Enter English name"
             maxlength="100"
             class="dark-input"
         />
@@ -68,6 +68,7 @@
                 placeholder="37.9601"
                 required
                 class="dark-input"
+                @input="onCoordinateInputChange"
             />
             <p class="coordinate-label">Широта (Latitude)</p>
           </div>
@@ -82,30 +83,71 @@
                 placeholder="58.3261"
                 required
                 class="dark-input"
+                @input="onCoordinateInputChange"
             />
             <p class="coordinate-label">Долгота (Longitude)</p>
           </div>
         </div>
         <template #help>
           Координаты остановки в формате десятичных градусов.
-          <button type="button" @click="showMapHelper" class="map-link">
-            Выбрать на карте
+          <button type="button" @click="toggleMapHelper" class="map-link">
+            {{ showMap ? 'Скрыть карту' : 'Выбрать на карте' }}
           </button>
         </template>
       </FormRow>
 
-      <!-- Карта для выбора координат -->
-      <div v-if="showMap" class="map-container">
-        <div id="stop-map" class="map-widget"></div>
-        <div class="map-actions">
-          <BtnComponent white small @click="hideMapHelper">
-            Отмена
-          </BtnComponent>
-          <BtnComponent success small @click="confirmCoordinates">
-            Подтвердить координаты
-          </BtnComponent>
+      <!-- УЛУЧШЕННАЯ ИНТЕГРАЦИЯ С MapComponent -->
+      <Transition name="map-slide">
+        <div v-if="showMap" class="map-container">
+          <div class="map-header">
+            <h4>Выберите местоположение остановки</h4>
+            <p class="map-instruction">Кликните на карте для выбора координат</p>
+          </div>
+
+          <MapComponent
+              ref="mapRef"
+              :initial-icon="mapCoordinates"
+              @update:icon="onMapCoordinatesUpdate"
+              class="map-widget"
+          />
+
+          <div class="map-actions">
+            <div class="coordinates-display">
+              <span class="coordinates-text">
+                Выбрано: {{ displayCoordinates }}
+              </span>
+            </div>
+            <div class="action-buttons">
+              <BtnComponent white small @click="cancelMapSelection">
+                Отмена
+              </BtnComponent>
+              <BtnComponent success small @click="confirmMapSelection" :disabled="!hasValidMapCoordinates">
+                Применить координаты
+              </BtnComponent>
+            </div>
+          </div>
         </div>
-      </div>
+      </Transition>
+
+      <FormRow>
+        <template #label>Настройки остановки</template>
+        <div class="settings-section">
+          <div class="setting-item">
+            <CheckBox
+                v-model="newStop.isMajorStop"
+                name="isMajorStop"
+                id="stopIsMajorStop"
+                class="dark-checkbox"
+            />
+            <label for="stopIsMajorStop" class="setting-label">
+              <strong class="setting-title">Главная остановка</strong>
+              <span class="setting-description">
+                Крупная остановка с повышенным приоритетом в поиске и большим количеством маршрутов
+              </span>
+            </label>
+          </div>
+        </div>
+      </FormRow>
     </main>
 
     <footer class="form-footer">
@@ -134,21 +176,25 @@
 import { useDialogBox, useErrorHandler, useMessageToaster, useOverlay } from '@/composables';
 import { isEqual } from 'lodash';
 import { mapActions, mapGetters } from 'vuex';
-import { reactive, ref, computed } from 'vue';
+import { reactive, ref, computed, watch } from 'vue';
 
 import FormRow from '../Ui/Form/FormRow.vue';
 import TextInput from '../Ui/Form/TextInput.vue';
 import SelectBox from '../Ui/Form/SelectBox.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
+import MapComponent from '../Map/MapComponent.vue';
+import CheckBox from "@/components/Ui/Form/CheckBox.vue";
 
 export default {
   name: 'AddStopForm',
 
   components: {
+    CheckBox,
     FormRow,
     TextInput,
     SelectBox,
-    BtnComponent
+    BtnComponent,
+    MapComponent
   },
 
   setup() {
@@ -164,22 +210,38 @@ export default {
       latitude: null,
       longitude: null,
       cityId: null,
-      displayOrder: 0
+      displayOrder: 0,
+      isActive: true,
+      isMajorStop: false,
     });
 
     const isSubmitting = ref(false);
     const showMap = ref(false);
-    const mapInstance = ref(null);
-    const selectedMarker = ref(null);
-    const tempCoordinates = ref(null);
+    const mapRef = ref(null);
+    const originalMapCoordinates = ref(null);
+
+    const mapCoordinates = computed(() => ({
+      lat: newStop.latitude || 37.9601,
+      lng: newStop.longitude || 58.3261
+    }));
+
+    const displayCoordinates = computed(() => {
+      if (newStop.latitude && newStop.longitude) {
+        return `${newStop.latitude.toFixed(6)}, ${newStop.longitude.toFixed(6)}`;
+      }
+      return 'Не выбрано';
+    });
+
+    const hasValidMapCoordinates = computed(() => {
+      return newStop.latitude && newStop.longitude &&
+          newStop.latitude >= 35 && newStop.latitude <= 43 &&
+          newStop.longitude >= 52 && newStop.longitude <= 67;
+    });
 
     const isFormValid = computed(() => {
       return (
           newStop.stopName?.trim() &&
-          newStop.latitude &&
-          newStop.longitude &&
-          newStop.latitude >= 35 && newStop.latitude <= 43 &&
-          newStop.longitude >= 52 && newStop.longitude <= 67
+          hasValidMapCoordinates.value
       );
     });
 
@@ -191,18 +253,25 @@ export default {
         latitude: null,
         longitude: null,
         cityId: null,
+        isMajorStop: false,
+        isActive: true,
         displayOrder: 0
       };
       return !isEqual(newStop, emptyData);
+    });
+
+    watch(() => [newStop.latitude, newStop.longitude], () => {
     });
 
     return {
       newStop,
       isSubmitting,
       showMap,
-      mapInstance,
-      selectedMarker,
-      tempCoordinates,
+      mapRef,
+      originalMapCoordinates,
+      mapCoordinates,
+      displayCoordinates,
+      hasValidMapCoordinates,
       isFormValid,
       hasChanges,
       showOverlay,
@@ -228,9 +297,6 @@ export default {
 
   beforeUnmount() {
     document.removeEventListener('keydown', this.handleKeydown);
-    if (this.mapInstance) {
-      this.mapInstance.remove();
-    }
   },
 
   methods: {
@@ -247,8 +313,61 @@ export default {
 
     handleKeydown(event) {
       if (event.key === 'Escape') {
-        this.maybeClose();
+        if (this.showMap) {
+          this.cancelMapSelection();
+        } else {
+          this.maybeClose();
+        }
       }
+    },
+
+    toggleMapHelper() {
+      if (this.showMap) {
+        this.cancelMapSelection();
+      } else {
+        this.showMapHelper();
+      }
+    },
+
+    showMapHelper() {
+      this.originalMapCoordinates = {
+        lat: this.newStop.latitude,
+        lng: this.newStop.longitude
+      };
+      this.showMap = true;
+
+      this.$nextTick(() => {
+        const mapContainer = document.querySelector('.map-container');
+        if (mapContainer) {
+          mapContainer.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
+      });
+    },
+
+    cancelMapSelection() {
+      if (this.originalMapCoordinates) {
+        this.newStop.latitude = this.originalMapCoordinates.lat;
+        this.newStop.longitude = this.originalMapCoordinates.lng;
+      }
+      this.showMap = false;
+      this.originalMapCoordinates = null;
+    },
+
+    confirmMapSelection() {
+      this.showMap = false;
+      this.originalMapCoordinates = null;
+      this.toastSuccess('Координаты выбраны на карте');
+    },
+
+    onMapCoordinatesUpdate(coordinates) {
+      this.newStop.latitude = parseFloat(coordinates.lat.toFixed(6));
+      this.newStop.longitude = parseFloat(coordinates.lng.toFixed(6));
+    },
+
+    onCoordinateInputChange() {
     },
 
     async submit() {
@@ -256,7 +375,7 @@ export default {
 
       this.isSubmitting = true;
       this.showOverlay();
-      console.log('create stop', this.newStop)
+
       try {
         const stopData = {
           stop_name: this.newStop.stopName.trim(),
@@ -265,12 +384,11 @@ export default {
           latitude: this.newStop.latitude,
           longitude: this.newStop.longitude,
           city_id: this.newStop.cityId || null,
-          stop_code: 'test-yes',
-          // display_order: this.newStop.displayOrder || 0
+          is_active: this.newStop.isActive,
+          is_major_stop:  Boolean(this.newStop.isMajorStop),
         };
-
         await this.store(stopData);
-        this.toastSuccess(`Остановка "${stopData.stopName}" успешно создана`);
+        this.toastSuccess(`Остановка "${stopData.stop_name}" успешно создана`);
         this.close();
       } catch (error) {
         this.errorHandler.handleHttpError(error);
@@ -293,74 +411,26 @@ export default {
 
     close() {
       this.$emit('close');
-    },
-
-    showMapHelper() {
-      this.showMap = true;
-      this.$nextTick(() => {
-        this.initMap();
-      });
-    },
-
-    hideMapHelper() {
-      this.showMap = false;
-      if (this.mapInstance) {
-        this.mapInstance.remove();
-        this.mapInstance = null;
-      }
-    },
-
-    initMap() {
-      try {
-        if (typeof L === 'undefined') {
-          console.warn('Leaflet library not loaded');
-          return;
-        }
-
-        const initialLat = this.newStop.latitude || 37.9601;
-        const initialLng = this.newStop.longitude || 58.3261;
-
-        this.mapInstance = L.map('stop-map').setView([initialLat, initialLng], 13);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(this.mapInstance);
-
-        if (this.newStop.latitude && this.newStop.longitude) {
-          this.selectedMarker = L.marker([this.newStop.latitude, this.newStop.longitude])
-              .addTo(this.mapInstance);
-        }
-
-        this.mapInstance.on('click', (e) => {
-          const { lat, lng } = e.latlng;
-
-          if (this.selectedMarker) {
-            this.mapInstance.removeLayer(this.selectedMarker);
-          }
-
-          this.selectedMarker = L.marker([lat, lng]).addTo(this.mapInstance);
-
-          this.tempCoordinates = { lat: parseFloat(lat.toFixed(6)), lng: parseFloat(lng.toFixed(6)) };
-        });
-
-      } catch (error) {
-        console.error('Failed to initialize map:', error);
-        this.hideMapHelper();
-      }
-    },
-
-    confirmCoordinates() {
-      if (this.tempCoordinates) {
-        this.newStop.latitude = this.tempCoordinates.lat;
-        this.newStop.longitude = this.tempCoordinates.lng;
-      }
-      this.hideMapHelper();
     }
   }
 };
 </script>
 
 <style lang="postcss" scoped>
+.map-slide-enter-active,
+.map-slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 400px;
+  overflow: hidden;
+}
+
+.map-slide-enter-from,
+.map-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
 .stop-form {
   @apply rounded-lg border max-w-2xl mx-auto;
   background-color: var(--color-bg-secondary);
@@ -399,7 +469,7 @@ export default {
 }
 
 .map-link {
-  @apply underline ml-2 transition-colors;
+  @apply underline ml-2 transition-colors cursor-pointer;
   color: var(--color-accent);
 }
 
@@ -407,19 +477,55 @@ export default {
   color: color-mix(in srgb, var(--color-accent) 80%, transparent);
 }
 
+/* УЛУЧШЕННЫЕ СТИЛИ ДЛЯ КАРТЫ */
 .map-container {
-  @apply rounded-lg overflow-hidden border;
+  @apply rounded-lg overflow-hidden border mt-4;
   background-color: var(--color-bg-primary);
   border-color: var(--color-border);
+  /* Ограничиваем максимальную высоту карты */
+  max-height: 400px;
+}
+
+.map-header {
+  @apply px-4 py-3;
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.map-header h4 {
+  @apply text-lg font-medium mb-1;
+  color: var(--color-text-primary);
+}
+
+.map-instruction {
+  @apply text-sm;
+  color: var(--color-text-secondary);
 }
 
 .map-widget {
-  @apply w-full h-64;
+  @apply w-full;
+  /* ФИКСИРОВАННАЯ ВЫСОТА ДЛЯ КАРТЫ */
+  height: 280px;
+  min-height: 280px;
 }
 
 .map-actions {
-  @apply flex justify-end p-3 gap-3;
+  @apply flex justify-between items-center p-4;
+  background-color: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
+}
+
+.coordinates-display {
+  @apply flex items-center;
+}
+
+.coordinates-text {
+  @apply text-sm font-mono;
+  color: var(--color-text-secondary);
+}
+
+.action-buttons {
+  @apply flex gap-3;
 }
 
 .form-footer {
@@ -435,7 +541,7 @@ export default {
   color: white;
 }
 
-.submit-button:hover {
+.submit-button:hover:not(:disabled) {
   background-color: color-mix(in srgb, var(--color-accent) 90%, black 10%);
   border-color: color-mix(in srgb, var(--color-accent) 90%, black 10%);
 }
@@ -454,7 +560,7 @@ export default {
   color: var(--color-text-primary);
 }
 
-.cancel-button:hover {
+.cancel-button:hover:not(:disabled) {
   background-color: color-mix(in srgb, var(--color-bg-secondary) 80%, transparent);
   border-color: var(--color-text-secondary);
 }
@@ -487,15 +593,6 @@ export default {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 
-/* Leaflet map styling */
-#stop-map {
-  z-index: 1;
-}
-
-.leaflet-container {
-  background-color: var(--color-bg-primary);
-}
-
 @media (max-width: 640px) {
   .form-content {
     @apply px-4 py-4;
@@ -503,6 +600,28 @@ export default {
 
   .form-footer {
     @apply px-4;
+  }
+
+  .map-actions {
+    @apply flex-col gap-3;
+  }
+
+  .coordinates-display {
+    @apply w-full;
+  }
+
+  .action-buttons {
+    @apply w-full justify-end;
+  }
+
+  /* Уменьшаем высоту карты на мобильных */
+  .map-widget {
+    height: 200px;
+    min-height: 200px;
+  }
+
+  .map-container {
+    max-height: 320px;
   }
 }
 </style>

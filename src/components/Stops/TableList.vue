@@ -2,23 +2,23 @@
   <div ref="wrapper" class="stop-list-wrap">
     <!-- Header with sorting -->
     <div class="stop-list-header flex items-center h-[48px] px-2 text-k-text-secondary bg-k-bg-secondary border-b border-k-border">
-      <span class="track-number cursor-pointer flex items-center justify-center gap-2" @click="sort('displayOrder')" style="min-width: 7rem; max-width: 7rem;">
+      <span class="track-number cursor-pointer flex items-center justify-center gap-2" @click="sort('displayOrder')" >
         <span class="truncate">ПОРЯДОК</span>
         <Icon v-if="sortField === 'displayOrder'" :icon="getSortIcon()" class="text-xs flex-shrink-0" />
       </span>
-      <span class="title-stop cursor-pointer flex items-center gap-2" @click="sort('stopName')" style="flex: 1; max-width: 30%;">
+      <span class="title-stop cursor-pointer flex items-center gap-2" @click="sort('stopName')" >
         <span class="truncate">НАЗВАНИЕ</span>
         <Icon v-if="sortField === 'stopName'" :icon="getSortIcon()" class="text-xs flex-shrink-0" />
       </span>
-      <span class="turkmen-name hidden md:block" style="min-width: 9rem; max-width: 9rem;">ТУРКМЕНСКИЙ</span>
-      <span class="english-name hidden lg:block" style="min-width: 9rem; max-width: 9rem;">АНГЛИЙСКИЙ</span>
-      <span class="city-name hidden lg:block" style="min-width: 7rem; max-width: 7rem;">ГОРОД</span>
-      <span class="coordinates hidden md:block" style="min-width: 9rem; max-width: 9rem;">КООРДИНАТЫ</span>
-      <span class="status" style="min-width: 5rem; max-width: 5rem; text-align: center;">СТАТУС</span>
-      <span class="action" style="min-width: 13rem; text-align: center;">ДЕЙСТВИЯ</span>
+      <span class="turkmen-name hidden md:block" >ТУРКМЕНСКИЙ</span>
+      <span class="english-name hidden lg:block" >АНГЛИЙСКИЙ</span>
+      <span class="city-name hidden lg:block" >ГОРОД</span>
+      <span class="coordinates hidden md:block" >КООРДИНАТЫ</span>
+      <span class="type hidden md:block">ТИП</span>
+      <span class="status" >СТАТУС</span>
+      <span class="action">ДЕЙСТВИЯ</span>
     </div>
 
-    <!-- Virtual Scroller for performance -->
     <VirtualScroller
         ref="scroller"
         v-slot="{ item }"
@@ -37,14 +37,12 @@
       />
     </VirtualScroller>
 
-    <!-- Loading indicator -->
     <div v-if="isLoading" class="loading-indicator flex justify-center py-4">
       <div class="spinner-border" role="status">
         <span class="sr-only">Загрузка...</span>
       </div>
     </div>
 
-    <!-- Load more section -->
     <div v-if="hasMoreData" class="load-more-section p-4 text-center border-t border-k-border">
       <BtnComponent
           @click="$emit('load-more')"
@@ -57,7 +55,6 @@
       </BtnComponent>
     </div>
 
-    <!-- Pagination info -->
     <div v-if="stops.length > 0" class="pagination-info px-4 py-3 border-t border-k-border bg-k-bg-secondary">
       <p class="text-sm text-k-text-secondary">
         Показано <span class="font-medium text-k-accent">{{ stops.length }}</span>
@@ -237,158 +234,139 @@ export default {
 
 <style lang="postcss">
 .stop-list-wrap {
-  .virtual-scroller {
-    @apply flex-1;
+  min-width: 90rem;
+  overflow-x: auto;
+}
+
+.stop-list-header > span, .stop-item > span {
+  @apply text-left p-3 align-middle;
+
+  &.track-number {
+    @apply basis-20 flex-shrink-0 min-w-0 text-center;
+    min-width: 5rem;
+    max-width: 5rem;
   }
 
-  &.dragging .stop-item * {
-    @apply pointer-events-none;
+  &.title-stop {
+    @apply flex-1 min-w-0;
+    min-width: 16rem;
+    max-width: none; /* Убираем ограничение для названия */
   }
 
-  /* КОЛОНКИ ДЛЯ ОСТАНОВОК */
+  &.turkmen-name {
+    @apply basis-40 flex-shrink-0 min-w-0;
+    min-width: 10rem;
+    max-width: 12rem;
+  }
+
+  &.english-name {
+    @apply basis-40 flex-shrink-0 min-w-0;
+    min-width: 10rem;
+    max-width: 12rem;
+  }
+
+  &.city-name {
+    @apply basis-32 flex-shrink-0 min-w-0;
+    min-width: 8rem;
+    max-width: 10rem;
+  }
+
+  &.coordinates {
+    @apply basis-40 flex-shrink-0 min-w-0;
+    min-width: 10rem;
+    max-width: 12rem;
+  }
+
+  &.type {
+    @apply basis-20 flex-shrink-0 text-center;
+    min-width: 5rem;
+    max-width: 5rem;
+  }
+
+  &.status {
+    @apply basis-24 flex-shrink-0 text-center;
+    min-width: 6rem;
+    max-width: 6rem;
+  }
+
+  &.action {
+    @apply basis-56 flex-shrink-0 text-center;
+    min-width: 14rem;
+    max-width: 16rem;
+  }
+}
+
+.stop-list-header {
+  @apply tracking-wide uppercase cursor-pointer font-medium text-sm;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+
+  span {
+    @apply transition-colors duration-200;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover {
+      color: var(--color-text-primary);
+    }
+  }
+
+  .text-xs {
+    @apply opacity-60;
+  }
+}
+
+@media (max-width: 1200px) {
+  .stop-list-wrap {
+    min-width: 80rem;
+  }
+}
+
+@media (max-width: 1024px) {
   .stop-list-header > span, .stop-item > span {
-    @apply text-left p-3 align-middle text-ellipsis overflow-hidden;
+    &.english-name {
+      display: none !important;
+    }
+  }
 
-    &.track-number {
-      @apply basis-28 flex-shrink-0 min-w-0 text-center;
-      max-width: 7rem; /* Увеличили для "ПОРЯДОК" */
+  .stop-list-wrap {
+    min-width: 70rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .stop-list-wrap {
+    min-width: auto;
+    overflow-x: scroll;
+  }
+
+  .stop-list-header > span, .stop-item > span {
+    &.turkmen-name,
+    &.city-name,
+    &.coordinates,
+    &.type {
+      display: none !important;
     }
 
     &.title-stop {
-      @apply flex-1 min-w-0;
-      max-width: 30%; /* Ограничиваем максимальную ширину названия */
-    }
-
-    &.turkmen-name {
-      @apply basis-36 flex-shrink-0 min-w-0;
-      max-width: 9rem;
-    }
-
-    &.english-name {
-      @apply basis-36 flex-shrink-0 min-w-0;
-      max-width: 9rem;
-    }
-
-    &.city-name {
-      @apply basis-28 flex-shrink-0 min-w-0;
-      max-width: 7rem;
-    }
-
-    &.coordinates {
-      @apply basis-36 flex-shrink-0 min-w-0;
-      max-width: 9rem;
-    }
-
-    &.status {
-      @apply basis-20 flex-shrink-0 text-center; /* Уменьшили ширину статуса */
-      max-width: 5rem;
+      min-width: 12rem;
+      flex: 2;
     }
 
     &.action {
-      @apply basis-52 flex-shrink-0 text-center;
-      min-width: 13rem;
-    }
-  }
-
-  .stop-list-header {
-    @apply tracking-wide uppercase cursor-pointer font-medium text-sm;
-    background-color: var(--color-bg-primary);
-    color: var(--color-text-secondary);
-    border-bottom: 1px solid var(--color-border);
-
-    span {
-      @apply transition-colors duration-200;
-
-      &:hover {
-        color: var(--color-text-primary);
-      }
-
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
+      min-width: 10rem;
+      max-width: 12rem;
     }
 
-    .text-xs {
-      @apply opacity-60;
+    &.status {
+      min-width: 5rem;
     }
 
-    /* Дополнительное ограничение ширины для заголовков */
-    .track-number {
-      min-width: 7rem !important;
-    }
-
-    .status {
-      min-width: 5rem !important;
-      max-width: 5rem !important;
-    }
-  }
-
-  .loading-indicator {
-    @apply border-t;
-    background-color: var(--color-bg-secondary);
-    border-color: var(--color-border);
-  }
-
-  .spinner-border {
-    @apply inline-block w-6 h-6 border-2 border-solid border-r-transparent rounded-full animate-spin;
-    border-color: var(--color-accent) transparent var(--color-accent) transparent;
-  }
-
-  .sr-only {
-    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
-    clip: rect(0, 0, 0, 0);
-  }
-
-  .load-more-button {
-    @apply inline-flex items-center px-6 py-3 rounded-lg transition-all duration-200;
-    background-color: transparent;
-    border: 1px solid var(--color-border);
-    color: var(--color-text-primary);
-  }
-
-  .load-more-button:hover {
-    background-color: color-mix(in srgb, var(--color-bg-secondary) 80%, transparent);
-    border-color: var(--color-accent);
-    color: var(--color-accent);
-  }
-
-  .pagination-info {
-    background-color: var(--color-bg-primary);
-  }
-
-  /* Mobile responsiveness */
-  @media only screen and (max-width: 768px) {
-    .stop-list-header {
-      display: none;
-    }
-
-    .stop-item {
-      @apply p-4;
-      flex-direction: column;
-      align-items: stretch;
-      height: auto;
-      min-height: 80px;
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .stop-item > span {
-      padding: 0;
-
-      &.track-number {
-        @apply absolute top-2 right-2 basis-auto;
-      }
-
-      &.title-stop {
-        @apply mb-3;
-      }
-
-      &.action {
-        @apply basis-auto text-left;
-
-        .space-x-2 {
-          @apply flex gap-2;
-        }
-      }
+    &.track-number {
+      min-width: 4rem;
+      max-width: 4rem;
     }
   }
 }
