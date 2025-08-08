@@ -1,136 +1,210 @@
-import { http } from '@/services';
+import {http} from '@/services';
 
-class RouteAPI {
+export default {
     async getAll(params = {}) {
-        const queryString = new URLSearchParams(params).toString();
-        const url = queryString ? `/admin/routes?${queryString}` : '/admin/routes';
+        const queryParams = new URLSearchParams();
+
+        if (params.page) queryParams.append('page', params.page);
+        if (params.size) queryParams.append('size', params.size);
+        if (params.sort) queryParams.append('sort', params.sort);
+        if (params.order) queryParams.append('order', params.order);
+        if (params.active !== undefined) queryParams.append('active', params.active);
+        if (params.cityId) queryParams.append('cityId', params.cityId);
+
+        const url = queryParams.toString() ?
+            `admin/routes?${queryParams.toString()}` :
+            'admin/routes';
+
         return await http.get(url);
-    }
+    },
 
-    async getById(id) {
-        return await http.get(`/admin/routes/${id}`);
-    }
+    async getById(routeId) {
+        const response = await http.get(`/admin/routes/${routeId}`);
+        return response.data;
+    },
 
-    async store(data) {
-        const payload = {
-            routeNumber: data.number,
-            routeName: data.name,
-            routeNameTm: data.nameTm,
-            farePrice: data.farePrice || 0.5,
-            estimatedDurationMinutes: data.estimatedDuration || 30,
-            forwardStopIds: data.fromStops || [],
-            backwardStopIds: data.toStops || [],
-            routeGeometryForward: data.forwardGeometry,
-            routeGeometryBackward: data.backwardGeometry,
-            isActive: data.isActive !== false
-        };
+    async store(routeData) {
+        const response = await http.post('/admin/routes', {
+            route_number: routeData.route_number || routeData.routeNumber,
+            route_name: routeData.route_name || routeData.routeName,
+            name_tm: routeData.name_tm || routeData.nameTm || null,
+            name_en: routeData.name_en || routeData.nameEn || null,
+            color: routeData.color || '#3B82F6',
+            frequency_minutes: routeData.frequency_minutes || routeData.frequencyMinutes || 15,
+            ticket_price: routeData.ticket_price || routeData.ticketPrice || 1.0,
+            start_time: routeData.start_time || routeData.startTime || '06:00',
+            end_time: routeData.end_time || routeData.endTime || '22:00',
+            is_active: routeData.is_active !== undefined ? routeData.is_active : routeData.isActive,
+            route_type: routeData.route_type || routeData.routeType || 'regular',
+            description: routeData.description || null,
+            geometry: routeData.geometry || null
+        });
 
-        return await http.post('/admin/routes', payload);
-    }
+        return response.data;
+    },
 
-    async update(id, data) {
-        const payload = {
-            routeNumber: data.number,
-            routeName: data.name,
-            routeNameTm: data.nameTm,
-            farePrice: data.farePrice,
-            estimatedDurationMinutes: data.estimatedDuration,
-            forwardStopIds: data.fromStops,
-            backwardStopIds: data.toStops,
-            routeGeometryForward: data.forwardGeometry,
-            routeGeometryBackward: data.backwardGeometry,
-            isActive: data.isActive
-        };
+    async update(routeId, routeData) {
+        const response = await http.put(`/admin/routes/${routeId}`, {
+            route_number: routeData.route_number || routeData.routeNumber,
+            route_name: routeData.route_name || routeData.routeName,
+            name_tm: routeData.name_tm || routeData.nameTm || null,
+            name_en: routeData.name_en || routeData.nameEn || null,
+            color: routeData.color,
+            frequency_minutes: routeData.frequency_minutes || routeData.frequencyMinutes,
+            start_time: routeData.start_time || routeData.startTime,
+            end_time: routeData.end_time || routeData.endTime,
+            is_active: routeData.is_active !== undefined ? routeData.is_active : routeData.isActive,
+            route_type: routeData.route_type || routeData.routeType,
+            description: routeData.description
+        });
 
-        return await http.put(`/admin/routes/${id}`, payload);
-    }
+        return response.data;
+    },
 
-    async delete(id) {
-        return await http.delete(`/admin/routes/${id}`);
-    }
+    async delete(routeId) {
+        await http.delete(`/admin/routes/${routeId}`);
+    },
 
-    async updateGeometry(id, geometry) {
-        const payload = {
-            routeGeometryForward: geometry.forward,
-            routeGeometryBackward: geometry.backward
-        };
+    async updateStatus(routeId, statusData) {
+        const response = await http.patch(`/admin/routes/${routeId}/status`, statusData);
+        return response.data;
+    },
 
-        return await http.put(`/admin/routes/${id}/geometry`, payload);
-    }
 
     async getRouteGeometry(routeNumber) {
-        return await http.silently.get(`/routes/${routeNumber}/geometry`);
-    }
+        const response = await http.get(`/routes/${routeNumber}/geometry`);
+        return response.data;
+    },
+
+    async updateRouteGeometry(routeNumber, geometryData) {
+        const response = await http.put(`/api/routes/${routeNumber}/geometry`, {
+            geometry: geometryData.geometry,
+            update_reason: geometryData.update_reason || 'Manual update from admin panel'
+        });
+
+        return response.data;
+    },
+
+
+    async getRouteStops(routeNumber, direction = 0) {
+        const response = await http.get(`/api/routes/${routeNumber}/stops`, {
+            params: { direction }
+        });
+
+        return response.data || [];
+    },
+
+    async addStopToRoute(routeNumber, stopData) {
+        const response = await http.post(`/api/routes/${routeNumber}/stops`, {
+            stop_id: stopData.stop_id || stopData.stopId,
+            direction: stopData.direction || 0,
+            sequence_order: stopData.sequence_order || stopData.sequenceOrder,
+            distance_from_start: stopData.distance_from_start || stopData.distanceFromStart || 0
+        });
+
+        return response.data;
+    },
+
+    async removeStopFromRoute(routeNumber, stopId, direction = 0) {
+        await http.delete(`/api/routes/${routeNumber}/stops/${stopId}`, {
+            params: { direction }
+        });
+    },
+
+
+    async getRouteInfo(routeNumber) {
+        const response = await http.get(`/api/routes/${routeNumber}/info`);
+        return response.data;
+    },
+
+    async findNearbyRoutes(lat, lon, radius = 1000) {
+        const response = await http.get('/api/routes/nearby', {
+            params: { lat, lon, radius }
+        });
+
+        return response.data || [];
+    },
 
     async getActiveRoutes() {
-        return await http.silently.get('/routes/active');
-    }
+        const response = await http.get('/api/routes/active');
+        return response.data || [];
+    },
 
-    async getRouteDetails(routeNumber) {
-        return await http.get(`/routes/${routeNumber}`);
-    }
 
-    async getRouteStops(routeNumber, direction = 'forward') {
-        return await http.get(`/routes/${routeNumber}/stops?direction=${direction}`);
-    }
+    async getStatistics() {
+        const response = await http.get('/api/admin/routes/statistics');
+        return response.data;
+    },
 
-    async addStopToRoute(routeId, stopId, direction, sequence) {
-        const payload = {
-            stopId,
-            direction, // 'forward' или 'backward'
-            sequence
-        };
+    async getRouteReport(routeNumber, params = {}) {
+        const response = await http.get(`/api/admin/routes/${routeNumber}/report`, {
+            params: {
+                start_date: params.startDate,
+                end_date: params.endDate,
+                include_performance: params.includePerformance || false,
+                include_stops: params.includeStops || false
+            }
+        });
 
-        return await http.post(`/admin/routes/${routeId}/stops`, payload);
-    }
+        return response.data;
+    },
 
-    async removeStopFromRoute(routeId, stopId, direction) {
-        return await http.delete(`/admin/routes/${routeId}/stops/${stopId}?direction=${direction}`);
-    }
 
-    async updateStopSequence(routeId, direction, stopsSequence) {
-        const payload = {
-            direction,
-            stopsSequence // массив { stopId, sequence }
-        };
+    async bulkUpdateStatus(routeIds, isActive) {
+        const response = await http.patch('/api/admin/routes/bulk/status', {
+            route_ids: routeIds,
+            is_active: isActive
+        });
 
-        return await http.put(`/admin/routes/${routeId}/stops/sequence`, payload);
-    }
+        return response.data;
+    },
 
-    async activate(id) {
-        return await http.post(`/admin/routes/${id}/activate`);
-    }
+    async exportRoutes(params = {}) {
+        const response = await http.get('/api/admin/routes/export', {
+            params: {
+                format: params.format || 'csv',
+                include_geometry: params.includeGeometry || false,
+                include_stops: params.includeStops || false,
+                active_only: params.activeOnly || false
+            },
+            responseType: 'blob'
+        });
 
-    async deactivate(id) {
-        return await http.post(`/admin/routes/${id}/deactivate`);
-    }
+        return response.data;
+    },
 
-    async validateRoute(routeData) {
-        return await http.post('/admin/routes/validate', routeData);
-    }
-
-    async getRouteStats() {
-        return await http.get('/admin/routes/stats');
-    }
-
-    async searchRoutes(query) {
-        return await http.get(`/routes/search?q=${encodeURIComponent(query)}`);
-    }
-
-    async exportRoutes(format = 'json') {
-        return await http.get(`/admin/routes/export?format=${format}`);
-    }
-
-    async importRoutes(file) {
+    async importRoutes(file, options = {}) {
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('update_existing', options.updateExisting || false);
+        formData.append('validate_geometry', options.validateGeometry || true);
 
-        return await http.post('/admin/routes/import', formData, {
+        const response = await http.post('/api/admin/routes/import', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
         });
-    }
-}
 
-export default new RouteAPI();
+        return response.data;
+    },
+
+
+    async checkRouteNumberAvailability(routeNumber, excludeRouteId = null) {
+        const queryParams = new URLSearchParams();
+        queryParams.append('routeNumber',routeNumber);
+
+        const url = `admin/routes/check-availability?${queryParams.toString()}`;
+
+        const  response = await http.get(url);
+        return !response.available || false;
+    },
+
+    async validateRouteGeometry(geometry) {
+        const response = await http.post('/api/admin/routes/validate-geometry', {
+            geometry
+        });
+
+        return response.data;
+    },
+
+};

@@ -9,7 +9,7 @@ import {faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot,  faAngleLeft, f
     faCircleQuestion, faChevronDown, faCity, faExclamation, faEye, faEyeSlash, faFilter, faHome, faImage, faInfo,
     faPlus, faQuestion, faRefresh, faSort, faRoute, faShield, faShop, faShopSlash, faSquareXmark, faTimes,
     faTimesCircle, faTriangleExclamation, faSpinner, faUpload, faUsers, faWarning, faSortUp, faSortDown, faPenToSquare,
-    faStar,
+    faStar, faClock, faMap, faPlay, faPause, faDownload, faPencilAlt, faXmark, faSave,
 } from '@fortawesome/free-solid-svg-icons';
 import { faStar as farStar } from '@fortawesome/free-regular-svg-icons';
 
@@ -30,9 +30,9 @@ import './assets/app.pcss';
 
 function setupApp(app) {
     library.add(
-        faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot, faHome, faTimes,
-        faBars, faArrowRightFromBracket, faShop, faRoute, faCity, faUsers, faAngleLeft,
-        faFilter, faPlus, faCaretUp, faCaretDown, faInfo, faCheck, faTriangleExclamation,
+        faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot, faHome, faTimes, faClock, faMap, faPlay, faPause,
+        faBars, faArrowRightFromBracket, faShop, faRoute, faCity, faUsers, faAngleLeft, faDownload, faPencilAlt,
+        faFilter, faPlus, faCaretUp, faCaretDown, faInfo, faCheck, faTriangleExclamation, faXmark, faSave,
         faExclamation, faQuestion, faTimesCircle, faCircleCheck, faCircleInfo,
         faCircleExclamation, faWarning, faEye, faEyeSlash, faRefresh, faUpload,
         faShield, faCircleQuestion, faShopSlash, faBuildingCircleExclamation,
