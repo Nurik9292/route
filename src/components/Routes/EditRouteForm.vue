@@ -474,7 +474,7 @@ export default {
       this.fetchCities()
     ]);
 
-
+    this.loadAndConvertRouteGeometry();
     this.initializeForm();
   },
 
@@ -512,7 +512,6 @@ export default {
 
 
     initializeForm() {
-
       this.originalRoute = {
         routeNumber: this.routeForm.routeNumber,
         routeName: this.routeForm.routeName,
@@ -527,9 +526,22 @@ export default {
         forwardGeometry: [...this.routeForwardGeometry],
         backwardGeometry: [...this.routeBackwardGeometry]
       };
-
     },
 
+    loadAndConvertRouteGeometry() {
+      if (this.route.forward_geometry) {
+        this.routeForwardGeometry = this.route.forward_geometry.map(point =>
+            [point.longitude, point.latitude]
+        );
+      }
+
+      const backwardGeometry = this.route.backward_geometry || this.route.backword_geometry;
+      if (backwardGeometry) {
+        this.routeBackwardGeometry = backwardGeometry.map(point =>
+            [point.longitude, point.latitude]
+        );
+      }
+    },
 
     processStops(stops) {
       if (!Array.isArray(stops)) return [];

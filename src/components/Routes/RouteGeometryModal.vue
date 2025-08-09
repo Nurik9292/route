@@ -284,8 +284,8 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useMessageToaster } from '@/composables';
 import routeAPI from '@/api/routeAPI';
 
-import BtnComponent from '../Ui/Form/BtnComponent.vue';
-import GeoMap from '../Map/GeoMap.vue';
+import BtnComponent from "@/components/Ui/Form/BtnComponent.vue";
+import GeoMap from "@/components/Map/GeoMap.vue";
 
 export default {
   name: 'RouteGeometryModal',

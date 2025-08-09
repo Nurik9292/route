@@ -171,8 +171,6 @@ export default {
                 const totalCount = response.total_count || 0;
                 const activeCount = response.active_count || 0;
 
-                console.log('cities, cities', cities)
-
                 if (state.pagination.currentPage === 1) {
                     await this.dispatch('cities/syncWithVault', cities);
                     commit('SET_CITIES', cities);
