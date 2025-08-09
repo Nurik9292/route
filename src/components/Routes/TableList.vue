@@ -114,14 +114,14 @@
 
     <!-- Route Geometry Modal -->
     <!-- Commented out until RouteGeometryModal is implemented -->
-    <!--
+
     <RouteGeometryModal
       v-if="showGeometryModal"
       :route="selectedRoute"
       @close="showGeometryModal = false"
       @geometry-updated="handleGeometryUpdated"
     />
-    -->
+
 
     <!-- Route Stops Modal -->
     <!-- Commented out until RouteStopsModal is implemented -->
@@ -144,8 +144,7 @@ import { useMessageToaster } from '@/composables';
 import VirtualScroller from '../Ui/VirtualScroller.vue';
 import ListItem from './ListItem.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
-// Commented out until modals are implemented
-// import RouteGeometryModal from './RouteGeometryModal.vue';
+import RouteGeometryModal from './RouteGeometryModal.vue';
 // import RouteStopsModal from './RouteStopsModal.vue';
 
 export default {
@@ -154,9 +153,8 @@ export default {
   components: {
     VirtualScroller,
     ListItem,
-    BtnComponent
-    // Commented out until modals are implemented
-    // RouteGeometryModal,
+    BtnComponent,
+    RouteGeometryModal,
     // RouteStopsModal
   },
 

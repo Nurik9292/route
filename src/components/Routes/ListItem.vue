@@ -82,7 +82,7 @@
         </BtnComponent>
 
         <BtnComponent
-            @click.stop="$emit('view-stops', route)"
+            @click.stop="showFormEdit()"
             small
             class="action-button stops-button"
             title="Остановки маршрута"
@@ -119,6 +119,7 @@ import { mapActions } from 'vuex';
 
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import StatusBadge from '../Ui/StatusBadge.vue';
+import {eventBus} from "@/utils/index.js";
 
 export default {
   name: 'RouteListItem',
@@ -181,36 +182,8 @@ export default {
   methods: {
     ...mapActions('routes', ['update']),
 
-    formatTime(time) {
-      if (!time) return '--:--';
-
-      // Handle different time formats
-      if (typeof time === 'string') {
-        if (time.includes(':')) {
-          return time.substring(0, 5); // HH:MM format
-        }
-        // Handle ISO time format
-        if (time.includes('T')) {
-          return new Date(time).toLocaleTimeString('ru-RU', {
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-        }
-      }
-
-      return time;
-    },
-
-    formatPrice(price) {
-      if (price === null || price === undefined || price === 0) {
-        return 'Бесплатно';
-      }
-
-      if (typeof price === 'number') {
-        return price.toFixed(1);
-      }
-
-      return price.toString();
+    showFormEdit() {
+      eventBus.emit('MODAL_SHOW_EDIT_ROUTE_FORM', this.item.route);
     },
 
     async toggleStatus() {
@@ -239,7 +212,6 @@ export default {
       }
     },
 
-    // Helper method to format route distance if available
     formatDistance(distance) {
       if (!distance) return '';
 
@@ -250,7 +222,6 @@ export default {
       return `${(distance / 1000).toFixed(1)}км`;
     },
 
-    // Helper method to get route statistics
     getRouteStats() {
       const stats = [];
 

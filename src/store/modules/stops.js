@@ -181,7 +181,6 @@ export default {
                 };
 
                 const response = await stopAPI.getAll(requestParams);
-                console.log('res res stop', response)
                 await commit('SYNC_WITH_VAULT', response.stops || response.content || []);
 
                 if (requestParams.page === 1) {

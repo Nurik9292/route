@@ -247,7 +247,7 @@ export default {
 
   computed: {
     ...mapGetters('routes', [
-      'routes',
+      'getRoutes',
       'isLoading',
       'totalCount',
       'hasMorePages',
@@ -255,16 +255,20 @@ export default {
       'averageFrequency'
     ]),
 
+    routes() {
+      return this.getRoutes || [];
+    },
+
     filteredRoutes() {
       let filtered = this.routes || [];
 
       if (this.searchQuery.trim()) {
         const query = this.searchQuery.toLowerCase();
         filtered = filtered.filter(route => {
-          const routeNumber = (route.routeNumber || '').toLowerCase();
-          const routeName = (route.routeName || '').toLowerCase();
-          const nameTm = (route.nameTm || '').toLowerCase();
-          const nameEn = (route.nameEn || '').toLowerCase();
+          const routeNumber = (route.route_number  || '').toLowerCase();
+          const routeName = (route.route_name || '').toLowerCase();
+          const nameTm = (route.name_tm || '').toLowerCase();
+          const nameEn = (route.name_en || '').toLowerCase();
 
           return routeNumber.includes(query) ||
               routeName.includes(query) ||
@@ -273,9 +277,6 @@ export default {
         });
       }
 
-      if (this.routeTypeFilter) {
-        filtered = filtered.filter(route => route.routeType === this.routeTypeFilter);
-      }
 
       if (this.statusFilter === 'active') {
         filtered = filtered.filter(route => route.is_active);
@@ -287,7 +288,6 @@ export default {
     },
 
     hasAppliedFilters() {
-      return !!(this.searchQuery.trim() || this.routeTypeFilter || this.statusFilter);
     },
 
     emptyStateMessage() {
@@ -316,6 +316,38 @@ export default {
     } catch (error) {
       this.errorHandler.handleHttpError(error);
     }
+
+    eventBus.on('route:created', this.handleRouteCreated);
+  },
+
+  beforeUnmount() {
+    eventBus.off('route:created', this.handleRouteCreated);
+  },
+
+
+  watch: {
+    routes: {
+      immediate: true,
+      handler(newRoutes) {
+        console.log('🔄 Store routes changed:', {
+          newCount: newRoutes?.length || 0
+        });
+        if (newRoutes && newRoutes.length > 0) {
+          this.$nextTick(() => {
+            this.initializeFuzzySearch(newRoutes);
+          });
+        }
+      }
+    },
+
+    hasError: {
+      immediate: true,
+      handler(hasError) {
+        if (hasError) {
+          this.errorHandler.handleError(this.getError);
+        }
+      }
+    },
   },
 
   methods: {
@@ -323,6 +355,32 @@ export default {
       'fetchAll',
       'destroy'
     ]),
+
+    initializeFuzzySearch(routes) {
+      if (!routes || routes.length === 0) return;
+
+      this.fuzzySearch = {
+        search: (query) => {
+          if (!query || !routes) return [];
+
+          const searchQuery = query.toLowerCase();
+          return routes
+              .map(route => ({ item: route }))
+              .filter(({ item }) => {
+                const routeNumber = (item.route_number || item.routeNumber || '').toLowerCase();
+                const routeName = (item.route_name || item.routeName || '').toLowerCase();
+                const nameTm = (item.name_tm || item.nameTm || '').toLowerCase();
+                const nameEn = (item.name_en || item.nameEn || '').toLowerCase();
+
+                return routeNumber.includes(searchQuery) ||
+                    routeName.includes(searchQuery) ||
+                    nameTm.includes(searchQuery) ||
+                    nameEn.includes(searchQuery);
+              });
+        }
+      };
+    },
+
 
     pluralizeRoutes() {
       return pluralize(this.totalCount, 'маршрут', 'маршрута', 'маршрутов');
@@ -355,7 +413,6 @@ export default {
 
     clearAllFilters() {
       this.searchQuery = '';
-      this.routeTypeFilter = '';
       this.statusFilter = '';
     },
 
@@ -369,7 +426,16 @@ export default {
     },
 
     showEditRouteForm(route) {
-      eventBus.emit('MODAL_SHOW_EDIT_ROUTE_FORM',  route );
+      eventBus.emit('MODAL_SHOW_EDIT_ROUTE_FORM',  route);
+    },
+
+    async handleRouteCreated(createdRoute) {
+      console.log('🎉 Route created:', createdRoute);
+      this.showSuccessToast(`Маршрут №${createdRoute.route_number} успешно создан`);
+
+      await this.refreshRoutes();
+
+
     },
 
     async handleDeleteRoute(route) {
@@ -402,7 +468,6 @@ export default {
       }, 3000);
     },
 
-    // Export functionality
     async exportRoutes() {
       if (this.exporting) return;
 
@@ -433,7 +498,6 @@ export default {
       }
     },
 
-    // Import functionality
     showImportModal() {
       this.showImportDialog = true;
     },

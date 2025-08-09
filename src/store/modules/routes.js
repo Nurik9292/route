@@ -34,7 +34,7 @@ export default {
     },
 
     getters: {
-        routes(state) {
+        getRoutes(state) {
             return state.routes;
         },
 
@@ -142,6 +142,7 @@ export default {
         },
 
         ADD_ROUTE(state, route) {
+            console.log('add route', route)
             state.routes.unshift(route);
             state.pagination.totalCount += 1;
             if (route.is_active) {
@@ -187,6 +188,10 @@ export default {
             arrayify(routes).forEach(route => {
                 state.vault.set(route.id, route);
             });
+        },
+
+        SET_VAULT(state, route) {
+            state.vault.set(route.id, route);
         },
 
         SET_PAGINATION(state, pagination) {
@@ -317,8 +322,7 @@ export default {
 
             try {
                 const route = await routeAPI.store(data);
-                console.log(route)
-                await dispatch('syncWithVault', route);
+                commit('SET_VAULT', route);
                 commit('ADD_ROUTE', route);
                 return route;
             } catch (error) {

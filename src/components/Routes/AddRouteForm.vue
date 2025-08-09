@@ -306,6 +306,7 @@ import CheckBox from '../Ui/Form/CheckBox.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import RouteGeometryModal from './RouteGeometryModal.vue';
 import RouteStopsSelector from "./RouteStopsSelector.vue";
+import {eventBus} from "@/utils/index.js";
 
 export default {
   name: 'AddRouteForm',
@@ -631,9 +632,10 @@ export default {
             'с геометрией обоих направлений' :
             this.hasGeometry ? 'с частичной геометрией' : 'без геометрии';
 
+        eventBus.emit('route:created', this.newRoute);
+
         this.toastSuccess(`Маршрут "${routeData.route_number}" успешно создан ${geometryInfo}`);
 
-        this.$emit('route-created', this.newRoute);
         this.close();
       } catch (error) {
         this.errorHandler.handleHttpError(error);
