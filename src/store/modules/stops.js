@@ -100,7 +100,7 @@ export default {
         ADD_STOP(state, stop) {
             state.stops.unshift(stop);
             state.pagination.totalCount += 1;
-            if (stop.isActive) {
+            if (stop.is_active) {
                 state.pagination.activeCount += 1;
             }
         },

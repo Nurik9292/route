@@ -9,7 +9,8 @@ import {faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot,  faAngleLeft, f
     faCircleQuestion, faChevronDown, faCity, faExclamation, faEye, faEyeSlash, faFilter, faHome, faImage, faInfo,
     faPlus, faQuestion, faRefresh, faSort, faRoute, faShield, faShop, faShopSlash, faSquareXmark, faTimes,
     faTimesCircle, faTriangleExclamation, faSpinner, faUpload, faUsers, faWarning, faSortUp, faSortDown, faPenToSquare,
-    faStar, faClock, faMap, faPlay, faPause, faDownload, faPencilAlt, faXmark, faSave,
+    faStar, faClock, faMap, faPlay, faPause, faDownload, faPencilAlt, faXmark, faSave, faArrowLeft, faArrowRight,
+    faSearch, faPlusCircle, faExchange, faCopy, faExchangeAlt, faClone, faTrashAlt, faGripVertical
 } from '@fortawesome/free-solid-svg-icons';
 import { faStar as farStar } from '@fortawesome/free-regular-svg-icons';
 
@@ -33,10 +34,11 @@ function setupApp(app) {
         faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot, faHome, faTimes, faClock, faMap, faPlay, faPause,
         faBars, faArrowRightFromBracket, faShop, faRoute, faCity, faUsers, faAngleLeft, faDownload, faPencilAlt,
         faFilter, faPlus, faCaretUp, faCaretDown, faInfo, faCheck, faTriangleExclamation, faXmark, faSave,
-        faExclamation, faQuestion, faTimesCircle, faCircleCheck, faCircleInfo,
-        faCircleExclamation, faWarning, faEye, faEyeSlash, faRefresh, faUpload,
-        faShield, faCircleQuestion, faShopSlash, faBuildingCircleExclamation,
-        faImage, faSquareXmark, faSortUp, faChevronDown, faSortDown, faPenToSquare, faSort, faSpinner, faStar, farStar
+        faExclamation, faQuestion, faTimesCircle, faCircleCheck, faCircleInfo, faArrowLeft, faArrowRight, faPlusCircle,
+        faCircleExclamation, faWarning, faEye, faEyeSlash, faRefresh, faUpload, faSearch, faExchange, faCopy,
+        faShield, faCircleQuestion, faShopSlash, faBuildingCircleExclamation, faExchangeAlt, faClone, faTrashAlt,
+        faImage, faSquareXmark, faSortUp, faChevronDown, faSortDown, faPenToSquare, faSort, faSpinner, faStar, farStar,
+        faGripVertical
     );
 
     const MyPreset = definePreset(Aura, {

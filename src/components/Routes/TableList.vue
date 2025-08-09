@@ -279,8 +279,7 @@ export default {
     buildRows() {
       this.rows = this.routes.map(route => ({
         route,
-        selected: this.selectedRoutes.includes(route.id),
-        type: 'route'
+        selected: this.selectedRoutes.includes(route.id)
       }));
     },
 

@@ -24,23 +24,8 @@ export default {
     },
 
     async store(routeData) {
-        const response = await http.post('/admin/routes', {
-            route_number: routeData.route_number || routeData.routeNumber,
-            route_name: routeData.route_name || routeData.routeName,
-            name_tm: routeData.name_tm || routeData.nameTm || null,
-            name_en: routeData.name_en || routeData.nameEn || null,
-            color: routeData.color || '#3B82F6',
-            frequency_minutes: routeData.frequency_minutes || routeData.frequencyMinutes || 15,
-            ticket_price: routeData.ticket_price || routeData.ticketPrice || 1.0,
-            start_time: routeData.start_time || routeData.startTime || '06:00',
-            end_time: routeData.end_time || routeData.endTime || '22:00',
-            is_active: routeData.is_active !== undefined ? routeData.is_active : routeData.isActive,
-            route_type: routeData.route_type || routeData.routeType || 'regular',
-            description: routeData.description || null,
-            geometry: routeData.geometry || null
-        });
+        return await http.post('/admin/routes', routeData);
 
-        return response.data;
     },
 
     async update(routeId, routeData) {

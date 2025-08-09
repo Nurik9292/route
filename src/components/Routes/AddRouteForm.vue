@@ -115,7 +115,6 @@
       </div>
 
 
-      <!-- Route Drawing Section -->
       <div class="space-y-4">
         <h3 class="text-lg font-medium text-k-text-primary border-b border-k-border pb-2">
           Геометрия маршрута
@@ -125,10 +124,10 @@
           <div class="flex justify-between items-start mb-4">
             <div>
               <p class="text-sm text-k-text-primary font-medium mb-1">
-                Нарисовать маршрут на карте
+                Нарисовать маршруты на карте
               </p>
               <p class="text-xs text-k-text-secondary">
-                Укажите путь движения автобусов по дорогам
+                Укажите пути движения автобусов для прямого и обратного направлений
               </p>
             </div>
             <BtnComponent
@@ -138,45 +137,99 @@
                 small
             >
               <Icon :icon="['fas', 'map']" class="mr-2" />
-              {{ routeGeometry ? 'Редактировать' : 'Нарисовать' }}
+              {{ hasGeometry ? 'Редактировать' : 'Нарисовать' }}
             </BtnComponent>
           </div>
 
-          <div v-if="routeGeometry" class="bg-k-bg-primary p-3 rounded border">
-            <div class="flex justify-between items-center">
-              <div class="text-sm">
-                <p class="text-k-text-primary font-medium">
-                  <Icon :icon="['fas', 'check-circle']" class="text-green-500 mr-1" />
-                  Маршрут нарисован
-                </p>
-                <p class="text-k-text-secondary">
-                  Точек: {{ routeGeometry.coordinates?.length || 0 }} |
-                  Длина: ~{{ formatRouteDistance() }} км
-                </p>
+          <!-- Статус геометрии -->
+          <div v-if="hasGeometry" class="space-y-3">
+            <!-- Прямое направление -->
+            <div class="bg-k-bg-primary p-3 rounded border">
+              <div class="flex justify-between items-center">
+                <div class="text-sm">
+                  <p class="text-k-text-primary font-medium flex items-center">
+                    <Icon :icon="['fas', 'arrow-right']" class="text-blue-500 mr-2" />
+                    Прямое направление
+                    <Icon v-if="routeForwardGeometry.length >= 2" :icon="['fas', 'check-circle']" class="text-green-500 ml-2" />
+                  </p>
+                  <p class="text-k-text-secondary">
+                    {{ routeForwardGeometry.length >= 2 ?
+                      `Точек: ${routeForwardGeometry.length} | Длина: ~${calculateGeometryDistance(routeForwardGeometry)} км` :
+                      'Не настроено'
+                    }}
+                  </p>
+                </div>
               </div>
-              <div class="flex gap-2">
-                <BtnComponent @click="editRouteGeometry" small white>
-                  <Icon :icon="['fas', 'edit']" class="mr-1" />
-                  Изменить
-                </BtnComponent>
-                <BtnComponent @click="clearRouteGeometry" small danger>
-                  <Icon :icon="['fas', 'trash']" class="mr-1" />
-                  Удалить
-                </BtnComponent>
+            </div>
+
+            <div class="bg-k-bg-primary p-3 rounded border">
+              <div class="flex justify-between items-center">
+                <div class="text-sm">
+                  <p class="text-k-text-primary font-medium flex items-center">
+                    <Icon :icon="['fas', 'arrow-left']" class="text-orange-500 mr-2" />
+                    Обратное направление
+                    <Icon v-if="routeBackwardGeometry.length >= 2" :icon="['fas', 'check-circle']" class="text-green-500 ml-2" />
+                  </p>
+                  <p class="text-k-text-secondary">
+                    {{ routeBackwardGeometry.length >= 2 ?
+                      `Точек: ${routeBackwardGeometry.length} | Длина: ~${calculateGeometryDistance(routeBackwardGeometry)} км` :
+                      'Не настроено'
+                    }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Общая статистика -->
+            <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+              <div class="flex justify-between items-center">
+                <div class="text-sm">
+                  <p class="text-blue-800 font-medium">
+                    <Icon :icon="['fas', 'info-circle']" class="mr-1" />
+                    Общая статистика
+                  </p>
+                  <p class="text-blue-700 text-xs">
+                    Общая длина: {{ formatRouteDistance() }}
+                  </p>
+                </div>
+                <div class="flex gap-2">
+                  <BtnComponent @click="showRouteDrawing" small white>
+                    <Icon :icon="['fas', 'edit']" class="mr-1" />
+                    Изменить
+                  </BtnComponent>
+                  <BtnComponent @click="clearRouteGeometry" small danger>
+                    <Icon :icon="['fas', 'trash']" class="mr-1" />
+                    Удалить
+                  </BtnComponent>
+                </div>
               </div>
             </div>
           </div>
 
+          <!-- Empty state -->
           <div v-else class="text-center py-8 border-2 border-dashed border-k-border rounded-lg">
             <Icon :icon="['fas', 'location-dot']" class="text-3xl text-k-text-secondary mb-2" />
             <p class="text-k-text-secondary text-sm">
-              Маршрут не нарисован
+              Маршруты не нарисованы
             </p>
             <p class="text-xs text-k-text-secondary mt-1">
-              Нажмите "Нарисовать" для создания геометрии
+              Нажмите "Нарисовать" для создания геометрии прямого и обратного направлений
             </p>
           </div>
         </div>
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="text-lg font-medium text-k-text-primary border-b border-k-border pb-2">
+          Остановки маршрута
+        </h3>
+
+        <RouteStopsSelector
+            :available-stops="availableStops"
+            v-model:forward-stops="newRoute.forwardStops"
+            v-model:backward-stops="newRoute.backwardStops"
+            @validation-changed="onStopsValidationChanged"
+        />
       </div>
 
       <!-- Статус -->
@@ -228,11 +281,11 @@
       </div>
     </footer>
 
-    <!-- Route Drawing Modal -->
     <RouteGeometryModal
         v-if="showDrawingModal"
         :route="newRoute"
-        :existing-geometry="routeGeometry"
+        :existing-forward-geometry="routeForwardGeometry"
+        :existing-backward-geometry="routeBackwardGeometry"
         @close="showDrawingModal = false"
         @geometry-updated="onGeometryUpdated"
     />
@@ -252,6 +305,7 @@ import SelectBox from '../Ui/Form/SelectBox.vue';
 import CheckBox from '../Ui/Form/CheckBox.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import RouteGeometryModal from './RouteGeometryModal.vue';
+import RouteStopsSelector from "./RouteStopsSelector.vue";
 
 export default {
   name: 'AddRouteForm',
@@ -262,11 +316,12 @@ export default {
     SelectBox,
     CheckBox,
     BtnComponent,
-    RouteGeometryModal
+    RouteGeometryModal,
+    RouteStopsSelector
   },
 
   setup() {
-    const { toastSuccess } = useMessageToaster();
+    const { toastSuccess, toastError } = useMessageToaster();
     const { showOverlay, hideOverlay } = useOverlay();
     const { showConfirmDialog } = useDialogBox();
     const errorHandler = useErrorHandler('dialog');
@@ -280,92 +335,80 @@ export default {
       frequency: '',
       isActive: true,
       cityId: '',
+      forwardStops: [],
+      backwardStops: []
     });
 
     const errors = ref({});
     const isSubmitting = ref(false);
     const showDrawingModal = ref(false);
-    const routeGeometry = ref(null);
+    const routeForwardGeometry = ref([]);
+    const routeBackwardGeometry = ref([]);
     const routeNumberChecking = ref(false);
     const routeNumberAvailable = ref(null);
-
-
-    const isFormValid = computed(() => {
-      return newRoute.routeNumber?.trim() &&
-          newRoute.routeName?.trim() &&
-          newRoute.frequency > 0 &&
-          routeNumberAvailable.value !== false &&
-          !Object.keys(errors.value).length;
-    });
-
-    const hasChanges = computed(() => {
-      return newRoute.routeNumber ||
-          newRoute.routeName ||
-          newRoute.nameTm ||
-          newRoute.nameEn ||
-          routeGeometry.value;
-    });
-
-    const debouncedValidateRouteNumber = debounce(async (routeNumber) => {
-      if (!routeNumber?.trim()) {
-        routeNumberAvailable.value = null;
-        return;
-      }
-
-      routeNumberChecking.value = true;
-      try {
-        const available = await routeAPI.checkRouteNumberAvailability(routeNumber);
-        routeNumberAvailable.value = available;
-
-        if (!available) {
-          errors.value.routeNumber = 'Номер маршрута уже используется';
-        } else {
-          delete errors.value.routeNumber;
-        }
-      } catch (error) {
-        console.error('Route number validation error:', error);
-        routeNumberAvailable.value = null;
-      } finally {
-        routeNumberChecking.value = false;
-      }
-    }, 500);
-
-    watch(() => newRoute.routeNumber, (newVal) => {
-      routeNumberAvailable.value = null;
-      delete errors.value.routeNumber;
-
-      if (newVal?.trim()) {
-        debouncedValidateRouteNumber(newVal.trim());
-      }
-    });
+    const stopsValid = ref(false);
 
     return {
       newRoute,
       errors,
       isSubmitting,
       showDrawingModal,
-      routeGeometry,
+      routeForwardGeometry,
+      routeBackwardGeometry,
       routeNumberChecking,
       routeNumberAvailable,
-      isFormValid,
-      hasChanges,
       toastSuccess,
       showOverlay,
       hideOverlay,
       showConfirmDialog,
       errorHandler,
-      debouncedValidateRouteNumber
+      stopsValid,
+      toastError
     };
   },
-
-
 
   computed: {
     ...mapGetters('cities', ['getCities']),
 
+    ...mapGetters('stops', ['getStops']),
+
+    availableStops() {
+      return this.getStops || []
+    },
+
 
     cities() {
       return this.getCities || [];
+    },
+
+
+    hasChanges () {
+      return this.newRoute.routeNumber ||
+          this.newRoute.routeName ||
+          this.routeForwardGeometry.length > 0 ||
+          this.routeBackwardGeometry.length > 0 ||
+          this.newRoute.nameTm ||
+          this.newRoute.nameEn ||
+          this.newRoute.forwardStops.length > 0 ||
+          this.newRoute.backwardStops.length > 0;
+    },
+
+
+    isFormValid ()  {
+      return this.newRoute.routeNumber?.trim() &&
+          this.newRoute.routeName?.trim() &&
+          this.newRoute.frequency > 0 &&
+          this.stopsValid &&
+          this.routeNumberAvailable !== false &&
+          !Object.keys(this.errors).length;
+    },
+
+    hasGeometry()  {
+      return this.routeForwardGeometry.length >= 2 || this.routeBackwardGeometry.length >= 2;
+    },
+
+    hasCompleteGeometry () {
+      return this.routeForwardGeometry.length >= 2 && this.routeBackwardGeometry.length >= 2;
     },
 
     cityFilterOptions() {
@@ -384,8 +427,60 @@ export default {
     },
   },
 
+  mounted() {
+    this.fetchAll({
+      page: 1,
+      size: 1500,
+      sort: 'route_number',
+      order: 'asc',
+      active: true,
+    })
+  },
+
+  watch: {
+    'newRoute.routeNumber'(newVal) {
+      this.routeNumberAvailable = null;
+      delete this.errors.routeNumber;
+
+      if (newVal && newVal.trim()) {
+        this.debouncedValidateRouteNumber(newVal.trim());
+      }
+    }
+  },
+
   methods: {
     ...mapActions('routes', ['store']),
+    ...mapActions('stops', ['fetchAll']),
+
+
+    onStopsValidationChanged (isValid){
+      this.stopsValid = isValid;
+    },
+
+    debouncedValidateRouteNumber: debounce(async function (routeNumber) {
+      if (!routeNumber || !routeNumber.trim()) {
+        this.routeNumberAvailable = null;
+        return;
+      }
+
+      this.routeNumberChecking = true;
+      try {
+        const available = await routeAPI.checkRouteNumberAvailability(routeNumber);
+        this.routeNumberAvailable = available;
+
+        if (!available) {
+          this.errors.routeNumber = 'Номер маршрута уже используется';
+        } else {
+          delete this.errors.routeNumber;
+        }
+      } catch (error) {
+        console.error('Route number validation error:', error);
+        this.routeNumberAvailable = null;
+      } finally {
+        this.routeNumberChecking = false;
+      }
+    }, 500),
+
 
     validateRouteNumber() {
       if (this.newRoute.routeNumber?.trim()) {
@@ -403,26 +498,48 @@ export default {
     },
 
     clearRouteGeometry() {
-      this.routeGeometry = null;
+      this.routeForwardGeometry = [];
+      this.routeBackwardGeometry = [];
       this.toastSuccess('Геометрия маршрута удалена');
     },
 
-    onGeometryUpdated(geometry) {
-      this.routeGeometry = geometry;
+    onGeometryUpdated(geometryData) {
+      if (geometryData.forward_geometry) {
+        this.routeForwardGeometry = geometryData.forward_geometry;
+      }
+      if (geometryData.backward_geometry) {
+        this.routeBackwardGeometry = geometryData.backward_geometry;
+      }
+
       this.showDrawingModal = false;
-      this.toastSuccess('Геометрия маршрута обновлена');
+
+      const totalPoints = (geometryData.forward_geometry?.length || 0) + (geometryData.backward_geometry?.length || 0);
+      this. toastSuccess(`Геометрия маршрута обновлена: ${totalPoints} точек`);
     },
 
-    formatRouteDistance() {
-      if (!this.routeGeometry?.coordinates?.length) return '0';
+    formatRouteDistance () {
+      const forwardDistance = this.calculateGeometryDistance(this.routeForwardGeometry);
+      const backwardDistance = this.calculateGeometryDistance(this.routeBackwardGeometry);
+
+      if (forwardDistance > 0 && backwardDistance > 0) {
+        return `${forwardDistance} км / ${backwardDistance} км`;
+      } else if (forwardDistance > 0) {
+        return `${forwardDistance} км (только прямое)`;
+      } else if (backwardDistance > 0) {
+        return `${backwardDistance} км (только обратное)`;
+      }
+      return '0 км';
+    },
+
+
+    calculateGeometryDistance (geometry)  {
+      if (!geometry || geometry.length < 2) return 0;
 
       let totalDistance = 0;
-      const coords = this.routeGeometry.coordinates;
-
-      for (let i = 1; i < coords.length; i++) {
-        const prev = coords[i - 1];
-        const curr = coords[i];
-        totalDistance += this.calculateDistance(prev[1], prev[0], curr[1], curr[0]);
+      for (let i = 1; i < geometry.length; i++) {
+        const prev = geometry[i - 1];
+        const curr = geometry[i];
+        totalDistance += this.calculateDistance(prev[0], prev[1], curr[0], curr[1]);
       }
 
       return totalDistance.toFixed(1);
@@ -476,6 +593,20 @@ export default {
         return;
       }
 
+      if (!this.stopsValid) {
+        this.toastError('Необходимо настроить остановки маршрута');
+        return;
+      }
+
+      if (!this.hasGeometry) {
+        const confirmed = await this.showConfirmDialog(
+            'Создать маршрут без геометрии?',
+            'Геометрия может быть добавлена позже через редактирование'
+        );
+        if (!confirmed) return;
+      }
+
+
       this.isSubmitting = true;
       this.showOverlay();
 
@@ -485,26 +616,24 @@ export default {
           route_name: this.newRoute.routeName.trim(),
           name_tm: this.newRoute.nameTm?.trim() || null,
           name_en: this.newRoute.nameEn?.trim() || null,
-          color: this.newRoute.color,
-          frequency_minutes: parseInt(this.newRoute.frequency),
+          route_color: this.newRoute.color,
+          estimated_duration_minutes: parseInt(this.newRoute.frequency),
           is_active: this.newRoute.isActive,
-          geometry: this.routeGeometry,
-          city_id: this.newRoute.cityId
+          city_id: this.newRoute.cityId,
+          forward_stops: this.newRoute.forwardStops.map(stop => stop.id),
+          backward_stops: this.newRoute.backwardStops.map(stop => stop.id),
+          forward_geometry: this.routeForwardGeometry,
+          backward_geometry: this.routeBackwardGeometry
         };
+        await this.store(routeData);
 
-        const createdRoute = await this.store(routeData);
+        const geometryInfo = this.hasCompleteGeometry ?
+            'с геометрией обоих направлений' :
+            this.hasGeometry ? 'с частичной геометрией' : 'без геометрии';
 
-        if (this.routeGeometry && createdRoute.routeNumber) {
-          try {
-            await routeAPI.updateRouteGeometry(createdRoute.routeNumber, {
-              geometry: this.routeGeometry
-            });
-          } catch (geometryError) {
-            console.warn('Failed to save route geometry:', geometryError);
-          }
-        }
+        this.toastSuccess(`Маршрут "${routeData.route_number}" успешно создан ${geometryInfo}`);
 
-        this.toastSuccess(`Маршрут "${routeData.route_number}" успешно создан`);
+        this.$emit('route-created', this.newRoute);
         this.close();
       } catch (error) {
         this.errorHandler.handleHttpError(error);

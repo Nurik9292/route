@@ -144,7 +144,7 @@ export default {
         ADD_ROUTE(state, route) {
             state.routes.unshift(route);
             state.pagination.totalCount += 1;
-            if (route.isActive) {
+            if (route.is_active) {
                 state.pagination.activeCount += 1;
             }
         },
@@ -317,6 +317,7 @@ export default {
 
             try {
                 const route = await routeAPI.store(data);
+                console.log(route)
                 await dispatch('syncWithVault', route);
                 commit('ADD_ROUTE', route);
                 return route;
