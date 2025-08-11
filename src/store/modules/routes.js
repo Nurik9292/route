@@ -344,6 +344,7 @@ export default {
 
             try {
                 const updatedRoute = await routeAPI.update(routeId, data);
+
                 await dispatch('syncWithVault', updatedRoute);
                 commit('UPDATE_ROUTE', updatedRoute);
                 return updatedRoute;

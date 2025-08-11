@@ -29,21 +29,7 @@ export default {
     },
 
     async update(routeId, routeData) {
-        const response = await http.put(`/admin/routes/${routeId}`, {
-            route_number: routeData.route_number || routeData.routeNumber,
-            route_name: routeData.route_name || routeData.routeName,
-            name_tm: routeData.name_tm || routeData.nameTm || null,
-            name_en: routeData.name_en || routeData.nameEn || null,
-            color: routeData.color,
-            frequency_minutes: routeData.frequency_minutes || routeData.frequencyMinutes,
-            start_time: routeData.start_time || routeData.startTime,
-            end_time: routeData.end_time || routeData.endTime,
-            is_active: routeData.is_active !== undefined ? routeData.is_active : routeData.isActive,
-            route_type: routeData.route_type || routeData.routeType,
-            description: routeData.description
-        });
-
-        return response.data;
+        return await http.put(`/admin/routes/${routeId}`, routeData);
     },
 
     async delete(routeId) {
@@ -51,8 +37,7 @@ export default {
     },
 
     async updateStatus(routeId, statusData) {
-        const response = await http.patch(`/admin/routes/${routeId}/status`, statusData);
-        return response.data;
+        return await http.patch(`/admin/routes/${routeId}/status`, statusData);
     },
 
 

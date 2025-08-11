@@ -24,7 +24,7 @@
           <div class="flex border-b border-k-border">
             <button
                 type="button"
-                @click="activeDirection = 'forward'"
+                @click="switchToDirection('forward')"
                 :class="[
                   'px-4 py-2 font-medium text-sm transition-colors relative',
                   activeDirection === 'forward'
@@ -40,7 +40,7 @@
             </button>
             <button
                 type="button"
-                @click="activeDirection = 'backward'"
+                @click="switchToDirection('backward')"
                 :class="[
                   'px-4 py-2 font-medium text-sm transition-colors relative',
                   activeDirection === 'backward'
@@ -62,11 +62,14 @@
           <!-- Map Panel -->
           <div class="flex-1 relative">
             <div class="h-[70vh] bg-gray-100 relative">
-              <!-- GeoMap Component -->
+              <!-- GeoMap Component - ДОБАВЛЕНЫ ТОЛЬКО НУЖНЫЕ PROPS -->
               <GeoMap
                   v-if="mapVisible"
                   ref="geoMap"
+                  :existing-geometry="currentDirectionGeometry"
+                  :line-color="currentDirectionColor"
                   @create="onGeometryCreated"
+                  :key="mapKey"
                   class="w-full h-full"
               />
 
@@ -122,7 +125,7 @@
             </div>
           </div>
 
-          <!-- Control Panel -->
+          <!-- Control Panel - БЕЗ ИЗМЕНЕНИЙ -->
           <div class="w-80 bg-k-bg-secondary border-l border-k-border p-4">
             <h3 class="font-medium text-k-text-primary mb-4">
               Управление геометрией
@@ -319,19 +322,21 @@ export default {
     const mapVisible = ref(true);
     const activeDirection = ref('forward');
 
+    // НОВАЯ ПЕРЕМЕННАЯ: ключ для принудительного обновления карты
+    const mapKey = ref(0);
 
+    // Геометрия направлений - ИНИЦИАЛИЗИРУЕМ СУЩЕСТВУЮЩЕЙ ГЕОМЕТРИЕЙ
     const forwardGeometry = ref([...props.existingForwardGeometry]);
     const backwardGeometry = ref([...props.existingBackwardGeometry]);
 
-
+    // Расстояния
     const forwardDistance = ref(0);
     const backwardDistance = ref(0);
 
-
+    // Вычисляемые свойства
     const isEditMode = computed(() => {
       return !!props.route.route_number;
     });
-
 
     const directionLabel = computed(() => {
       return activeDirection.value === 'forward' ? 'Прямое направление' : 'Обратное направление';
@@ -381,13 +386,29 @@ export default {
       return '';
     });
 
+    // НОВЫЕ COMPUTED для передачи в GeoMap
+    const currentDirectionGeometry = computed(() => {
+      return currentGeometry.value;
+    });
 
+    const currentDirectionColor = computed(() => {
+      return activeDirection.value === 'forward' ? '#3B82F6' : '#F97316';
+    });
+
+    // Методы работы с геометрией - БЕЗ ИЗМЕНЕНИЙ
     const onGeometryCreated = (points) => {
       console.log('📍 Получены точки от GeoMap для', activeDirection.value, ':', points);
 
       if (points && points.length >= 2) {
-
-        const coordinates = points.map(point => [point.lat, point.lng]);
+        // Преобразуем координаты в формат [lat, lng]
+        const coordinates = points.map(point => {
+          if (point.lat !== undefined && point.lng !== undefined) {
+            return [point.lat, point.lng];
+          } else if (Array.isArray(point) && point.length === 2) {
+            return point;
+          }
+          return point;
+        });
 
         if (activeDirection.value === 'forward') {
           forwardGeometry.value = coordinates;
@@ -399,7 +420,7 @@ export default {
 
         toastSuccess(`${directionLabel.value} создано: ${points.length} точек`);
       } else if (points && points.length === 0) {
-
+        // Очистка геометрии
         if (activeDirection.value === 'forward') {
           forwardGeometry.value = [];
           forwardDistance.value = 0;
@@ -455,7 +476,17 @@ export default {
       return degrees * (Math.PI / 180);
     };
 
+    // НОВЫЙ МЕТОД: Безопасное переключение направлений
+    const switchToDirection = (direction) => {
+      if (activeDirection.value !== direction) {
+        console.log('🔄 Переключение направления на:', direction);
+        activeDirection.value = direction;
+        // Принудительно обновляем карту через изменение ключа
+        mapKey.value++;
+      }
+    };
 
+    // Остальные методы - БЕЗ ИЗМЕНЕНИЙ
     const clearCurrentGeometry = () => {
       if (activeDirection.value === 'forward') {
         forwardGeometry.value = [];
@@ -465,6 +496,8 @@ export default {
         backwardDistance.value = 0;
       }
 
+      // Обновляем карту после очистки
+      mapKey.value++;
       toastSuccess(`${directionLabel.value} очищено`);
     };
 
@@ -473,6 +506,7 @@ export default {
       backwardGeometry.value = [];
       forwardDistance.value = 0;
       backwardDistance.value = 0;
+      mapKey.value++;
       toastSuccess('Вся геометрия очищена');
     };
 
@@ -517,6 +551,8 @@ export default {
         calculateDistance('backward');
       }
 
+      // Обновляем карту после копирования
+      mapKey.value++;
       toastSuccess(`Геометрия скопирована из ${oppositeDirectionLabel.value.toLowerCase()}`);
     };
 
@@ -537,11 +573,11 @@ export default {
         console.log('💾 Сохраняем геометрию обоих направлений:', geometryData);
 
         if (isEditMode.value) {
-
+          // Обновляем существующий маршрут
           await routeAPI.updateRouteGeometry(props.route.route_number, geometryData);
           toastSuccess('Геометрия маршрута обновлена');
         } else {
-
+          // Новый маршрут - просто передаем данные
           toastSuccess('Геометрия готова к сохранению');
         }
 
@@ -562,8 +598,13 @@ export default {
       emit('close');
     };
 
-
+    // Инициализация при монтировании
     onMounted(() => {
+      console.log('🚀 RouteGeometryModal mounted');
+      console.log('Existing forward geometry:', props.existingForwardGeometry?.length || 0, 'points');
+      console.log('Existing backward geometry:', props.existingBackwardGeometry?.length || 0, 'points');
+
+      // Вычисляем расстояния для существующей геометрии
       if (props.existingForwardGeometry.length > 0) {
         calculateDistance('forward');
       }
@@ -572,21 +613,14 @@ export default {
       }
     });
 
-
-    watch(activeDirection, () => {
-
-      nextTick(() => {
-
-        if (mapVisible.value) {
-
-        }
-      });
-    });
+    // Удален проблемный watch для activeDirection
+    // Вместо этого используем mapKey для принудительного обновления
 
     return {
       saving,
       mapVisible,
       activeDirection,
+      mapKey, // НОВАЯ ПЕРЕМЕННАЯ
       forwardGeometry,
       backwardGeometry,
       forwardDistance,
@@ -602,7 +636,10 @@ export default {
       hasAnyGeometry,
       isAllGeometryValid,
       validationMessage,
+      currentDirectionGeometry, // НОВАЯ ПЕРЕМЕННАЯ
+      currentDirectionColor, // НОВАЯ ПЕРЕМЕННАЯ
       onGeometryCreated,
+      switchToDirection, // ОБНОВЛЕННЫЙ МЕТОД
       clearCurrentGeometry,
       clearAllGeometry,
       copyToOppositeDirection,

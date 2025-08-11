@@ -259,7 +259,7 @@
         <h4 class="text-sm font-medium text-k-text-primary mb-2">Информация о маршруте</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-k-text-secondary">
           <div>
-            <p><strong>Создан:</strong> {{ formatDate(v.created_at) }}</p>
+            <p><strong>Создан:</strong> {{ formatDate(route.created_at) }}</p>
             <p v-if="route.updated_at"><strong>Обновлен:</strong> {{ formatDate(route.updated_at) }}</p>
           </div>
           <div>
@@ -770,26 +770,20 @@ export default {
           backward_geometry: this.routeBackwardGeometry
         };
 
-        console.log('📤 Sending update data:', updateData);
-
-
         const updatedRoute = await this.update({
           routeId: this.route.id,
           data: updateData
         });
 
-        console.log('✅ Route updated successfully:', updatedRoute);
 
         const geometryInfo = this.hasCompleteGeometry ?
             'с геометрией обоих направлений' :
             this.hasGeometry ? 'с частичной геометрией' : 'без геометрии';
 
+        eventBus.emit('route:updated',  updatedRoute);
         this.toastSuccess(
             `Маршрут "${updateData.route_number}" успешно обновлен ${geometryInfo}`
         );
-
-
-        eventBus.emit('route:updated', updatedRoute);
 
         this.close();
 

@@ -318,6 +318,7 @@ export default {
     }
 
     eventBus.on('route:created', this.handleRouteCreated);
+    eventBus.on('route:updated', this.handleRouteUpdated);
   },
 
   beforeUnmount() {
@@ -430,12 +431,13 @@ export default {
     },
 
     async handleRouteCreated(createdRoute) {
-      console.log('🎉 Route created:', createdRoute);
       this.showSuccessToast(`Маршрут №${createdRoute.route_number} успешно создан`);
 
       await this.refreshRoutes();
+    },
 
-
+    async handleRouteUpdated(createdRoute) {
+      await this.refreshRoutes();
     },
 
     async handleDeleteRoute(route) {
