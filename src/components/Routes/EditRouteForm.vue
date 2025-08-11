@@ -463,17 +463,19 @@ export default {
   },
 
   async mounted() {
-    console.log('setup edit route2', this.route)
-
     await Promise.all([
-      this.fetchStops({page: 1,
-          size: 25,
-          sort: this.sortField,
-          order: this.sortOrder,
-          active: true,}),
-      this.fetchCities()
+      this.fetchStops({
+        page: 1,
+        size: 25,
+        sort: this.sortField,
+        order: this.sortOrder,
+        active: true
+      }),
+
+      await this.fetchCities()
     ]);
 
+    this.loadAndConvertStops();
     this.loadAndConvertRouteGeometry();
     this.initializeForm();
   },
@@ -526,6 +528,19 @@ export default {
         forwardGeometry: [...this.routeForwardGeometry],
         backwardGeometry: [...this.routeBackwardGeometry]
       };
+    },
+
+    loadAndConvertStops() {
+      console.log("load test", this.availableStops)
+      this.routeForm.forwardStops = this.availableStops.filter(
+          stop => this.route.forward_stops_ids.includes(stop.id)
+      );
+
+      this.routeForm.backwardStops = this.availableStops.filter(
+          stop => this.route.backword_stops_ids.includes(stop.id)
+      );
+
+      console.log('formRoute', this.routeForm)
     },
 
     loadAndConvertRouteGeometry() {

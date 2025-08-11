@@ -317,6 +317,17 @@ export default {
     const forwardStops = ref([...props.forwardStops]);
     const backwardStops = ref([...props.backwardStops]);
 
+    watch(() => props.forwardStops, (newStops) => {
+      forwardStops.value = [...(newStops || [])];
+    }, { immediate: true, deep: true });
+
+    watch(() => props.backwardStops, (newStops) => {
+      backwardStops.value = [...(newStops || [])];
+    }, { immediate: true, deep: true });
+
+
+    console.log('selector forward', forwardStops)
+
 
     const directionLabel = computed(() => {
       return activeDirection.value === 'forward' ? 'Прямое направление' : 'Обратное направление';

@@ -626,6 +626,9 @@ export default {
           forward_geometry: this.routeForwardGeometry,
           backward_geometry: this.routeBackwardGeometry
         };
+
+        console.log('created route bus', routeData);
+
         await this.store(routeData);
 
         const geometryInfo = this.hasCompleteGeometry ?
