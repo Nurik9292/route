@@ -47,7 +47,7 @@ export default {
     },
 
     async updateRouteGeometry(routeNumber, geometryData) {
-        const response = await http.put(`/api/routes/${routeNumber}/geometry`, {
+        const response = await http.put(`/routes/${routeNumber}/geometry`, {
             geometry: geometryData.geometry,
             update_reason: geometryData.update_reason || 'Manual update from admin panel'
         });

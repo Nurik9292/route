@@ -82,7 +82,7 @@
         </BtnComponent>
 
         <BtnComponent
-            @click.stop="showFormEdit()"
+            @click.stop="$emit('view-stops', route)"
             small
             class="action-button stops-button"
             title="Остановки маршрута"

@@ -306,7 +306,7 @@ export default {
     },
 
     routesWithGeometry() {
-      return this.routes.filter(route => route.hasGeometry || route.geometry).length;
+      return this.routes.filter(route => route.forward_geometry || route.backword_geometry).length;
     }
   },
 

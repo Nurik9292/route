@@ -112,8 +112,7 @@
       </div>
     </div>
 
-    <!-- Route Geometry Modal -->
-    <!-- Commented out until RouteGeometryModal is implemented -->
+
 
     <RouteGeometryModal
       v-if="showGeometryModal"
@@ -348,7 +347,7 @@ export default {
       // TODO: Implement geometry modal when RouteGeometryModal is ready
       this.toastSuccess('Редактирование геометрии маршрута будет реализовано');
       // this.selectedRoute = route;
-      // this.showGeometryModal = true;
+      //  this.showGeometryModal = true;
     },
 
     handleViewStops(route) {
@@ -378,7 +377,7 @@ export default {
 
     formatTime(time) {
       if (!time) return '';
-      return time.substring(0, 5); // HH:MM format
+      return time.substring(0, 5);
     },
 
     formatPrice(price) {

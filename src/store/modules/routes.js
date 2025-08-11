@@ -113,7 +113,7 @@ export default {
 
         averageFrequency(state) {
             if (state.routes.length === 0) return 0;
-            const total = state.routes.reduce((sum, route) => sum + (route.frequencyMinutes || 0), 0);
+            const total = state.routes.reduce((sum, route) => sum + (route.estimated_duration_minutes || 0), 0);
             return Math.round(total / state.routes.length);
         }
     },
