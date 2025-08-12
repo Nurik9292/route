@@ -168,7 +168,6 @@ import TextInput from '../Ui/Form/TextInput.vue';
 import CheckBox from '../Ui/Form/CheckBox.vue';
 import BtnComponent from '../Ui/Form/BtnComponent.vue';
 import TooltipIcon from '../Ui/TooltipIcon.vue';
-import {logger} from "@/utils/index.js";
 
 export default {
   name: 'AdminEditForm',

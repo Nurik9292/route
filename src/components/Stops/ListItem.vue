@@ -67,12 +67,10 @@
       </div>
     </span>
 
-    <!-- Статус -->
     <span class="status">
       <StatusBadge :is-active="stop.is_active" size="small" />
     </span>
 
-    <!-- Действия -->
     <span class="action">
       <div class="actions-menu">
         <BtnComponent

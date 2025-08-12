@@ -191,7 +191,6 @@ export default {
       this.generalError = null;
       this.successMessage = null;
 
-      console.log('update', this.profile)
 
       try {
         if (this.profile.avatar !== this.originalProfile.avatar) {

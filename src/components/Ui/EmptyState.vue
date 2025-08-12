@@ -8,6 +8,9 @@
             <div class="text text-center text-3xl font-light flex flex-col gap-2">
                 <slot name="title">Placeholder text goes here.</slot>
             </div>
+          <div class="text text-center text-3xl font-light flex flex-col gap-2 mt-5">
+            <slot name="action">Placeholder text goes here.</slot>
+          </div>
         </div>
     </article>
 </template>

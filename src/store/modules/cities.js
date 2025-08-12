@@ -167,6 +167,7 @@ export default {
 
                 const response = await cityAPI.getAll(requestParams);
 
+
                 const cities = response.cities || [];
                 const totalCount = response.total_count || 0;
                 const activeCount = response.active_count || 0;

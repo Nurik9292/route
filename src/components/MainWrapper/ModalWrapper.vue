@@ -21,13 +21,14 @@ export default {
         'add-user-form': defineAsyncComponent(() => import('@/components/Admin/AdminAddForm.vue')),
         'edit-user-form': defineAsyncComponent(() => import('@/components/Admin/AdminEditForm.vue')),
 
-        'add-stop-form': defineAsyncComponent(() => import('../Stops/AddStopForm.vue')),
-        'edit-stop-form': defineAsyncComponent(() => import('../Stops/EditStopForm.vue')),
-        'add-route-form': defineAsyncComponent(() => import('../Routes/AddRouteForm.vue')),
-        'edit-route-form': defineAsyncComponent(() => import('../Routes/EditRouteForm.vue')),
-        'add-city-form': defineAsyncComponent(() => import('../City/AddCityForm.vue')),
-        'edit-city-form': defineAsyncComponent(() => import('../City/EditCityForm.vue')),
-        'add-banner-form': defineAsyncComponent(() => import('../Banners/AddBannerForm.vue')),
+        'add-stop-form': defineAsyncComponent(() => import('@/components/Stops/AddStopForm.vue')),
+        'edit-stop-form': defineAsyncComponent(() => import('@/components/Stops/EditStopForm.vue')),
+        'add-route-form': defineAsyncComponent(() => import('@/components/Routes/AddRouteForm.vue')),
+        'edit-route-form': defineAsyncComponent(() => import('@/components/Routes/EditRouteForm.vue')),
+        'add-city-form': defineAsyncComponent(() => import('@/components/City/AddCityForm.vue')),
+        'edit-city-form': defineAsyncComponent(() => import('@/components/City/EditCityForm.vue')),
+        'add-banner-form': defineAsyncComponent(() => import('@/components/Banners/AddBannerForm.vue')),
+        'edit-banner-form': defineAsyncComponent(() => import('@/components/Banners/EditBannerForm.vue')),
       },
       activeModalName: null,
       context: {},
@@ -66,6 +67,11 @@ export default {
       this.context = { city };
       this.activeModalName = 'edit-city-form';
     });
+
+    eventBus.on('MODAL_SHOW_EDIT_BANNER_FORM', (banner) => {
+      this.context = { banner };
+      this.activeModalName = 'edit-banner-form';
+    });
   },
 
   beforeUnmount() {
@@ -78,6 +84,7 @@ export default {
     eventBus.off('MODAL_SHOW_EDIT_STOP_FORM');
     eventBus.off('MODAL_SHOW_EDIT_ROUTE_FORM');
     eventBus.off('MODAL_SHOW_EDIT_CITY_FORM');
+    eventBus.off('MODAL_SHOW_EDIT_BANNER_FORM');
   },
 
   methods: {
