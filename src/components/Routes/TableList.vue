@@ -79,7 +79,6 @@
       />
     </VirtualScroller>
 
-    <!-- Load More Button -->
     <div v-if="hasMoreData" class="load-more-section p-4 text-center border-t border-k-border bg-k-bg-secondary">
       <BtnComponent
           @click="$emit('load-more')"
@@ -90,7 +89,6 @@
       </BtnComponent>
     </div>
 
-    <!-- Pagination Info -->
     <div v-if="routes.length > 0" class="pagination-info px-4 py-3 border-t border-k-border bg-k-bg-secondary">
       <div class="flex justify-between items-center">
         <p class="text-sm text-k-text-secondary">
@@ -299,7 +297,6 @@ export default {
         return;
       }
 
-      // Handle click for editing on desktop
       this.$emit('edit', row.route);
     },
 
@@ -310,7 +307,6 @@ export default {
     onScroll(event) {
       const { scrollTop } = event.target;
 
-      // Emit scroll breakpoint for infinite loading
       if (scrollTop > this.lastScrollTop && scrollTop > 100) {
         this.$emit('scroll-breakpoint');
       }
@@ -336,7 +332,6 @@ export default {
 
     handleA(event) {
       if (event.ctrlKey || event.metaKey) {
-        // Select all routes
         this.rows.forEach(row => {
           row.selected = true;
         });

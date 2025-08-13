@@ -107,7 +107,6 @@
         </div>
       </div>
 
-      <!-- Routes Table -->
       <TableList
           v-if="filteredRoutes.length > 0"
           :routes="filteredRoutes"
@@ -115,7 +114,7 @@
           :sort-field="sortField"
           :sort-order="sortOrder"
           :is-loading="isLoading"
-          :has-more-data="hasMoreData"
+          :has-more-data="hasMorePages"
           :total-count="totalCount"
           @sort="sort"
           @edit="showEditRouteForm"
@@ -156,7 +155,6 @@
       </EmptyState>
     </template>
 
-    <!-- Success Toast -->
     <Transition name="toast">
       <div v-if="showSuccessMessage" class="success-toast">
         <Icon :icon="['fas', 'check-circle']" class="text-green-500 mr-2" />
@@ -164,7 +162,6 @@
       </div>
     </Transition>
 
-    <!-- Import Modal -->
     <div v-if="showImportDialog" class="import-modal-overlay">
       <div class="import-modal">
         <h3>Импорт маршрутов</h3>
@@ -260,23 +257,7 @@ export default {
     },
 
     filteredRoutes() {
-      let filtered = this.routes || [];
-
-      if (this.searchQuery.trim()) {
-        const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(route => {
-          const routeNumber = (route.route_number  || '').toLowerCase();
-          const routeName = (route.route_name || '').toLowerCase();
-          const nameTm = (route.name_tm || '').toLowerCase();
-          const nameEn = (route.name_en || '').toLowerCase();
-
-          return routeNumber.includes(query) ||
-              routeName.includes(query) ||
-              nameTm.includes(query) ||
-              nameEn.includes(query);
-        });
-      }
-
+      let filtered = [...this.routes];
 
       if (this.statusFilter === 'active') {
         filtered = filtered.filter(route => route.is_active);
@@ -354,6 +335,7 @@ export default {
   methods: {
     ...mapActions('routes', [
       'fetchAll',
+      'paginate',
       'destroy'
     ]),
 
@@ -392,8 +374,21 @@ export default {
     },
 
     async loadMoreRoutes() {
-      const currentPage = Math.floor(this.routes.length / 50);
-      return this.fetchAll({ page: currentPage, append: true });
+      if (this.isLoading || !this.hasMorePages) return;
+
+      this.isLoading = true;
+      try {
+        return this.paginate({
+          page: Math.floor(this.routes.length / 25) + 1,
+          size: 25,
+          active: true
+        });
+
+      } catch (error) {
+        await this.errorHandler.handleError(error);
+      } finally {
+        this.isLoading = false;
+      }
     },
 
     async refreshRoutes() {

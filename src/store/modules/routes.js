@@ -142,7 +142,6 @@ export default {
         },
 
         ADD_ROUTE(state, route) {
-            console.log('add route', route)
             state.routes.unshift(route);
             state.pagination.totalCount += 1;
             if (route.is_active) {

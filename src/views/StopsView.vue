@@ -350,7 +350,8 @@ export default {
           page: Math.floor(this.stops.length / 25) + 1,
           size: 25,
           sort: this.sortField,
-          order: this.sortOrder
+          order: this.sortOrder,
+          active: true,
         });
       } catch (error) {
         await this.errorHandler.handleError(error);
