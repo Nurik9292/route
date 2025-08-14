@@ -13,6 +13,7 @@
     <RoutesView v-show="screen === 'Routes'"/>
     <CityView v-show="screen === 'Cities'"/>
     <BannerView v-show="screen === 'Banners'"/>
+    <RouteMonitoringView v-show="screen === 'Monitoring'"/>
 
     <ProfileView v-if="screen === 'Profile'" />
     <AdminView v-if="screen === 'Admins'" />
@@ -27,6 +28,7 @@ import AdminView from '@/views/AdminView.vue';
 import RoutesView from '@/views/RoutesView.vue';
 import CityView from '@/views/CityView.vue';
 import BannerView from '@/views/BannerView.vue';
+import RouteMonitoringView from "@/views/RouteMonitoringView.vue";
 
 import { useRouter } from '@/composables';
 
@@ -34,6 +36,7 @@ export default {
   name: "MainContent",
 
   components: {
+    RouteMonitoringView,
     HomeView,
     StopsView,
     ProfileView,

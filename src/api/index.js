@@ -3,11 +3,13 @@ export { default as routeAPI } from './routeAPI';
 export { default as stopAPI } from './stopAPI';
 export { default as adminAPI } from './adminAPI.js';
 export { default as bannerAPI } from './bannerAPI';
+export { default as monitoringAPI } from './monitoringAPI';
 
 import authAPI from './authAPI';
 import routeAPI from './routeAPI';
 import stopAPI from './stopAPI';
 import adminAPI from './adminAPI';
+import monitoringAPI from './monitoringAPI';
 import bannerAPI from './bannerAPI';
 
 export const api = {
@@ -15,7 +17,8 @@ export const api = {
     routes: routeAPI,
     stops: stopAPI,
     admins: adminAPI,
-    banners: bannerAPI
+    banners: bannerAPI,
+    monitoring: monitoringAPI
 };
 
 

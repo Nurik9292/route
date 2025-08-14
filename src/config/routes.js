@@ -35,5 +35,10 @@ export const routes = [
     path: '/banners',
     screen: 'Banners'
   },
+
+  {
+    path: '/monitoring',
+    screen: 'Monitoring'
+  },
  
 ]

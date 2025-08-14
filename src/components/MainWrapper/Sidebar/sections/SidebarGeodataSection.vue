@@ -17,6 +17,12 @@
                 </template>
                 Маршруты
             </SidebarItem>
+            <SidebarItem href="#/monitoring" screen="Monitoring">
+              <template #icon>
+                <Icon :icon="['fas', 'map']" fixed-width />
+              </template>
+              Мониторинг
+            </SidebarItem>
         </ul>
     </SidebarSection>
 </template>

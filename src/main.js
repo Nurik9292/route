@@ -1,6 +1,5 @@
 import 'primeicons/primeicons.css';
 import {createApp} from 'vue';
-import {authService} from "@/services/index.js";
 import {FontAwesomeIcon, FontAwesomeLayers} from '@fortawesome/vue-fontawesome';
 import {library} from '@fortawesome/fontawesome-svg-core';
 import {LMap, LMarker, LTileLayer} from '@vue-leaflet/vue-leaflet';
@@ -11,7 +10,7 @@ import {faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot,  faAngleLeft, f
     faTimesCircle, faTriangleExclamation, faSpinner, faUpload, faUsers, faWarning, faSortUp, faSortDown, faPenToSquare,
     faStar, faClock, faMap, faPlay, faPause, faDownload, faPencilAlt, faXmark, faSave, faArrowLeft, faArrowRight,
     faSearch, faPlusCircle, faExchange, faCopy, faExchangeAlt, faClone, faTrashAlt, faGripVertical, faImages,
-    faCloudUploadAlt, faCamera,
+    faCloudUploadAlt, faCamera, faChartLine
 } from '@fortawesome/free-solid-svg-icons';
 import { faStar as farStar } from '@fortawesome/free-regular-svg-icons';
 
@@ -39,7 +38,7 @@ function setupApp(app) {
         faCircleExclamation, faWarning, faEye, faEyeSlash, faRefresh, faUpload, faSearch, faExchange, faCopy,
         faShield, faCircleQuestion, faShopSlash, faBuildingCircleExclamation, faExchangeAlt, faClone, faTrashAlt,
         faImage, faSquareXmark, faSortUp, faChevronDown, faSortDown, faPenToSquare, faSort, faSpinner, faStar, farStar,
-        faGripVertical, faImages, faCloudUploadAlt, faCamera
+        faGripVertical, faImages, faCloudUploadAlt, faCamera, faChartLine
     );
 
     const MyPreset = definePreset(Aura, {
