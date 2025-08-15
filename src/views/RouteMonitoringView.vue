@@ -24,7 +24,6 @@
 
     <div class="h-full flex flex-col">
       <div class="flex-1 flex overflow-hidden">
-        <!-- Карта (70% ширины) -->
         <section class="flex-1 relative">
           <MonitoringMap
               ref="monitoringMap"
@@ -44,9 +43,7 @@
           />
         </section>
 
-        <!-- Боковая панель (30% ширины) -->
         <aside class="w-96 bg-k-bg-secondary border-l border-k-border flex flex-col">
-          <!-- Планировщик поездок -->
           <TripPlanner
               ref="tripPlanner"
               @trip-searched="onTripSearched"
@@ -55,7 +52,6 @@
               @clear-trip-points="onClearTripPoints"
           />
 
-          <!-- Отслеживание автобусов -->
           <VehicleTracking
               :selected-route="selectedRoute"
               :active-vehicles="activeVehicles"
@@ -65,7 +61,6 @@
               @show-all-vehicles="showAllVehicles"
           />
 
-          <!-- Статистика мониторинга -->
           <MonitoringStats
               :selected-route="selectedRoute"
               :active-vehicles="activeVehicles"
@@ -186,14 +181,12 @@ export default {
       try {
         console.log('📊 Загружаем маршруты...')
 
-        // Сначала пробуем Vuex store
         try {
-          await this.paginate({ size: 100 })
+          await this.paginate({ size: 25 })
         } catch (storeError) {
           console.warn('⚠️ Ошибка загрузки из store:', storeError)
         }
 
-        // Если в store пусто, используем direct API
         if (!this.effectiveRoutes || this.effectiveRoutes.length === 0) {
           console.log('📦 Загружаем маршруты через Monitoring API...')
           const response = await monitoringAPI.getAllRoutes()
@@ -240,7 +233,6 @@ export default {
 
     async loadRouteGeometry() {
       try {
-        // Проверяем, есть ли уже геометрия в объекте маршрута
         if (this.selectedRoute.forward_geometry || this.selectedRoute.backward_geometry) {
           this.routeGeometry = {
             forward: this.parseGeometry(this.selectedRoute.forward_geometry),
@@ -265,7 +257,6 @@ export default {
       try {
         const response = await monitoringAPI.getVehiclesRoute(this.selectedRoute.route_number)
 
-        // Преобразуем данные в нужный формат
         this.activeVehicles = (response.vehicles || response || []).map(vehicle => ({
           id: vehicle.id,
           vehicleNumber: vehicle.vehicle_number || vehicle.number || `Bus-${vehicle.id}`,
@@ -418,11 +409,45 @@ export default {
     },
 
     onTripOptionSelected(tripOption) {
+      console.log('🔍 Получен tripOption:', tripOption)
+
+      if (tripOption && tripOption.route_segments) {
+        console.log('📊 Сегменты маршрута:', tripOption.route_segments.length)
+        tripOption.route_segments.forEach((segment, index) => {
+          console.log(`📍 Сегмент ${index}:`, {
+            type: segment.type,
+            hasGeometry: !!segment.route_geometry,
+            hasLocations: !!(segment.from_location && segment.to_location),
+            routeNumber: segment.route_number
+          })
+
+          if (segment.route_geometry?.coordinates) {
+            console.log(`  └── Координат в геометрии: ${segment.route_geometry.coordinates.length}`)
+          }
+        })
+      }
+
       this.selectedTripOption = tripOption
-      logger.info('✅ Выбран вариант поездки:', tripOption.type)
+
+      this.selectedRoute = null
+      this.routeGeometry = null
+      this.disconnectWebSocket()
+
+      this.$nextTick(() => {
+        if (this.$refs.monitoringMap && this.$refs.monitoringMap.fitTripBounds) {
+          setTimeout(() => {
+            this.$refs.monitoringMap.fitTripBounds()
+          }, 100) // Даем время на отрисовку сегментов
+        }
+      })
+
+      logger.info('✅ Выбран вариант поездки:', {
+        type: tripOption.trip_type || tripOption.type,
+        segments: tripOption.route_segments?.length || 0,
+        duration: tripOption.total_travel_minutes || tripOption.total_duration
+      })
     },
 
-    // ========= ОСТАЛЬНЫЕ МЕТОДЫ =========
 
     onVehicleFocused(vehicle) {
       if (this.$refs.monitoringMap) {

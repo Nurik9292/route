@@ -57,7 +57,7 @@ export default {
 
 
     async getRouteStops(routeNumber, direction = 0) {
-        const response = await http.get(`/api/routes/${routeNumber}/stops`, {
+        const response = await http.get(`/routes/${routeNumber}/stops`, {
             params: { direction }
         });
 
@@ -65,7 +65,7 @@ export default {
     },
 
     async addStopToRoute(routeNumber, stopData) {
-        const response = await http.post(`/api/routes/${routeNumber}/stops`, {
+        const response = await http.post(`/routes/${routeNumber}/stops`, {
             stop_id: stopData.stop_id || stopData.stopId,
             direction: stopData.direction || 0,
             sequence_order: stopData.sequence_order || stopData.sequenceOrder,
@@ -76,19 +76,19 @@ export default {
     },
 
     async removeStopFromRoute(routeNumber, stopId, direction = 0) {
-        await http.delete(`/api/routes/${routeNumber}/stops/${stopId}`, {
+        await http.delete(`/routes/${routeNumber}/stops/${stopId}`, {
             params: { direction }
         });
     },
 
 
     async getRouteInfo(routeNumber) {
-        const response = await http.get(`/api/routes/${routeNumber}/info`);
+        const response = await http.get(`/routes/${routeNumber}/info`);
         return response.data;
     },
 
     async findNearbyRoutes(lat, lon, radius = 1000) {
-        const response = await http.get('/api/routes/nearby', {
+        const response = await http.get('/routes/nearby', {
             params: { lat, lon, radius }
         });
 
@@ -96,18 +96,18 @@ export default {
     },
 
     async getActiveRoutes() {
-        const response = await http.get('/api/routes/active');
+        const response = await http.get('/routes/active');
         return response.data || [];
     },
 
 
     async getStatistics() {
-        const response = await http.get('/api/admin/routes/statistics');
+        const response = await http.get('/admin/routes/statistics');
         return response.data;
     },
 
     async getRouteReport(routeNumber, params = {}) {
-        const response = await http.get(`/api/admin/routes/${routeNumber}/report`, {
+        const response = await http.get(`/admin/routes/${routeNumber}/report`, {
             params: {
                 start_date: params.startDate,
                 end_date: params.endDate,
@@ -121,7 +121,7 @@ export default {
 
 
     async bulkUpdateStatus(routeIds, isActive) {
-        const response = await http.patch('/api/admin/routes/bulk/status', {
+        const response = await http.patch('/admin/routes/bulk/status', {
             route_ids: routeIds,
             is_active: isActive
         });
@@ -130,7 +130,7 @@ export default {
     },
 
     async exportRoutes(params = {}) {
-        const response = await http.get('/api/admin/routes/export', {
+        const response = await http.get('/admin/routes/export', {
             params: {
                 format: params.format || 'csv',
                 include_geometry: params.includeGeometry || false,
@@ -149,7 +149,7 @@ export default {
         formData.append('update_existing', options.updateExisting || false);
         formData.append('validate_geometry', options.validateGeometry || true);
 
-        const response = await http.post('/api/admin/routes/import', formData, {
+        const response = await http.post('/admin/routes/import', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
@@ -163,14 +163,14 @@ export default {
         const queryParams = new URLSearchParams();
         queryParams.append('routeNumber',routeNumber);
 
-        const url = `admin/routes/check-availability?${queryParams.toString()}`;
+        const url = `/admin/routes/check-availability?${queryParams.toString()}`;
 
         const  response = await http.get(url);
         return !response.available || false;
     },
 
     async validateRouteGeometry(geometry) {
-        const response = await http.post('/api/admin/routes/validate-geometry', {
+        const response = await http.post('/admin/routes/validate-geometry', {
             geometry
         });
 

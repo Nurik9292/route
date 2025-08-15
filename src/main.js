@@ -10,7 +10,7 @@ import {faTrash, faRotateLeft, faUserPlus, faBus, faLocationDot,  faAngleLeft, f
     faTimesCircle, faTriangleExclamation, faSpinner, faUpload, faUsers, faWarning, faSortUp, faSortDown, faPenToSquare,
     faStar, faClock, faMap, faPlay, faPause, faDownload, faPencilAlt, faXmark, faSave, faArrowLeft, faArrowRight,
     faSearch, faPlusCircle, faExchange, faCopy, faExchangeAlt, faClone, faTrashAlt, faGripVertical, faImages,
-    faCloudUploadAlt, faCamera, faChartLine
+    faCloudUploadAlt, faCamera, faChartLine, faStop, faKeyboard
 } from '@fortawesome/free-solid-svg-icons';
 import { faStar as farStar } from '@fortawesome/free-regular-svg-icons';
 
@@ -38,7 +38,7 @@ function setupApp(app) {
         faCircleExclamation, faWarning, faEye, faEyeSlash, faRefresh, faUpload, faSearch, faExchange, faCopy,
         faShield, faCircleQuestion, faShopSlash, faBuildingCircleExclamation, faExchangeAlt, faClone, faTrashAlt,
         faImage, faSquareXmark, faSortUp, faChevronDown, faSortDown, faPenToSquare, faSort, faSpinner, faStar, farStar,
-        faGripVertical, faImages, faCloudUploadAlt, faCamera, faChartLine
+        faGripVertical, faImages, faCloudUploadAlt, faCamera, faChartLine, faStop, faKeyboard
     );
 
     const MyPreset = definePreset(Aura, {

@@ -297,16 +297,57 @@ export default {
         logger.info('🔍 Поиск маршрутов:', searchParams)
         const response = await monitoringAPI.search(searchParams)
 
-        this.tripResults = response.trip_options || []
+        let tripOptions = []
+
+        if (response) {
+          if (response.trip_options && Array.isArray(response.trip_options)) {
+            tripOptions = response.trip_options
+            logger.info('📋 Формат: trip_options массив')
+          } else if (response.option_id) {
+            tripOptions = [response]
+            logger.info('📋 Формат: одиночный объект')
+          } else if (Array.isArray(response)) {
+            tripOptions = response
+            logger.info('📋 Формат: прямой массив')
+          } else if (response.data && Array.isArray(response.data)) {
+            tripOptions = response.data
+            logger.info('📋 Формат: data массив')
+          } else {
+            logger.warn('⚠️ Неизвестный формат ответа:', response)
+            tripOptions = []
+          }
+        }
+
+        this.tripResults = tripOptions.map(option => ({
+          option_id: option.option_id || option.id || `option_${Date.now()}`,
+          trip_type: option.trip_type || option.type || 'direct',
+          summary: option.summary || this.generateSummary(option),
+          total_travel_minutes: option.total_travel_minutes || option.total_duration || 0,
+          total_walking_minutes: option.total_walking_minutes || 0,
+          transfers_count: option.transfers_count || 0,
+          route_segments: option.route_segments || option.segments || [],
+
+          total_duration: option.total_travel_minutes || option.total_duration || 0,
+          type: option.trip_type || option.type || 'direct',
+
+          ...option
+        }))
+
         this.searchCompleted = true
         this.selectedOptionIndex = null
-
         this.$emit('trip-searched', this.tripResults)
 
         if (this.tripResults.length === 0) {
           logger.info('❌ Маршруты не найдены для:', searchParams)
         } else {
           logger.info('✅ Найдено маршрутов:', this.tripResults.length)
+          if (this.tripResults[0]) {
+            logger.info('🔍 Первый маршрут:', {
+              type: this.tripResults[0].trip_type,
+              duration: this.tripResults[0].total_travel_minutes,
+              segments: this.tripResults[0].route_segments?.length || 0
+            })
+          }
         }
 
       } catch (error) {
@@ -320,8 +361,20 @@ export default {
 
     selectTripOption(option, index) {
       this.selectedOptionIndex = index
-      this.$emit('trip-option-selected', option)
-      logger.info('✅ Выбран вариант поездки:', option.type)
+
+      const normalizedOption = {
+        ...option,
+        route_segments: option.route_segments || [],
+        trip_type: option.trip_type || option.type || 'direct',
+        total_duration: option.total_travel_minutes || option.total_duration || 0
+      }
+
+      this.$emit('trip-option-selected', normalizedOption)
+      logger.info('✅ Выбран вариант поездки:', {
+        type: normalizedOption.trip_type,
+        duration: normalizedOption.total_duration,
+        segments: normalizedOption.route_segments.length
+      })
     },
 
     clearFromPoint() {
@@ -366,17 +419,45 @@ export default {
     getRouteDescription(segments) {
       if (!segments || segments.length === 0) return 'Нет данных'
 
-      return segments
-          .map(segment => {
-            if (segment.type === 'walking') return 'Пешком'
-            return segment.route_number ? `№${segment.route_number}` : 'Автобус'
-          })
-          .join(' → ')
+      const parts = []
+
+      segments.forEach(segment => {
+        if (segment.type === 'walking') {
+          parts.push('Пешком')
+        } else if (segment.type === 'bus_ride' && segment.route_number) {
+          parts.push(`№${segment.route_number}`)
+        } else if (segment.route_number) {
+          parts.push(`№${segment.route_number}`)
+        }
+      })
+
+      return parts.length > 0 ? parts.join(' → ') : 'Маршрут'
     },
 
     formatCoordinates(point) {
       return `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`
-    }
+    },
+
+    generateSummary(option) {
+      if (!option.route_segments || option.route_segments.length === 0) {
+        return 'Маршрут не определен'
+      }
+
+      const busSegments = option.route_segments.filter(s => s.type === 'bus_ride')
+      const totalTime = option.total_travel_minutes || option.total_duration || 0
+
+      if (busSegments.length === 0) {
+        return `Пешком - ${totalTime} мин`
+      } else if (busSegments.length === 1) {
+        const route = busSegments[0].route_number
+        return `Прямой маршрут ${route} - ${totalTime} мин`
+      } else {
+        const routes = busSegments.map(s => s.route_number).join(' → ')
+        return `${routes} - ${totalTime} мин`
+      }
+    },
+
+
   }
 }
 </script>

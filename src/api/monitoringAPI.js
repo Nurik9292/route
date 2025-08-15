@@ -1,10 +1,76 @@
 import { http } from '@/services'
+import { logger } from "@/utils/index.js";
 
 class MonitoringAPI {
 
 
-    async search(data) {
-        return await http.post('/trip-planning/search', data);
+    async search(params) {
+        try {
+            logger.info('📡 API запрос:', params)
+
+            const response = await http.post('/trip-planning/search', params)
+            console.log('search search', response)
+            let normalizedResponse = null
+
+            if (response) {
+                const data = response
+
+                if (data.trip_options && Array.isArray(data.trip_options)) {
+                    normalizedResponse = {
+                        trip_options: data.trip_options,
+                        status: data.status || 'success'
+                    }
+                    logger.info('✅ Формат: trip_options массив, элементов:', data.trip_options.length)
+                }
+
+                // Вариант 2: Одиночный объект с option_id (как в вашем JSON)
+                else if (data.option_id) {
+                    normalizedResponse = {
+                        trip_options: [data],
+                        status: 'success'
+                    }
+                    logger.info('✅ Формат: одиночный объект, обернут в массив')
+                }
+
+                // Вариант 3: Прямой массив в data
+                else if (Array.isArray(data)) {
+                    normalizedResponse = {
+                        trip_options: data,
+                        status: 'success'
+                    }
+                    logger.info('✅ Формат: прямой массив, элементов:', data.length)
+                }
+
+                // Вариант 4: Неизвестный формат
+                else {
+                    logger.warn('⚠️ Неизвестный формат ответа API:', data)
+                    normalizedResponse = {
+                        trip_options: [],
+                        status: 'error',
+                        message: 'Неподдерживаемый формат ответа'
+                    }
+                }
+            } else {
+                logger.warn('⚠️ Пустой ответ от API')
+                normalizedResponse = {
+                    trip_options: [],
+                    status: 'error',
+                    message: 'Пустой ответ'
+                }
+            }
+
+            return normalizedResponse
+
+        } catch (error) {
+            logger.error('❌ Ошибка API запроса:', error)
+
+            // Проверяем есть ли данные в ошибке
+            if (error.response && error.response.data) {
+                throw error
+            }
+
+            throw new Error('Сервис временно недоступен')
+        }
     }
 
     async getVehiclesRoute(routeNumber) {
